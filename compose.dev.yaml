@@ -42,7 +42,16 @@ services:
       - '8545:8545'
     volumes:
       - ./:/workspace
+      # `node_modules` de CADA paquete del workspace va en un volumen con nombre.
+      # Un `pnpm install` dentro del contenedor crea symlinks y shims de binarios
+      # (.bin) para cada proyecto del workspace: si `apps/api/node_modules` queda
+      # en el bind mount, el contenedor sobrescribe los shims de Windows del host
+      # con los suyos de Linux y rompe `pnpm exec` en el host. Aislar el árbol de
+      # dependencias en volúmenes es lo que hace seguro compartir el código.
       - hardhat_root_modules:/workspace/node_modules
+      - hardhat_api_modules:/workspace/apps/api/node_modules
+      - hardhat_web_modules:/workspace/apps/web/node_modules
+      - hardhat_shared_modules:/workspace/packages/shared/node_modules
       - hardhat_contracts_modules:/workspace/packages/contracts/node_modules
     # `exec` (no `run`): `pnpm --filter <pkg> <binario>` no existe en pnpm 12.
     command: >
@@ -54,4 +63,7 @@ volumes:
   pgdata_dev:
   redisdata_dev:
   hardhat_root_modules:
+  hardhat_api_modules:
+  hardhat_web_modules:
+  hardhat_shared_modules:
   hardhat_contracts_modules:
