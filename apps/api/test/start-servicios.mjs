@@ -14,11 +14,34 @@ const rutaApi = resolve(raizRepo, 'apps/api');
 const hijos = [];
 let apagando = false;
 
+/**
+ * Cierra un proceso y TODA su descendencia. `child.kill()` solo señaliza al
+ * shell intermedio (`shell: true`), así que en Windows el proceso real (p. ej.
+ * Vite) queda huérfano y sigue escuchando su puerto. En Windows se usa
+ * `taskkill /T`; en POSIX se apunta al grupo de procesos (por eso `detached`).
+ */
+function cerrarArbol(hijo) {
+  if (hijo.exitCode !== null || hijo.signalCode !== null) return;
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/PID', String(hijo.pid), '/T', '/F'], { stdio: 'ignore' });
+    return;
+  }
+  try {
+    process.kill(-hijo.pid, 'SIGTERM');
+  } catch {
+    try {
+      hijo.kill('SIGTERM');
+    } catch {
+      // El proceso ya había terminado.
+    }
+  }
+}
+
 function apagar(codigoSalida = 0) {
   if (apagando) return;
   apagando = true;
   for (const hijo of hijos) {
-    hijo.kill();
+    cerrarArbol(hijo);
   }
   setTimeout(() => process.exit(codigoSalida), 1_000);
 }
@@ -31,6 +54,8 @@ function lanzar(comando, argumentos, opciones = {}) {
     cwd: opciones.cwd ?? raizRepo,
     stdio: opciones.stdio ?? 'inherit',
     shell: true,
+    // En POSIX, un grupo propio permite matar a toda la descendencia.
+    detached: process.platform !== 'win32',
     env: { ...process.env, ...opciones.env },
   });
   hijos.push(hijo);
