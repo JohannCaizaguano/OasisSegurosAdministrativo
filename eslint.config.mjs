@@ -74,7 +74,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/api/prisma/**/*.ts', '**/*.config.{js,mjs,ts}'],
+    files: ['apps/api/prisma/**/*.ts', 'apps/api/test/**/*.mjs', '**/*.config.{js,mjs,ts}'],
     rules: {
       'no-console': 'off',
     },
