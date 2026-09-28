@@ -24,6 +24,22 @@ import { PolizasModule } from './modules/polizas/polizas.module';
 import { RecibosModule } from './modules/recibos/recibos.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 
+function transportePretty() {
+  if (process.env.NODE_ENV === 'production') {
+    return undefined;
+  }
+  try {
+    require.resolve('pino-pretty');
+  } catch {
+    // En imágenes de producción sin devDependencies no hay pino-pretty.
+    return undefined;
+  }
+  return {
+    target: 'pino-pretty',
+    options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss' },
+  };
+}
+
 export function opcionesLogger() {
   return LoggerModule.forRoot({
     pinoHttp: {
@@ -38,13 +54,7 @@ export function opcionesLogger() {
         paths: ['req.headers.authorization', 'req.headers.cookie'],
         censor: '[REDACTADO]',
       },
-      transport:
-        process.env.NODE_ENV === 'production'
-          ? undefined
-          : {
-              target: 'pino-pretty',
-              options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss' },
-            },
+      transport: transportePretty(),
     },
   });
 }

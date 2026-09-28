@@ -1,0 +1,84 @@
+# Stack de evaluación (ISO/IEC 25023). Se combina con compose.prod.yaml:
+#   docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d
+# (sin `name:` propio para heredar el proyecto del compose principal)
+# Grafana no publica puertos: se accede por túnel SSH (ssh -L 3001:localhost:3000).
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    restart: unless-stopped
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheusdata:/prometheus
+    networks: [oasis_internal]
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M }
+    <<: *logging
+
+  grafana:
+    image: grafana/grafana:12.4.0
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-oasis-grafana}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafanadata:/var/lib/grafana
+    networks: [oasis_internal]
+    depends_on: [prometheus]
+    # Sin puertos públicos: acceso solo por túnel SSH.
+    expose: ['3000']
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M }
+    <<: *logging
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:0.60.5
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks: [oasis_internal]
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
+    <<: *logging
+
+  node-exporter:
+    image: prom/node-exporter:v1.9.1
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks: [oasis_internal]
+    deploy:
+      resources:
+        limits: { cpus: '0.25', memory: 128M }
+    <<: *logging
+
+networks:
+  oasis_internal:
+    external: true
+
+volumes:
+  prometheusdata:
+  grafanadata:

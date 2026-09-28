@@ -105,5 +105,5 @@ vigente de cada herramienta:
 - [x] **F2** API base: config Zod, Prisma, auth, health, métricas, esqueleto hexagonal.
 - [x] **F3** Walking skeleton e2e contra Hardhat local (+ idempotencia).
 - [x] **F4** SPA: login, pagos, recibo con QR y verificación pública.
-- [ ] **F5** Docker: compose dev/prod/monitoring, Caddy.
+- [x] **F5** Docker: compose dev/prod/monitoring, Caddy.
 - [ ] **F6** CI/CD, scripts, k6, docs C4, ADRs y despliegue.

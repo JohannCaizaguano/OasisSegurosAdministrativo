@@ -6,6 +6,7 @@ node_modules
 **/build
 **/coverage
 **/.turbo
+**/*.tsbuildinfo
 **/artifacts
 **/cache
 **/typechain-types
