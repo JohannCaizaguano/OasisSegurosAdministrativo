@@ -162,6 +162,9 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 | `MAX_FEE_PER_GAS_GWEI`                                                       | ambos                        | `50`                             | Tope de `maxFeePerGas` al anclar.                                            |
 | `EXPLORER_BASE_URL`                                                          | ambos                        | `https://amoy.polygonscan.com`   | Base de los enlaces públicos.                                                |
 | `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR 0004).   |
+| `OPERATOR_ADDRESS`                                                           | scripts de contratos         | —                                | Cuenta `REGISTRADOR_ROLE` para `grant-registrador.ts` (no es secreto).       |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`                        | `.env` (Docker)              | `oasis`                          | Credenciales de la imagen de PostgreSQL en compose.                          |
+| `SEED_ADMIN_PASSWORD` / `SEED_OPERADOR_PASSWORD` / `SEED_CLIENTE_PASSWORD`   | seed                         | `Admin.Oasis1` …                 | Contraseñas del seed (opcionales).                                           |
 | `THROTTLE_GLOBAL_LIMIT`                                                      | ambos                        | `100`                            | Peticiones/min por IP del límite global.                                     |
 | `THROTTLE_LOGIN_LIMIT`                                                       | ambos                        | `5`                              | Por minuto en `POST /auth/login`.                                            |
 | `THROTTLE_REFRESH_LIMIT`                                                     | ambos                        | `20`                             | Por minuto en `/auth/refresh` y `/auth/logout`.                              |
@@ -192,6 +195,9 @@ Desviaciones respecto al enunciado, tomadas siguiendo la documentación vigente:
    Migrar a ESM permitiría NestJS 12.
 7. **prom-client**: la última estable (15.1.3) está marcada como deprecada en favor de
    `@prometheus-io/client` (0.16.x, aún inmadura); se mantiene prom-client y se reevaluará.
+   Además, en lugar de `@willsoto/nestjs-prometheus` (que envuelve a prom-client y asume
+   una aplicación HTTP de Nest) se usa un `MetricsModule` propio: el worker expone sus
+   métricas con un servidor mínimo, sin aplicación HTTP.
 8. **Imagen `oasis-api-migrator`**: el runtime no incluye el CLI de Prisma; se publica una
    segunda imagen (mismo Dockerfile, target `migrator`) para la tarea `migrate`.
 9. **Cobertura de contratos**: el plugin de cobertura de Hardhat 3 no instrumenta ramas ni
