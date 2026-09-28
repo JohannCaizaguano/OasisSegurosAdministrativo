@@ -1,0 +1,46 @@
+/**
+ * Tipos de dominio compartidos entre el API y la SPA.
+ *
+ * Todos son alias derivados de los esquemas Zod y de las constantes, que siguen
+ * siendo la única fuente de verdad; este módulo solo los agrupa para ofrecer un
+ * único punto de importación (por ejemplo, `import type { Pago } from '@oasis/shared'`)
+ * sin duplicar declaraciones ni crear dependencias circulares.
+ */
+
+// --- Entidades y modelos de lectura ------------------------------------------
+export type { Aseguradora } from '../schemas/aseguradora.schema';
+export type { Cliente } from '../schemas/cliente.schema';
+export type { Pago } from '../schemas/pago.schema';
+export type { Poliza } from '../schemas/poliza.schema';
+export type { ReciboDetalle, ReciboResumen } from '../schemas/recibo.schema';
+export type { VerificacionPublica } from '../schemas/recibo.schema';
+export type { ApiError, PaginacionMeta, RespuestaPaginada } from '../schemas/common.schema';
+
+// --- Cuerpos de entrada de los endpoints -------------------------------------
+export type {
+  ActualizarAseguradoraInput,
+  CrearAseguradoraInput,
+} from '../schemas/aseguradora.schema';
+export type { ActualizarClienteInput, CrearClienteInput } from '../schemas/cliente.schema';
+export type { ActualizarPolizaInput, CrearPolizaInput } from '../schemas/poliza.schema';
+export type { CrearPagoInput, RechazarPagoInput, ValidarPagoInput } from '../schemas/pago.schema';
+export type { LoginInput, LoginResponse, UsuarioSesion } from '../schemas/auth.schema';
+
+// --- Consultas de listado ----------------------------------------------------
+export type { ListarAseguradorasQuery } from '../schemas/aseguradora.schema';
+export type { ListarClientesQuery } from '../schemas/cliente.schema';
+export type { ListarPagosQuery } from '../schemas/pago.schema';
+export type { ListarPolizasQuery } from '../schemas/poliza.schema';
+export type { ListarRecibosQuery } from '../schemas/recibo.schema';
+export type { PaginacionQuery } from '../schemas/common.schema';
+
+// --- Uniones de literales del dominio ----------------------------------------
+export type {
+  EstadoPago,
+  EstadoPoliza,
+  EstadoRecibo,
+  EstadoVerificacion,
+  MetodoPago,
+  TipoIdentificacion,
+} from '../constants/estados';
+export type { Rol } from '../constants/roles';
