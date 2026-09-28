@@ -1,0 +1,71 @@
+import { createBrowserRouter, Navigate, Outlet, Link } from 'react-router-dom';
+
+import { AppLayout } from '@/components/layout/AppLayout';
+import { LoginPage } from '@/features/auth/pages/LoginPage';
+import { ClientesPage } from '@/features/clientes/pages/ClientesPage';
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
+import { PagosPage } from '@/features/pagos/pages/PagosPage';
+import { PolizasPage } from '@/features/polizas/pages/PolizasPage';
+import { ReciboDetallePage } from '@/features/recibos/pages/ReciboDetallePage';
+import { RecibosPage } from '@/features/recibos/pages/RecibosPage';
+import { VerificacionPage } from '@/features/verificacion/pages/VerificacionPage';
+import { useAuthStore } from '@/lib/auth-store';
+
+import { RutaProtegida } from './guards';
+
+/** Redirige al inicio a los usuarios ya autenticados que visitan /login. */
+function SoloInvitados() {
+  const autenticado = useAuthStore((estado) => estado.autenticado);
+  return autenticado ? <Navigate to="/" replace /> : <Outlet />;
+}
+
+/** Ruta desconocida: antes redirigía al inicio, sin explicar nada. */
+function NoEncontrado() {
+  return (
+    <div className="mx-auto grid min-h-screen max-w-lg content-center gap-4 p-6 text-center">
+      <h1 className="text-2xl font-semibold">Página no encontrada</h1>
+      <p className="text-sm text-[var(--muted-foreground)]">
+        La dirección solicitada no corresponde a ninguna sección de Oasis Seguros.
+      </p>
+      <div className="flex justify-center gap-2">
+        <Link className="underline" to="/">
+          Ir al inicio
+        </Link>
+        <Link className="underline" to="/verificar">
+          Verificar un recibo
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+export const router = createBrowserRouter([
+  {
+    element: <SoloInvitados />,
+    children: [{ path: '/login', element: <LoginPage /> }],
+  },
+  { path: '/verificar', element: <VerificacionPage /> },
+  { path: '/verificar/:codigo', element: <VerificacionPage /> },
+  {
+    element: <RutaProtegida />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/', element: <DashboardPage /> },
+          {
+            element: <RutaProtegida roles={['ADMIN', 'OPERADOR']} />,
+            children: [
+              { path: '/pagos', element: <PagosPage /> },
+              { path: '/recibos', element: <RecibosPage /> },
+              { path: '/recibos/:id', element: <ReciboDetallePage /> },
+              { path: '/clientes', element: <ClientesPage /> },
+              { path: '/polizas', element: <PolizasPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  { path: '*', element: <NoEncontrado /> },
+]);

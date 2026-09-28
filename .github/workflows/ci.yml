@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-1234
+  JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-1234
+
+jobs:
+  calidad:
+    name: Lint, build, typecheck y dependency-cruiser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r build
+      - run: pnpm -r lint
+      - run: pnpm -r typecheck
+      - run: pnpm depcruise
+
+  contratos:
+    name: Contratos (compile, tests, cobertura, solhint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @oasis/contracts build
+      - run: pnpm --filter @oasis/contracts lint
+      - run: pnpm --filter @oasis/contracts test
+      - run: pnpm --filter @oasis/contracts typecheck
+      # `reporte` corre los tests con --coverage y --gas-stats, verifica el
+      # umbral de cobertura y regenera REPORTE-COBERTURA.md y REPORTE-GAS.md.
+      # Si el umbral no se alcanza, el job falla.
+      - run: pnpm --filter @oasis/contracts reporte
+      # El ABI compartido se genera desde el contrato: si alguien lo editó a
+      # mano o cambió el contrato sin reexportarlo, el diff delata la deriva.
+      - run: pnpm --filter @oasis/contracts export-abi
+      - name: El ABI exportado debe coincidir con el contrato
+        run: |
+          if ! git diff --exit-code -- packages/shared/src/abi/; then
+            echo "::error::El ABI de packages/shared no coincide con el contrato compilado."
+            echo "Ejecuta 'pnpm --filter @oasis/contracts export-abi' y versiona el resultado."
+            exit 1
+          fi
+
+  slither:
+    name: Slither (análisis estático)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @oasis/contracts build
+      - uses: crytic/slither-action@v0.4.2
+        with:
+          target: packages/contracts
+          slither-config: packages/contracts/slither.config.json
+          fail-on: medium
+
+  api:
+    name: API (unitarias y e2e)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: oasis
+          POSTGRES_PASSWORD: oasis
+          POSTGRES_DB: oasis
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U oasis" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @oasis/shared build
+      - run: pnpm --filter @oasis/api run test
+      - name: Migrar y sembrar la base de datos
+        working-directory: apps/api
+        run: |
+          cp ../../.env.example .env
+          pnpm exec prisma migrate deploy
+          pnpm run seed
+      - name: Nodo Hardhat y anclaje de prueba
+        run: |
+          pnpm --filter @oasis/contracts exec hardhat node --hostname 127.0.0.1 > /tmp/hardhat.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -X POST http://127.0.0.1:8545 -H 'Content-Type: application/json' \
+              -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' > /dev/null && break
+            sleep 1
+          done
+          pnpm dev:chain
+          pnpm --filter @oasis/api run build
+      - name: Pruebas e2e
+        working-directory: apps/api
+        run: pnpm run test:e2e
+
+  web:
+    name: SPA (vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @oasis/shared build
+      - run: pnpm --filter @oasis/web run test
+      - run: pnpm --filter @oasis/web run build
+
+  docker:
+    name: Imágenes Docker (sin publicar)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: runtime
+          push: false
+          tags: oasis-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: migrator
+          push: false
+          tags: oasis-api-migrator:ci
+          cache-from: type=gha
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          target: runtime
+          push: false
+          tags: oasis-web:ci
+          cache-from: type=gha

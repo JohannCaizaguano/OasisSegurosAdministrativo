@@ -1,0 +1,109 @@
+name: Deploy
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-produccion
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Publicar imágenes en GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: version
+        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: runtime
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/oasis-api:sha-${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/oasis-api:${{ steps.version.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          target: migrator
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/oasis-api-migrator:sha-${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/oasis-api-migrator:${{ steps.version.outputs.tag }}
+          cache-from: type=gha
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/web/Dockerfile
+          target: runtime
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/oasis-web:sha-${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/oasis-web:${{ steps.version.outputs.tag }}
+          cache-from: type=gha
+
+  desplegar:
+    name: Desplegar en el VPS
+    needs: publicar
+    runs-on: ubuntu-latest
+    environment: produccion
+    steps:
+      - name: Despliegue por SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/oasis
+            # `sed` sale con 0 aunque no sustituya nada, así que el `|| echo`
+            # no se disparaba y OASIS_TAG se quedaba sin definir: compose
+            # usaba el `:latest` por defecto y desplegaba la imagen vieja.
+            if grep -q '^OASIS_TAG=' .env; then
+              sed -i "s/^OASIS_TAG=.*/OASIS_TAG=${{ needs.publicar.outputs.tag }}/" .env
+            else
+              echo "OASIS_TAG=${{ needs.publicar.outputs.tag }}" >> .env
+            fi
+            grep '^OASIS_TAG=' .env
+            docker compose -f compose.prod.yaml pull
+            docker compose -f compose.prod.yaml run --rm migrate
+            docker compose -f compose.prod.yaml up -d
+
+  smoke:
+    name: Smoke test /api/v1/health
+    needs: desplegar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar health del API público
+        env:
+          DOMINIO: ${{ secrets.VPS_DOMAIN }}
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsS "https://${DOMINIO}/api/v1/health" | grep -q '"status":"ok"'; then
+              echo "Health OK"
+              exit 0
+            fi
+            echo "Intento $i: esperando el health…"
+            sleep 10
+          done
+          echo "El smoke test falló" >&2
+          exit 1

@@ -1,0 +1,56 @@
+# Dependencias
+node_modules/
+.pnpm-store/
+
+# Builds
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Cobertura y reportes
+coverage/
+playwright-report/
+test-results/
+.hardhat-cache/
+
+# Contratos (artefactos regenerables)
+packages/contracts/artifacts/
+packages/contracts/cache/
+packages/contracts/typechain-types/
+packages/contracts/ignition/deployments/
+
+# Entorno y secretos (NUNCA versionar)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Sistema operativo / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Vite / Playwright
+apps/web/dist/
+apps/web/.vite/
+apps/web/e2e/.auth/
+
+# Prisma
+apps/api/prisma/client/
+apps/api/src/generated/
+
+# Artefactos de asistentes/agentes de IA (no forman parte del proyecto)
+.agents/
+skills-lock.json

@@ -1,0 +1,139 @@
+name: oasis
+
+# Despliegue en el VPS (OVHcloud). Las imágenes se publican en GHCR desde
+# .github/workflows/deploy.yml. Para empezar: cp .env.example .env y editar.
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
+
+# La clave privada de la cuenta operadora vive en `.env.worker`, que SÓLO se
+# inyecta en el contenedor `worker` (ADR 0004). `.env` nunca debe contener
+# OPERATOR_PRIVATE_KEY: el api y el migrador no la necesitan y no deben poder
+# leerla (visible en `docker inspect` y en /proc/1/environ).
+x-api-common: &api-common
+  image: ${OASIS_API_IMAGE:-ghcr.io/oasis-seguros/oasis-api}:${OASIS_TAG:-latest}
+  restart: unless-stopped
+  networks: [internal]
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  <<: *logging
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { cpus: '1.0', memory: 1G }
+    <<: *logging
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    networks: [internal]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M }
+    <<: *logging
+
+  migrate:
+    image: ${OASIS_MIGRATOR_IMAGE:-ghcr.io/oasis-seguros/oasis-api-migrator}:${OASIS_TAG:-latest}
+    env_file: [.env]
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: 'no'
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M }
+    <<: *logging
+
+  api:
+    <<: *api-common
+    env_file: [.env]
+    networks: [internal, edge]
+    expose: ['3000']
+    deploy:
+      resources:
+        limits: { cpus: '1.0', memory: 768M }
+
+  worker:
+    <<: *api-common
+    command: ['node', 'dist/worker.js']
+    # Exporter de métricas del anclaje. No publica puertos: Prometheus lo
+    # consume por la red interna y Caddy no lo expone.
+    expose: ['9101']
+    environment:
+      WORKER_METRICS_PORT: '9101'
+    # `.env.worker` se carga DESPUÉS de `.env`, de modo que sus variables
+    # tienen prioridad. Solo el worker recibe este archivo.
+    env_file: [.env, .env.worker]
+    # internal para hablar con postgres/redis; edge para salir a Internet (RPC).
+    networks: [internal, edge]
+    # El worker no expone HTTP: el HEALTHCHECK de la imagen no aplica.
+    healthcheck:
+      disable: true
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 512M }
+
+  web:
+    image: ${OASIS_WEB_IMAGE:-ghcr.io/oasis-seguros/oasis-web}:${OASIS_TAG:-latest}
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    depends_on: [api]
+    deploy:
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
+    <<: *logging
+
+networks:
+  internal:
+    name: oasis_internal
+    internal: true
+  edge:
+    name: oasis_edge
+
+volumes:
+  pgdata:
+  redisdata:
+  caddy_data:
+  caddy_config:

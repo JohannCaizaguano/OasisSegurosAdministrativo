@@ -1,0 +1,167 @@
+// Prisma 7: el generator `prisma-client` emite TypeScript puro dentro de src/.
+// Se compila junto al API (CommonJS), por eso moduleFormat = "cjs".
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  runtime      = "nodejs"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ADMIN
+  OPERADOR
+  CLIENTE
+}
+
+enum TipoIdentificacion {
+  CEDULA
+  RUC
+  PASAPORTE
+}
+
+enum EstadoPoliza {
+  VIGENTE
+  VENCIDA
+  CANCELADA
+}
+
+enum MetodoPago {
+  TRANSFERENCIA
+  EFECTIVO
+  TARJETA
+  CHEQUE
+}
+
+enum EstadoPago {
+  REGISTRADO
+  VALIDADO
+  RECHAZADO
+}
+
+enum EstadoRecibo {
+  PENDIENTE_ANCLAJE
+  ENVIADO
+  ANCLADO
+  FALLIDO
+  ANULADO
+}
+
+model Usuario {
+  id             String   @id @default(uuid()) @db.Uuid
+  email          String   @unique
+  passwordHash   String
+  rol            Rol
+  activo         Boolean  @default(true)
+  clienteId      String?  @unique @db.Uuid
+  cliente        Cliente? @relation(fields: [clienteId], references: [id])
+  pagosValidados Pago[]   @relation("PagoValidadoPor")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([rol])
+}
+
+model Aseguradora {
+  id        String   @id @default(uuid()) @db.Uuid
+  nombre    String
+  ruc       String   @unique
+  polizas   Poliza[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cliente {
+  id                 String             @id @default(uuid()) @db.Uuid
+  tipoIdentificacion TipoIdentificacion
+  identificacion     String             @unique
+  nombres            String?
+  apellidos          String?
+  razonSocial        String?
+  email              String
+  telefono           String?
+  usuario            Usuario?
+  polizas            Poliza[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([email])
+  @@index([tipoIdentificacion])
+}
+
+model Poliza {
+  id            String       @id @default(uuid()) @db.Uuid
+  numero        String       @unique
+  clienteId     String       @db.Uuid
+  aseguradoraId String       @db.Uuid
+  ramo          String
+  primaTotal    Decimal      @db.Decimal(12, 2)
+  fechaInicio   DateTime     @db.Date
+  fechaFin      DateTime     @db.Date
+  estado        EstadoPoliza @default(VIGENTE)
+  cliente       Cliente      @relation(fields: [clienteId], references: [id])
+  aseguradora   Aseguradora  @relation(fields: [aseguradoraId], references: [id])
+  pagos         Pago[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([clienteId])
+  @@index([aseguradoraId])
+  @@index([estado])
+  @@index([fechaFin])
+}
+
+model Pago {
+  id            String     @id @default(uuid()) @db.Uuid
+  polizaId      String     @db.Uuid
+  monto         Decimal    @db.Decimal(12, 2)
+  fechaPago     DateTime   @db.Date
+  metodo        MetodoPago
+  referencia    String?
+  estado        EstadoPago @default(REGISTRADO)
+  validadoPorId String?    @db.Uuid
+  validadoEn    DateTime?
+  // Nota de auditoría del operador al validar o rechazar. Es interna: nunca
+  // entra al payload canónico del recibo ni a la blockchain.
+  nota          String?
+  poliza        Poliza     @relation(fields: [polizaId], references: [id])
+  validadoPor   Usuario?   @relation("PagoValidadoPor", fields: [validadoPorId], references: [id])
+  recibo        Recibo?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([polizaId])
+  @@index([estado])
+  @@index([validadoPorId])
+  @@index([fechaPago])
+}
+
+model Recibo {
+  id                String       @id @default(uuid()) @db.Uuid
+  codigo            String       @unique
+  pagoId            String       @unique @db.Uuid
+  idOnchain         String
+  hashRecibo        String
+  sal               String
+  payloadCanonico   String
+  estado            EstadoRecibo @default(PENDIENTE_ANCLAJE)
+  txHash            String?
+  blockNumber       BigInt?
+  gasUsed           BigInt?
+  effectiveGasPrice BigInt?
+  chainId           Int
+  contractAddress   String
+  intentos          Int          @default(0)
+  ultimoError       String?
+  creadoEn          DateTime     @default(now())
+  enviadoEn         DateTime?
+  ancladoEn         DateTime?
+  updatedAt         DateTime     @updatedAt
+  pago              Pago         @relation(fields: [pagoId], references: [id])
+
+  @@index([estado])
+  @@index([creadoEn])
+}
