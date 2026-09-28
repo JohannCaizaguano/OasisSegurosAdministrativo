@@ -1,0 +1,40 @@
+{
+  "name": "oasis-seguros",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema web con anclaje blockchain en Polygon PoS (Amoy) para el bróker de seguros Oasis Seguros - Trabajo de Titulación de Ingeniería de Software",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=24 <27"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev": "pnpm --parallel --filter @oasis/api --filter @oasis/web dev",
+    "dev:infra": "docker compose -f compose.dev.yaml up -d",
+    "dev:infra:down": "docker compose -f compose.dev.yaml down",
+    "dev:chain": "node infra/scripts/dev-chain.mjs",
+    "depcruise": "pnpm --filter @oasis/api depcruise"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.12.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1"
+  }
+}

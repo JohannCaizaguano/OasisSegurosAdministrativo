@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+pnpm-lock.yaml
+apps/web/src/components/ui
+packages/shared/src/abi
+packages/contracts/artifacts
+packages/contracts/cache
+packages/contracts/typechain-types
+packages/contracts/ignition/deployments
+apps/api/prisma/migrations
+playwright-report
+test-results
