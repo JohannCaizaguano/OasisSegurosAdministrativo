@@ -9,6 +9,10 @@ packages/contracts/artifacts
 packages/contracts/cache
 packages/contracts/typechain-types
 packages/contracts/ignition/deployments
+# Reportes generados: se versionan, pero su formato lo fija el script que los
+# produce y no deben reformatearse en cada commit.
+packages/contracts/REPORTE-COBERTURA.md
+packages/contracts/REPORTE-GAS.md
 apps/api/prisma/migrations
 playwright-report
 test-results

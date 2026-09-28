@@ -1,16 +1,36 @@
-import type { LoginResponse } from '@oasis/shared';
+import { apiErrorSchema, type ApiError as CuerpoApiError, type LoginResponse } from '@oasis/shared';
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
+/**
+ * Error de API de la SPA.
+ *
+ * Se construye validando el cuerpo con `apiErrorSchema` de `@oasis/shared`, que
+ * es el mismo contrato que produce el filtro global de errores del API. Antes
+ * esta clase declaraba sus propios campos (`status` en vez de `statusCode`, sin
+ * `requestId` ni `path`) y el cuerpo se leía como un tipo anónimo: el contrato
+ * de error no estaba verificado por ninguna de las dos partes.
+ */
 export class ApiError extends Error {
-  constructor(
-    readonly status: number,
-    readonly code: string,
-    message: string,
-    readonly details?: unknown,
-  ) {
-    super(message);
+  readonly statusCode: number;
+  readonly code: string;
+  readonly details?: unknown;
+  readonly requestId?: string;
+  readonly path?: string;
+
+  constructor(cuerpo: Partial<CuerpoApiError> & { message?: string }, status: number) {
+    super(cuerpo.message ?? 'No fue posible completar la operación');
     this.name = 'ApiError';
+    this.statusCode = cuerpo.statusCode ?? status;
+    this.code = cuerpo.code ?? 'ERROR_DESCONOCIDO';
+    this.details = cuerpo.details;
+    this.requestId = cuerpo.requestId;
+    this.path = cuerpo.path;
+  }
+
+  /** Alias para no romper los lectores que usaban la propiedad anterior. */
+  get status(): number {
+    return this.statusCode;
   }
 }
 
@@ -124,19 +144,11 @@ export async function apiFetch<T>(ruta: string, opciones: OpcionesPeticion = {})
     return undefined as T;
   }
 
-  const cuerpo = (await respuesta.json().catch(() => null)) as {
-    code?: string;
-    message?: string;
-    details?: unknown;
-  } | null;
+  const cuerpo = (await respuesta.json().catch(() => null)) as CuerpoApiError | null;
 
   if (!respuesta.ok) {
-    throw new ApiError(
-      respuesta.status,
-      cuerpo?.code ?? 'ERROR_DESCONOCIDO',
-      cuerpo?.message ?? 'No fue posible completar la operación',
-      cuerpo?.details,
-    );
+    const validado = apiErrorSchema.safeParse(cuerpo);
+    throw new ApiError(validado.success ? validado.data : (cuerpo ?? {}), respuesta.status);
   }
 
   return cuerpo as T;

@@ -15,9 +15,11 @@
     "lint": "solhint \"contracts/**/*.sol\"",
     "typecheck": "hardhat compile && tsc --noEmit",
     "export-abi": "hardhat run scripts/export-abi.ts",
-    "deploy:local": "hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network localhost",
-    "deploy:amoy": "hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network amoy --parameters ignition/parameters/amoy.json",
-    "grant-registrador": "hardhat run scripts/grant-registrador.ts"
+    "deploy:local": "hardhat compile --build-profile production && hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network localhost",
+    "deploy:amoy": "hardhat compile --build-profile production && hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network amoy --parameters ignition/parameters/amoy.json",
+    "grant-registrador": "hardhat run scripts/grant-registrador.ts",
+    "reporte": "hardhat test --coverage --gas-stats && node scripts/reporte.ts",
+    "build:production": "hardhat compile --build-profile production"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.1.8",

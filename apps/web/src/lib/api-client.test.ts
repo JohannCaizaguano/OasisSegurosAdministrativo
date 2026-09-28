@@ -61,23 +61,48 @@ describe('apiFetch', () => {
     await expect(apiFetch<void>('/vacio')).resolves.toBeUndefined();
   });
 
-  it('lanza ApiError con el código del backend', async () => {
+  it('lanza ApiError con el contrato de error compartido', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      respuestaJson({ code: 'NO_ENCONTRADO', message: 'Cliente no encontrado' }, 404),
+      respuestaJson(
+        {
+          statusCode: 404,
+          code: 'NO_ENCONTRADO',
+          message: 'Cliente no encontrado',
+          requestId: '0f0c1f3e-1111-2222-3333-444455556666',
+          timestamp: '2026-09-28T12:00:00.000Z',
+          path: '/api/v1/clientes/x',
+        },
+        404,
+      ),
     );
 
     await expect(apiFetch('/clientes/x')).rejects.toMatchObject({
-      status: 404,
+      statusCode: 404,
       code: 'NO_ENCONTRADO',
       message: 'Cliente no encontrado',
+      path: '/api/v1/clientes/x',
     });
   });
 
-  it('ApiError conserva el status para el manejo de reintentos', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
-    const error = await apiFetch('/error').catch((e: unknown) => e);
+  it('rellena los campos ausentes sin romper cuando el cuerpo no cumple el esquema', async () => {
+    // Un 502 de Caddy o un proxy intermedio devuelve HTML: el error debe seguir
+    // siendo utilizable por la SPA.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html>502</html>', { status: 502, headers: { 'Content-Type': 'text/html' } }),
+    );
+
+    const error = (await apiFetch('/error').catch((e: unknown) => e)) as ApiError;
     expect(error).toBeInstanceOf(ApiError);
-    expect((error as ApiError).status).toBe(500);
+    expect(error.statusCode).toBe(502);
+    expect(error.code).toBe('ERROR_DESCONOCIDO');
+    expect(error.message).toBeTruthy();
+  });
+
+  it('el alias status sigue disponible para los lectores existentes', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 500 }));
+    const error = (await apiFetch('/error').catch((e: unknown) => e)) as ApiError;
+    expect(error.status).toBe(500);
+    expect(error.statusCode).toBe(500);
   });
 
   it('envía el access token y las cookies en cada petición', async () => {

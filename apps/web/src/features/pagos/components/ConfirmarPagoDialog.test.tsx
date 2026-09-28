@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConfirmarPagoDialog } from './ConfirmarPagoDialog';
 
 const PAGO: Pago = {
-  id: '22222222-2222-2222-2222-222222222222',
-  polizaId: '33333333-3333-3333-3333-333333333333',
+  id: '7c1e5a90-2b3d-4f6a-9e8c-1d2b3a4c5d6e',
+  polizaId: '3f2a1c8e-4b5d-4e6f-8a9b-0c1d2e3f4a5b',
   numeroPoliza: 'POL-0001',
   monto: '120.50',
   fechaPago: '2026-09-01',

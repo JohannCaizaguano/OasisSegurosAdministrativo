@@ -83,16 +83,37 @@ pnpm dev                       # API, worker y SPA con recarga en caliente
 | `pnpm dev:chain`                             | Despliegue local (Ignition) + rol + `.env` del API. |
 | `pnpm dev`                                   | API + worker + SPA en modo desarrollo.              |
 | `pnpm format` / `format:check`               | Prettier sobre el monorepo.                         |
+| `pnpm --filter @oasis/contracts reporte`     | Cobertura (con umbral) y reporte de gas.            |
 
 ## Pruebas
 
-| Suite         | Comando                               | Qué cubre                                                                                                                                                                |
-| ------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Contratos     | `pnpm --filter @oasis/contracts test` | Solidity (unit + fuzz) y viem (roles, duplicados, pausa, eventos). Cobertura 100 %, reporte de gas con `gas-stats`.                                                      |
-| API unitarias | `pnpm --filter @oasis/api test`       | Hash/canonicalización, transiciones del Recibo, login, utilidades.                                                                                                       |
-| API e2e       | `pnpm --filter @oasis/api test:e2e`   | Flujo completo contra Hardhat local + escenarios de idempotencia con caída simulada del worker.                                                                          |
-| SPA           | `pnpm --filter @oasis/web test`       | `api-client` (refresh y errores).                                                                                                                                        |
-| SPA e2e       | `pnpm --filter @oasis/web test:e2e`   | Playwright: login → validar pago → ANCLADO → QR → verificación pública sin sesión. El webServer de Playwright levanta Hardhat, despliega, y arranca API + worker + Vite. |
+| Suite         | Comando                                  | Qué cubre                                                                                                                                                                                   |
+| ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contratos     | `pnpm --filter @oasis/contracts test`    | 26 casos: Solidity (unit + fuzz, 16) y viem (roles, duplicados, pausa, eventos, 10).                                                                                                        |
+| Contratos     | `pnpm --filter @oasis/contracts reporte` | Verifica el umbral de cobertura y regenera `REPORTE-COBERTURA.md` y `REPORTE-GAS.md`. Falla si las líneas cubiertas bajan del 90 %.                                                         |
+| API unitarias | `pnpm --filter @oasis/api test`          | 34 casos: hash y canonicalización, transiciones del Recibo, login, y el módulo blockchain (outbox, idempotencia del anclaje, verificación pública).                                         |
+| API e2e       | `pnpm --filter @oasis/api test:e2e`      | Flujo completo contra Hardhat local + escenarios de idempotencia con caída simulada del worker.                                                                                             |
+| SPA           | `pnpm --filter @oasis/web test`          | 33 casos: `api-client` (401 → refresh → reintento, deduplicación del refresco, contrato de error), esquemas compartidos de Zod y el diálogo de confirmación de pagos.                       |
+| SPA e2e       | `pnpm --filter @oasis/web test:e2e`      | Playwright: login → validar pago (con confirmación) → ANCLADO → QR → verificación pública sin sesión. El webServer de Playwright levanta Hardhat, despliega, y arranca API + worker + Vite. |
+
+**Límites de las pruebas.** Los e2e (API y Playwright) son de pila completa:
+necesitan PostgreSQL, Redis, el nodo Hardhat con el contrato desplegado y la API
+compilada (`pnpm -r build`). El job `web` de CI **no** los ejecuta; para correrlos
+localmente:
+
+```bash
+pnpm dev:infra && pnpm dev:chain
+pnpm --filter @oasis/api exec prisma migrate deploy && pnpm --filter @oasis/api seed
+pnpm -r build
+pnpm test:e2e && pnpm --filter @oasis/web test:e2e
+```
+
+**Cobertura de contratos: qué se mide y qué no.** El plugin de cobertura de
+Hardhat 3 instrumenta líneas y sentencias, **no ramas ni funciones**. Su informe
+HTML muestra «Branches 100 %» y «Functions 100 %» con 0 elementos instrumentados,
+que es una casilla vacía de la plantilla. `REPORTE-COBERTURA.md` solo afirma
+líneas y sentencias (100 %), y explica la limitación. Medir ramas de verdad exige
+migrar los tests a Foundry (`forge coverage`), fuera del stack acordado.
 
 ## Producción
 
@@ -119,6 +140,38 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
   detección de reutilización.
 - Throttling, helmet, validación Zod de entradas y de entorno, filtro global de errores.
 
+## Variables de entorno
+
+`.env.example` y `.env.worker.example` son las plantillas comentadas. Resumen:
+
+| Variable                                                                     | Dónde                        | Por defecto                      | Para qué                                                                     |
+| ---------------------------------------------------------------------------- | ---------------------------- | -------------------------------- | ---------------------------------------------------------------------------- |
+| `NODE_ENV`                                                                   | ambos                        | `development`                    | `development` \| `test` \| `production`. Condiciona Swagger y CORS.          |
+| `PORT`                                                                       | API                          | `3000`                           | Puerto HTTP del API.                                                         |
+| `DATABASE_URL`                                                               | ambos                        | —                                | Cadena de conexión de PostgreSQL. En Docker el host es `postgres`.           |
+| `REDIS_HOST` / `REDIS_PORT`                                                  | ambos                        | `localhost` / `6379`             | Redis de BullMQ y de los refresh tokens.                                     |
+| `REDIS_PASSWORD`                                                             | ambos                        | vacío                            | Opcional.                                                                    |
+| `JWT_ACCESS_SECRET`                                                          | ambos                        | —                                | Firma del access token (≥ 32 caracteres).                                    |
+| `JWT_REFRESH_SECRET`                                                         | ambos                        | —                                | Firma del refresh token, distinta de la anterior.                            |
+| `JWT_ACCESS_TTL`                                                             | ambos                        | `15m`                            | Vigencia del access token.                                                   |
+| `JWT_REFRESH_TTL`                                                            | ambos                        | `7d`                             | Vigencia de la cookie httpOnly.                                              |
+| `CHAIN_ID`                                                                   | ambos                        | `31337`                          | `31337` local \| `80002` Amoy \| `137` Polygon. Selecciona la chain en viem. |
+| `RPC_URL`                                                                    | ambos                        | `http://127.0.0.1:8545`          | RPC principal.                                                               |
+| `RPC_URL_FALLBACK`                                                           | ambos                        | vacío                            | RPC de respaldo (transporte `fallback` de viem).                             |
+| `CONTRACT_ADDRESS`                                                           | ambos                        | vacío                            | Dirección de `RegistroRecibos`.                                              |
+| `MAX_FEE_PER_GAS_GWEI`                                                       | ambos                        | `50`                             | Tope de `maxFeePerGas` al anclar.                                            |
+| `EXPLORER_BASE_URL`                                                          | ambos                        | `https://amoy.polygonscan.com`   | Base de los enlaces públicos.                                                |
+| `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR 0004).   |
+| `THROTTLE_GLOBAL_LIMIT`                                                      | ambos                        | `100`                            | Peticiones/min por IP del límite global.                                     |
+| `THROTTLE_LOGIN_LIMIT`                                                       | ambos                        | `5`                              | Por minuto en `POST /auth/login`.                                            |
+| `THROTTLE_REFRESH_LIMIT`                                                     | ambos                        | `20`                             | Por minuto en `/auth/refresh` y `/auth/logout`.                              |
+| `THROTTLE_VERIFICACION_PUBLICA_LIMIT`                                        | ambos                        | `20`                             | Por minuto en la verificación pública.                                       |
+| `WORKER_METRICS_PORT`                                                        | worker                       | `9101`                           | Exporter de métricas del anclaje (red interna).                              |
+| `DOMAIN`                                                                     | ambos                        | `localhost`                      | Dominio que sirve Caddy con TLS automático.                                  |
+| `OASIS_API_IMAGE` / `OASIS_MIGRATOR_IMAGE` / `OASIS_WEB_IMAGE` / `OASIS_TAG` | `.env`                       | `ghcr.io/oasis-seguros/*:latest` | Imágenes y etiqueta de `compose.prod.yaml`.                                  |
+| `GRAFANA_ADMIN_PASSWORD`                                                     | `.env`                       | —                                | Solo el día de evaluación (`compose.monitoring.yaml`).                       |
+| `VITE_API_BASE_URL`                                                          | SPA                          | `/api/v1`                        | Solo en `pnpm dev`; en producción Caddy sirve el mismo origen.               |
+
 ## Notas de fidelidad a la documentación oficial
 
 Desviaciones respecto al enunciado, tomadas siguiendo la documentación vigente:
@@ -141,6 +194,19 @@ Desviaciones respecto al enunciado, tomadas siguiendo la documentación vigente:
    `@prometheus-io/client` (0.16.x, aún inmadura); se mantiene prom-client y se reevaluará.
 8. **Imagen `oasis-api-migrator`**: el runtime no incluye el CLI de Prisma; se publica una
    segunda imagen (mismo Dockerfile, target `migrator`) para la tarea `migrate`.
+9. **Cobertura de contratos**: el plugin de cobertura de Hardhat 3 no instrumenta ramas ni
+   funciones, así que el umbral del 90 % se verifica sobre **líneas y sentencias** (100 %
+   en la revisión actual). `packages/contracts/REPORTE-COBERTURA.md` documenta la
+   limitación; medir ramas exigiría migrar los tests a Foundry.
+10. **Límites del rate limiter**: son configurables por entorno. Los valores por defecto
+    (5/min en login) son de seguridad y harían que una prueba de carga midiera el
+    limitador en lugar del API, así que `docs/despliegue.md` indica subirlos el día de la
+    evaluación y restaurarlos al terminar.
+11. **Confirmación al validar un pago**: el enunciado pide que el operador valide un pago
+    sin especificar la interfaz. Se añadió un diálogo con confirmación explícita y motivo
+    de auditoría (`Pago.nota`), porque validar dispara una transacción real e
+    irreversible. El API exige `confirmado: true`, de modo que la protección no depende
+    solo de la SPA.
 
 ## Fases
 

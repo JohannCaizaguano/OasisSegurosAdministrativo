@@ -44,9 +44,21 @@ jobs:
       - run: pnpm --filter @oasis/contracts build
       - run: pnpm --filter @oasis/contracts lint
       - run: pnpm --filter @oasis/contracts test
-      - run: pnpm --filter @oasis/contracts coverage
-      - run: pnpm --filter @oasis/contracts gas-stats
       - run: pnpm --filter @oasis/contracts typecheck
+      # `reporte` corre los tests con --coverage y --gas-stats, verifica el
+      # umbral de cobertura y regenera REPORTE-COBERTURA.md y REPORTE-GAS.md.
+      # Si el umbral no se alcanza, el job falla.
+      - run: pnpm --filter @oasis/contracts reporte
+      # El ABI compartido se genera desde el contrato: si alguien lo editó a
+      # mano o cambió el contrato sin reexportarlo, el diff delata la deriva.
+      - run: pnpm --filter @oasis/contracts export-abi
+      - name: El ABI exportado debe coincidir con el contrato
+        run: |
+          if ! git diff --exit-code -- packages/shared/src/abi/; then
+            echo "::error::El ABI de packages/shared no coincide con el contrato compilado."
+            echo "Ejecuta 'pnpm --filter @oasis/contracts export-abi' y versiona el resultado."
+            exit 1
+          fi
 
   slither:
     name: Slither (análisis estático)
