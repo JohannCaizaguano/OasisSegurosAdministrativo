@@ -55,7 +55,6 @@ CHAIN_ID=80002
 RPC_URL=https://rpc-amoy.polygon.technology
 RPC_URL_FALLBACK=<proveedor alternativo opcional>
 CONTRACT_ADDRESS=<se completa tras el despliegue del contrato>
-OPERATOR_PRIVATE_KEY=<clave de la cuenta operadora>
 MAX_FEE_PER_GAS_GWEI=50
 EXPLORER_BASE_URL=https://amoy.polygonscan.com
 # Imágenes publicadas por GitHub Actions:
@@ -66,9 +65,27 @@ OASIS_TAG=1.0.0
 GRAFANA_ADMIN_PASSWORD=<secreto>
 ```
 
+`.env.worker` de producción (archivo separado, `chmod 600`):
+
+```ini
+# Clave de la cuenta operadora (REGISTRADOR_ROLE). Solo la inyecta el worker.
+OPERATOR_PRIVATE_KEY=<clave de la cuenta operadora>
+```
+
 ```bash
+install -m 600 /dev/null /opt/oasis/.env.worker   # y editar
 echo <PAT> | docker login ghcr.io -u <usuario> --password-stdin
 cd /opt/oasis && docker compose -f compose.prod.yaml up -d
+```
+
+`compose.prod.yaml` carga `.env.worker` únicamente en el servicio `worker`, así que
+`docker inspect` del contenedor `api` no muestra la clave (ADR 0004). Verifíquelo:
+
+```bash
+docker inspect oasis-api-1 --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | grep -c OPERATOR_PRIVATE_KEY   # debe imprimir 0
+docker inspect oasis-worker-1 --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | grep -c OPERATOR_PRIVATE_KEY   # debe imprimir 1
 ```
 
 El contenedor `migrate` aplica las migraciones y termina; `api` y `worker` esperan a que
@@ -118,7 +135,8 @@ Anote en este documento (tabla de registros):
 | Cuenta operadora (REGISTRADOR_ROLE) | _(completar)_                                      |
 | Enlace al explorador                | https://amoy.polygonscan.com/address/_(completar)_ |
 
-Finalmente copie `CONTRACT_ADDRESS` y `OPERATOR_PRIVATE_KEY` al `.env` del VPS y ejecute
+Finalmente, copie `CONTRACT_ADDRESS` al `.env` del VPS y `OPERATOR_PRIVATE_KEY` a
+`.env.worker` (ambos `chmod 600`), y ejecute
 `docker compose -f compose.prod.yaml up -d`.
 
 ## 5. Backups
@@ -183,4 +201,4 @@ Métricas clave (ISO/IEC 25023): latencia p50/p95 y RPS del API, CPU/RAM por con
   `POST /api/v1/recibos/:id/anular` (ADMIN) que además anula on-chain cuando corresponde.
 - Rotación de la cuenta operadora: genere una cuenta nueva, otorgue `REGISTRADOR_ROLE`
   (`grant-registrador.ts`), revoque el rol anterior con `revokeRole` (cuenta admin) y
-  actualice `OPERATOR_PRIVATE_KEY` en el `.env` del VPS.
+  actualice `OPERATOR_PRIVATE_KEY` en `/opt/oasis/.env.worker` y reinicie el worker.

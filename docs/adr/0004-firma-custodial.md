@@ -14,6 +14,13 @@ del sistema: quien la posee puede anclar o anular recibos.
 - **Firma custodial del lado del servidor**, aislada en el contenedor `worker`:
   `OPERATOR_PRIVATE_KEY` solo se monta en ese contenedor; el esquema de entorno del API
   **no incluye** esa variable.
+- El aislamiento es **a nivel de despliegue, no solo de código**. La clave vive en un
+  archivo aparte (`.env.worker`, `chmod 600`) que `compose.prod.yaml` inyecta
+  exclusivamente en el servicio `worker`; `.env` nunca la contiene. Antes de este cambio
+  `env_file: [.env]` estaba en el ancla `x-api-common`, por lo que la clave llegaba
+  también al `api` y al `migrate` (visible en `docker inspect` y en `/proc/1/environ`),
+  aunque el API no la leyera. El aislamiento por esquema de entorno es la segunda barrera,
+  no la primera.
 - El API únicamente realiza lecturas (`eth_call`) para la verificación pública.
 - El contrato separa `DEFAULT_ADMIN_ROLE` (cuenta del despliegue, guardada con
   `hardhat-keystore` en la laptop del responsable, **fuera del servidor**) de

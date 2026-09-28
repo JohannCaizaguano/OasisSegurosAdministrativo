@@ -9,10 +9,13 @@ x-logging: &logging
       max-size: '10m'
       max-file: '3'
 
+# La clave privada de la cuenta operadora vive en `.env.worker`, que SÓLO se
+# inyecta en el contenedor `worker` (ADR 0004). `.env` nunca debe contener
+# OPERATOR_PRIVATE_KEY: el api y el migrador no la necesitan y no deben poder
+# leerla (visible en `docker inspect` y en /proc/1/environ).
 x-api-common: &api-common
   image: ${OASIS_API_IMAGE:-ghcr.io/oasis-seguros/oasis-api}:${OASIS_TAG:-latest}
   restart: unless-stopped
-  env_file: [.env]
   networks: [internal]
   depends_on:
     migrate:
@@ -76,6 +79,7 @@ services:
 
   api:
     <<: *api-common
+    env_file: [.env]
     networks: [internal, edge]
     expose: ['3000']
     deploy:
@@ -85,14 +89,14 @@ services:
   worker:
     <<: *api-common
     command: ['node', 'dist/worker.js']
+    # `.env.worker` se carga DESPUÉS de `.env`, de modo que sus variables
+    # tienen prioridad. Solo el worker recibe este archivo.
+    env_file: [.env, .env.worker]
     # internal para hablar con postgres/redis; edge para salir a Internet (RPC).
     networks: [internal, edge]
     # El worker no expone HTTP: el HEALTHCHECK de la imagen no aplica.
     healthcheck:
       disable: true
-    environment:
-      # La clave operadora SOLO existe en este contenedor.
-      OPERATOR_PRIVATE_KEY: ${OPERATOR_PRIVATE_KEY}
     deploy:
       resources:
         limits: { cpus: '0.5', memory: 512M }
@@ -100,8 +104,9 @@ services:
   web:
     image: ${OASIS_WEB_IMAGE:-ghcr.io/oasis-seguros/oasis-web}:${OASIS_TAG:-latest}
     restart: unless-stopped
+    env_file: [.env]
     environment:
-      DOMAIN: ${DOMAIN}
+      DOMAIN: ${DOMAIN:-localhost}
     ports:
       - '80:80'
       - '443:443'

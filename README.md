@@ -109,10 +109,12 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 
 - Ningún dato personal ni monto se escribe en la blockchain: solo `idOnchain` y
   `hashRecibo` (`bytes32`), con sal aleatoria que nunca sale de PostgreSQL (ADR 0006).
-- `OPERATOR_PRIVATE_KEY` **solo** existe en el contenedor `worker`; el esquema de entorno
-  del API no la incluye (ADR 0004).
-- `.env` ignorado por git; `.env.example` documenta todas las variables; ningún secreto
-  se versiona.
+- `OPERATOR_PRIVATE_KEY` **solo** existe en el contenedor `worker`: vive en `.env.worker`
+  (plantilla en `.env.worker.example`), que `compose.prod.yaml` inyecta únicamente en ese
+  servicio. Ni `.env` ni el entorno del `api` o del `migrate` la contienen, y el esquema de
+  entorno del API tampoco la incluye (ADR 0004).
+- `.env` y `.env.worker` ignorados por git; `.env.example` y `.env.worker.example`
+  documentan las variables; ningún secreto se versiona.
 - Contraseñas con argon2; JWT de acceso de 15 min; refresh de 7 días con rotación y
   detección de reutilización.
 - Throttling, helmet, validación Zod de entradas y de entorno, filtro global de errores.

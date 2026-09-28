@@ -46,7 +46,14 @@ usermod -aG docker "${USUARIO_DEPLOY}"
 
 echo "== 4/7 Directorio de la aplicación =="
 install -d -m 750 -o "${USUARIO_DEPLOY}" -g "${USUARIO_DEPLOY}" "${RUTA_APP}"
-echo "Copie compose.prod.yaml, compose.monitoring.yaml, infra/ y .env (chmod 600) a ${RUTA_APP}"
+echo "Copie compose.prod.yaml, compose.monitoring.yaml e infra/ a ${RUTA_APP}"
+# .env y .env.worker contienen secretos: se crean vacíos con permisos 600 desde el
+# principio para que un archivo recién creado no quede legible por otros usuarios.
+install -m 600 /dev/null "${RUTA_APP}/.env"
+install -m 600 /dev/null "${RUTA_APP}/.env.worker"
+chown "${USUARIO_DEPLOY}:${USUARIO_DEPLOY}" "${RUTA_APP}/.env" "${RUTA_APP}/.env.worker"
+echo "  ${RUTA_APP}/.env        -> config comun (NO debe incluir OPERATOR_PRIVATE_KEY)"
+echo "  ${RUTA_APP}/.env.worker -> solo OPERATOR_PRIVATE_KEY (lo inyecta el worker)"
 
 echo "== 5/7 Login en GHCR (como ${USUARIO_DEPLOY}) =="
 echo "Ejecute:  echo <PAT> | docker login ghcr.io -u <usuario> --password-stdin"

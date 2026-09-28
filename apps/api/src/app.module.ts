@@ -82,9 +82,13 @@ export function opcionesLogger() {
     RecibosModule,
   ],
   providers: [
+    // El orden importa: los guards globales se ejecutan en el orden declarado.
+    // Throttler va primero para que el rate limit también aplique a las
+    // peticiones no autenticadas (login, verificación pública); si fuera último,
+    // JwtAuthGuard respondería 401 antes de que el throttler llegue a contar.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
   ],

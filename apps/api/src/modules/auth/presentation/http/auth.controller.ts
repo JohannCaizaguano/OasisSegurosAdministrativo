@@ -37,10 +37,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Inicia sesión y entrega un access token + cookie de refresh' })
   async iniciarSesion(
     @Body(new ZodValidationPipe(loginSchema)) input: LoginInput,
+    @Req() peticion: Request,
     @Res({ passthrough: true }) respuesta: Response,
   ): Promise<LoginResponse> {
     const { usuario, tokens } = await this.login.ejecutar(input.email, input.password);
-    this.escribirCookie(respuesta, tokens.refreshToken);
+    this.escribirCookie(peticion, respuesta, tokens.refreshToken);
     return { accessToken: tokens.accessToken, usuario: this.aSesion(usuario) };
   }
 
@@ -58,11 +59,12 @@ export class AuthController {
       throw new NoAutorizadoError('No hay sesión activa');
     }
     const { usuario, tokens } = await this.refrescar.ejecutar(token);
-    this.escribirCookie(respuesta, tokens.refreshToken);
+    this.escribirCookie(peticion, respuesta, tokens.refreshToken);
     return { accessToken: tokens.accessToken, usuario: this.aSesion(usuario) };
   }
 
   @Public()
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post('logout')
   @HttpCode(204)
   @ApiOperation({ summary: 'Cierra la sesión y revoca el refresh token' })
@@ -72,7 +74,7 @@ export class AuthController {
   ): Promise<void> {
     const token = (peticion.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE];
     await this.cerrar.ejecutar(token);
-    this.limpiarCookie(respuesta);
+    this.limpiarCookie(peticion, respuesta);
   }
 
   @Get('me')
@@ -91,20 +93,28 @@ export class AuthController {
     };
   }
 
-  private escribirCookie(respuesta: Response, token: string): void {
+  /**
+   * `secure` se deriva del protocolo real de la petición (`X-Forwarded-Proto`
+   * resuelto por `trust proxy`), no de NODE_ENV. Decidirlo por NODE_ENV emitía
+   * cookies sin `Secure` en cualquier entorno que no fuese exactamente
+   * `production` (staging, preview), y un token de 7 días viaja sin protección
+   * en la red. Con HTTPS (producción detrás de Caddy) siempre lleva `Secure`;
+   * en local por HTTP sigue funcionando para el desarrollo.
+   */
+  private escribirCookie(peticion: Request, respuesta: Response, token: string): void {
     respuesta.cookie(REFRESH_COOKIE, token, {
       httpOnly: true,
-      secure: this.config.esProduccion,
+      secure: peticion.secure,
       sameSite: 'strict',
       path: RUTA_COOKIE,
       maxAge: duracionASegundos(this.config.auth.refreshTtl) * 1_000,
     });
   }
 
-  private limpiarCookie(respuesta: Response): void {
+  private limpiarCookie(peticion: Request, respuesta: Response): void {
     respuesta.clearCookie(REFRESH_COOKIE, {
       httpOnly: true,
-      secure: this.config.esProduccion,
+      secure: peticion.secure,
       sameSite: 'strict',
       path: RUTA_COOKIE,
     });
