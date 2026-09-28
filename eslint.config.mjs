@@ -80,6 +80,20 @@ export default tseslint.config(
     },
   },
   {
+    // Escenarios k6 (no son Node: k6 no expone require/process).
+    files: ['infra/k6/**/*.js'],
+    languageOptions: {
+      globals: {
+        __ENV: 'readonly',
+        __VU: 'readonly',
+        __ITER: 'readonly',
+      },
+    },
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['infra/scripts/**/*.mjs', '**/*.config.{js,mjs,ts}'],
     rules: {
       'no-console': 'off',
