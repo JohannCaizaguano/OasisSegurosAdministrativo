@@ -24,4 +24,33 @@ export class BullMqColaAnclajeAdapter implements ColaAnclajePort {
   async encolarAnulacion(reciboId: string): Promise<void> {
     await this.cola.add(JOB_ANULAR_RECIBO, { reciboId }, { jobId: `anular:${reciboId}` });
   }
+
+  /**
+   * BullMQ deduplica por `jobId`: si ya existe, `add` no crea nada y devuelve
+   * el id del job existente. Como los jobs terminados se conservan
+   * (`removeOnComplete`/`removeOnFail`), un recibo que ya se procesó -en
+   * particular uno que agotó sus 5 intentos y quedó en FALLIDO- quedaba
+   * bloqueado: ni el reintento manual del ADMIN ni el barrido periódico
+   * lograban reencolarlo, y el recibo se quedaba indefinidamente sin anclar.
+   * Por eso hay que retirar el job previo antes de reencolar.
+   *
+   * Un job `active` no se puede quitar (BullMQ lo tiene bloqueado); en ese caso
+   * se deja intacto: ya está siendo procesado y reencolarlo duplicaría trabajo.
+   */
+  async desencolarAnclaje(reciboId: string): Promise<void> {
+    const job = await this.cola.getJob(reciboId);
+    if (!job) {
+      return;
+    }
+    const estado = await job.getState();
+    if (estado === 'active') {
+      return;
+    }
+    try {
+      await job.remove();
+    } catch {
+      // El job pudo ser tomado por un worker entre getState() y remove().
+      // Reencolar después sin quitarlo es seguro: el caso de uso es idempotente.
+    }
+  }
 }

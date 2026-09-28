@@ -156,7 +156,8 @@ export function VerificacionPage() {
             )}
             <p className="text-xs text-[var(--muted-foreground)]">
               Verificado el {formatearFecha(consulta.data.verificadoEn)} · Red{' '}
-              {consulta.data.chainId} · Contrato {consulta.data.contractAddress}
+              {consulta.data.chainId}
+              {consulta.data.contractAddress ? ` · Contrato ${consulta.data.contractAddress}` : ''}
             </p>
           </CardContent>
         </Card>

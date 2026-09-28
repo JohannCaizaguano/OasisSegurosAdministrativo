@@ -20,7 +20,10 @@ export interface RecibosRepositoryPort {
   buscarPorCodigo(codigo: string): Promise<Recibo | null>;
   listar(filtros: FiltrosRecibos): Promise<PaginaRecibos>;
   guardar(recibo: Recibo): Promise<Recibo>;
-  /** Recibos en PENDIENTE_ANCLAJE creados antes de la fecha de corte. */
-  listarPendientes(creadosAntesDe: Date): Promise<Recibo[]>;
+  /**
+   * Recibos del outbox sin resolver antes de la fecha de corte: los
+   * PENDIENTE_ANCLAJE por `creadoEn` y los ENVIADO por `enviadoEn`.
+   */
+  listarPendientes(antesDe: Date): Promise<Recibo[]>;
   contarPendientes(): Promise<number>;
 }

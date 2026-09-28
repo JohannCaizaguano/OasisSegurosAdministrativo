@@ -4,6 +4,7 @@ import { ConflictoError, ReglaNegocioError } from '../../../../shared-kernel/dom
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Pago } from '../../domain/pago';
 import { mapearRecibo } from '../../../recibos/infrastructure/persistence/recibo.mapper';
+import { Recibo } from '../../../recibos/domain/recibo';
 import type {
   DatosCrearPago,
   DatosValidarPago,
@@ -108,19 +109,24 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
         include: { poliza: true },
       });
 
+      // Se construye el agregado con `Recibo.nuevo()` en lugar de escribir las
+      // columnas a mano: así los invariantes de creación (estado inicial,
+      // txHash/gas/block nulos, contadores a cero) quedan garantizados por el
+      // dominio y no por una cadena literal repetida en el adaptador.
+      const recibo = Recibo.nuevo(datos.recibo);
       const filaRecibo = await tx.recibo.create({
         data: {
-          id: datos.recibo.id,
-          codigo: datos.recibo.codigo,
-          pagoId: datos.recibo.pagoId,
-          idOnchain: datos.recibo.idOnchain,
-          hashRecibo: datos.recibo.hashRecibo,
-          sal: datos.recibo.sal,
-          payloadCanonico: datos.recibo.payloadCanonico,
-          estado: 'PENDIENTE_ANCLAJE',
-          chainId: datos.recibo.chainId,
-          contractAddress: datos.recibo.contractAddress,
-          creadoEn: new Date(datos.recibo.creadoEn),
+          id: recibo.id,
+          codigo: recibo.codigo,
+          pagoId: recibo.pagoId,
+          idOnchain: recibo.idOnchain,
+          hashRecibo: recibo.hashRecibo,
+          sal: recibo.sal,
+          payloadCanonico: recibo.payloadCanonico,
+          estado: recibo.estado,
+          chainId: recibo.chainId,
+          contractAddress: recibo.contractAddress,
+          creadoEn: new Date(recibo.creadoEn),
         },
         include: { pago: { include: { poliza: true } } },
       });

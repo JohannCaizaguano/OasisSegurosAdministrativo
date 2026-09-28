@@ -6,4 +6,6 @@ export interface ConfiguracionCadenaPort {
   readonly explorerBaseUrl: string;
   /** Lanza DomainError si CONTRACT_ADDRESS no está configurado. */
   obtenerContractAddress(): string;
+  /** Variante que devuelve null en lugar de lanzar, para lecturas tolerantes. */
+  contractAddressSiExiste(): string | null;
 }

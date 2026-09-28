@@ -53,7 +53,8 @@ export const verificacionPublicaSchema = z.object({
   blockNumber: bigintStringSchema.nullish(),
   ancladoEn: z.iso.datetime().nullish(),
   chainId: z.number().int(),
-  contractAddress: z.string(),
+  // null solo cuando el código no existe y el contrato aún no está desplegado.
+  contractAddress: z.string().nullish(),
   explorerUrl: z.string().nullish(),
   verificadoEn: z.iso.datetime(),
 });

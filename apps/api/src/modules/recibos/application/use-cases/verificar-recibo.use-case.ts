@@ -17,7 +17,8 @@ export interface ResultadoVerificacion {
   blockNumber: string | null;
   ancladoEn: string | null;
   chainId: number;
-  contractAddress: string;
+  /** Dirección del contrato; null solo si el recibo no existe y no hay despliegue. */
+  contractAddress: string | null;
   explorerUrl: string | null;
   verificadoEn: string;
 }
@@ -41,6 +42,10 @@ export class VerificarReciboUseCase {
     const recibo = await this.recibos.buscarPorCodigo(codigo);
 
     if (!recibo) {
+      // No hay recibo, así que no hay instantánea propio: se informa del
+      // despliegue vigente. Se usa la variante que no lanza, para que consultar
+      // un código inexistente en un entorno sin contrato desplegado responda
+      // NO_ENCONTRADO en lugar de un 502.
       return {
         codigo,
         estado: 'NO_ENCONTRADO',
@@ -50,7 +55,7 @@ export class VerificarReciboUseCase {
         blockNumber: null,
         ancladoEn: null,
         chainId: this.cadena.chainId,
-        contractAddress: this.cadena.obtenerContractAddress(),
+        contractAddress: this.cadena.contractAddressSiExiste(),
         explorerUrl: null,
         verificadoEn,
       };

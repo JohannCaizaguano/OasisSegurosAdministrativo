@@ -21,12 +21,16 @@ export class ConfiguracionCadenaAdapter implements ConfiguracionCadenaPort {
   }
 
   obtenerContractAddress(): string {
-    const direccion = this.config.blockchain.contractAddress;
+    const direccion = this.contractAddressSiExiste();
     if (!direccion) {
       throw new ErrorDependenciaExterna(
         'CONTRACT_ADDRESS no está configurado: despliegue el contrato y actualice el entorno',
       );
     }
     return direccion;
+  }
+
+  contractAddressSiExiste(): string | null {
+    return this.config.blockchain.contractAddress || null;
   }
 }
