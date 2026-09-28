@@ -73,14 +73,18 @@ Estas desviaciones respecto al enunciado se tomaron siguiendo la documentación 
 vigente de cada herramienta:
 
 1. **TypeScript**: la última estable es 7.x (compilador nativo), pero `typescript-eslint`
-   (peer `<6.1.0`) y `ts-jest` (peer `<7`) aún **no la soportan**. Se usa la última 5.x
-   estable. Se reevaluará cuando el ecosistema publique soporte.
+   (peer `<6.1.0`) y `ts-jest` (peer `<7`) aún **no la soportan**. Se usa la última
+   estable soportada, **6.0.3**. Se reevaluará cuando el ecosistema publique soporte.
 2. **Prisma**: el dist-tag `latest` de `prisma` apunta a un _release candidate_ (8.0.0-rc);
    se usa la **última estable 7.10.0** (etiqueta `prev`) junto con `@prisma/client@7.10.0`.
 3. **Corepack**: Node.js ≥ 25 ya no incluye corepack. Se fija la versión con el campo
    `packageManager` y se recomienda `npm i -g pnpm@12` (o instalar corepack por separado).
-4. **pnpm ≥ 10** bloquea los scripts de instalación de dependencias nativas; se declaran
-   en `onlyBuiltDependencies` dentro de `pnpm-workspace.yaml`.
+4. **pnpm 12**: reemplazó el campo `onlyBuiltDependencies` por `allowBuilds` (mapa
+   nombre→booleano) para aprobar scripts de instalación. Se declaran **ambas claves** en
+   `pnpm-workspace.yaml` para ser compatibles con pnpm 10 y 12+.
+5. **Hardhat 3**: los tests de Solidity requieren `forge-std` como dependencia de GitHub
+   y los tipos de `viem` se obtienen de `artifacts/**/artifacts.d.ts` (generado al
+   compilar); por eso `pnpm --filter @oasis/contracts typecheck` compila primero.
 
 ## Seguridad
 
@@ -93,7 +97,7 @@ vigente de cada herramienta:
 ## Fases de construcción
 
 - [x] **F0** Monorepo base (tooling, husky, commitlint).
-- [ ] **F1** `packages/shared` y `packages/contracts` (contrato + tests + ABI).
+- [x] **F1** `packages/shared` y `packages/contracts` (contrato + tests + ABI).
 - [ ] **F2** API base: config Zod, Prisma, auth, health, métricas, esqueleto hexagonal.
 - [ ] **F3** Walking skeleton e2e contra Hardhat local (+ idempotencia).
 - [ ] **F4** SPA: login, pagos, recibo con QR y verificación pública.

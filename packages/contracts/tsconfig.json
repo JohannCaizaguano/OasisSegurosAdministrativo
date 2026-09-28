@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "hardhat.config.ts",
+    "ignition/**/*.ts",
+    "scripts/**/*.ts",
+    "test/**/*.ts",
+    "artifacts/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "cache", "coverage", "ignition/deployments"]
+}

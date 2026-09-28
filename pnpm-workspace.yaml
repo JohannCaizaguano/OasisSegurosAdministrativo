@@ -2,9 +2,24 @@ packages:
   - apps/*
   - packages/*
 
-# pnpm >= 10 bloquea por defecto los scripts de instalación de dependencias.
-# Aquí se declaran los paquetes que sí necesitan ejecutar scripts (postinstall,
-# prebuild, etc.) por usar módulos nativos o binarios descargables.
+# pnpm bloquea por defecto los scripts de instalación de dependencias.
+# `onlyBuiltDependencies` (pnpm 10) y `allowBuilds` (pnpm 12+) declaran los
+# paquetes autorizados a ejecutar scripts (módulos nativos o binarios).
+# Se mantienen ambas claves para compatibilidad entre versiones de pnpm.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@tailwindcss/oxide': true
+  argon2: true
+  bufferutil: true
+  esbuild: true
+  keccak: true
+  msgpackr-extract: true
+  prisma: true
+  secp256k1: true
+  unrs-resolver: true
+  utf-8-validate: true
+
 onlyBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
