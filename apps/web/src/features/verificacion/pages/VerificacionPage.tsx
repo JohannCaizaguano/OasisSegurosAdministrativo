@@ -1,5 +1,4 @@
 import type { VerificacionPublica } from '@oasis/shared';
-import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, CircleHelp, ExternalLink, Search, ShieldAlert, ShieldX } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -8,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { api } from '@/lib/api-client';
 import { formatearFecha } from '@/lib/format';
+
+import { useVerificacion } from '../hooks';
 
 const LEYENDAS: Record<
   VerificacionPublica['estado'],
@@ -48,18 +48,7 @@ export function VerificacionPage() {
   const [entrada, setEntrada] = useState(codigo ?? '');
   const [codigoPrevio, setCodigoPrevio] = useState(codigo);
 
-  const consulta = useQuery({
-    queryKey: ['verificacion', codigo],
-    // `encodeURIComponent`: el código viene de la URL o de lo que el usuario
-    // escribe, y sin escapar un `/` o un `?` rompería la ruta o la consulta.
-    queryFn: () =>
-      api.get<VerificacionPublica>(
-        `/public/recibos/${encodeURIComponent(codigo ?? '')}/verificacion`,
-      ),
-    enabled: !!codigo,
-    retry: false,
-    staleTime: 0,
-  });
+  const consulta = useVerificacion(codigo);
 
   // Al navegar de /verificar/A a /verificar/B React reutiliza la misma
   // instancia del componente, así que el input debe seguir a la ruta. Se ajusta

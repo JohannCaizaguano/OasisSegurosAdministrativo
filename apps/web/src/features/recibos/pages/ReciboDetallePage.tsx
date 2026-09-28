@@ -1,5 +1,4 @@
 import { ArrowLeft, ExternalLink } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { Link, useParams } from 'react-router-dom';
 
 import { AvisoError } from '@/components/data-state';
@@ -7,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { acortarHash, formatearFecha } from '@/lib/format';
+import { formatearFecha } from '@/lib/format';
 
 import { useRecibo } from '../hooks';
+import { TarjetaVerificacionPublica } from '../components/tarjeta-verificacion-publica';
 
 export function ReciboDetallePage() {
   const { id } = useParams<{ id: string }>();
@@ -39,8 +39,6 @@ export function ReciboDetallePage() {
       </div>
     );
   }
-
-  const urlPublica = `${window.location.origin}/verificar/${recibo.codigo}`;
 
   return (
     <div className="grid gap-4">
@@ -127,30 +125,7 @@ export function ReciboDetallePage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Verificación pública</CardTitle>
-            <CardDescription>
-              Cualquier persona puede comprobar este recibo sin iniciar sesión.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid justify-items-center gap-4">
-            <div className="rounded-xl bg-white p-3" data-testid="qr-recibo">
-              <QRCodeSVG value={urlPublica} size={180} title={`Verificación de ${recibo.codigo}`} />
-            </div>
-            <p className="break-all text-center font-mono text-xs text-[var(--muted-foreground)]">
-              {urlPublica}
-            </p>
-            <Button asChild className="w-full">
-              <Link to={`/verificar/${recibo.codigo}`} data-testid="enlace-verificacion">
-                Abrir verificación pública
-              </Link>
-            </Button>
-            <p className="text-center text-xs text-[var(--muted-foreground)]">
-              Hash: {acortarHash(recibo.hashRecibo)}
-            </p>
-          </CardContent>
-        </Card>
+        <TarjetaVerificacionPublica codigo={recibo.codigo} hashRecibo={recibo.hashRecibo} />
       </div>
     </div>
   );

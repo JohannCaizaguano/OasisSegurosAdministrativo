@@ -1,5 +1,4 @@
-import type { Aseguradora, Cliente, EstadoPoliza, Poliza, RespuestaPaginada } from '@oasis/shared';
-import { useQuery } from '@tanstack/react-query';
+import type { EstadoPoliza } from '@oasis/shared';
 
 import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
@@ -13,14 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { api } from '@/lib/api-client';
 import { formatearFecha, formatearMoneda } from '@/lib/format';
 
-export const polizasApi = {
-  listar: () => api.get<RespuestaPaginada<Poliza>>('/polizas?page=1&pageSize=100'),
-  clientes: () => api.get<RespuestaPaginada<Cliente>>('/clientes?page=1&pageSize=100'),
-  aseguradoras: () => api.get<RespuestaPaginada<Aseguradora>>('/aseguradoras?page=1&pageSize=100'),
-};
+import { usePolizas } from '../hooks';
 
 function varianteEstado(estado: EstadoPoliza) {
   if (estado === 'VIGENTE') return 'success' as const;
@@ -29,7 +23,7 @@ function varianteEstado(estado: EstadoPoliza) {
 }
 
 export function PolizasPage() {
-  const consulta = useQuery({ queryKey: ['polizas'], queryFn: () => polizasApi.listar() });
+  const consulta = usePolizas();
 
   return (
     <div className="grid gap-4">
