@@ -85,6 +85,10 @@ vigente de cada herramienta:
 5. **Hardhat 3**: los tests de Solidity requieren `forge-std` como dependencia de GitHub
    y los tipos de `viem` se obtienen de `artifacts/**/artifacts.d.ts` (generado al
    compilar); por eso `pnpm --filter @oasis/contracts typecheck` compila primero.
+6. **NestJS**: la versión 12 del framework es **ESM-only** (`"type": "module"`), por lo
+   que es incompatible con el modo CommonJS solicitado. Ante el conflicto se priorizó
+   CommonJS (requisito explícito del enunciado) y se usa **NestJS 11**, la última línea
+   estable compatible con CommonJS. Migrar a ESM permitiría saltar a NestJS 12.
 
 ## Seguridad
 
@@ -98,7 +102,7 @@ vigente de cada herramienta:
 
 - [x] **F0** Monorepo base (tooling, husky, commitlint).
 - [x] **F1** `packages/shared` y `packages/contracts` (contrato + tests + ABI).
-- [ ] **F2** API base: config Zod, Prisma, auth, health, métricas, esqueleto hexagonal.
+- [x] **F2** API base: config Zod, Prisma, auth, health, métricas, esqueleto hexagonal.
 - [ ] **F3** Walking skeleton e2e contra Hardhat local (+ idempotencia).
 - [ ] **F4** SPA: login, pagos, recibo con QR y verificación pública.
 - [ ] **F5** Docker: compose dev/prod/monitoring, Caddy.

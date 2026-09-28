@@ -49,3 +49,7 @@ apps/web/e2e/.auth/
 # Prisma
 apps/api/prisma/client/
 apps/api/src/generated/
+
+# Artefactos de asistentes/agentes de IA (no forman parte del proyecto)
+.agents/
+skills-lock.json

@@ -68,6 +68,18 @@ export default tseslint.config(
     },
   },
   {
+    files: ['**/*.cjs'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.commonjs },
+    },
+  },
+  {
+    files: ['apps/api/prisma/**/*.ts', '**/*.config.{js,mjs,ts}'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+  {
     files: ['infra/scripts/**/*.mjs', '**/*.config.{js,mjs,ts}'],
     rules: {
       'no-console': 'off',
