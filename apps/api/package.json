@@ -8,7 +8,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "jest",
-    "test:e2e": "jest --config test/jest-e2e.json --runInBand",
+    "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-e2e.json --runInBand --forceExit",
     "dev": "concurrently -n api,worker -c cyan,magenta \"nest start --watch\" \"nest start --watch --entryFile worker\"",
     "start": "node dist/main.js",
     "start:worker": "node dist/worker.js",

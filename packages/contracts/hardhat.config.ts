@@ -21,6 +21,8 @@ export default defineConfig({
       type: 'http',
       chainId: 31337,
       url: 'http://127.0.0.1:8545',
+      // El nodo Hardhat local firma con sus cuentas desbloqueadas (sin claves en el repo).
+      accounts: 'remote',
     },
     amoy: {
       type: 'http',

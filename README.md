@@ -103,7 +103,7 @@ vigente de cada herramienta:
 - [x] **F0** Monorepo base (tooling, husky, commitlint).
 - [x] **F1** `packages/shared` y `packages/contracts` (contrato + tests + ABI).
 - [x] **F2** API base: config Zod, Prisma, auth, health, métricas, esqueleto hexagonal.
-- [ ] **F3** Walking skeleton e2e contra Hardhat local (+ idempotencia).
+- [x] **F3** Walking skeleton e2e contra Hardhat local (+ idempotencia).
 - [ ] **F4** SPA: login, pagos, recibo con QR y verificación pública.
 - [ ] **F5** Docker: compose dev/prod/monitoring, Caddy.
 - [ ] **F6** CI/CD, scripts, k6, docs C4, ADRs y despliegue.

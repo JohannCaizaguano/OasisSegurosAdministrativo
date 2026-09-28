@@ -1,9 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Interval } from '@nestjs/schedule';
 import { PinoLogger } from 'nestjs-pino';
 
 import { MetricsService } from '../../../../infrastructure/metrics/metrics.service';
-import type { ConfiguracionCadenaPort } from '../../application/ports/configuracion-cadena.port';
+import {
+  CONFIG_CADENA,
+  type ConfiguracionCadenaPort,
+} from '../../application/ports/configuracion-cadena.port';
 import { ReencolarPendientesUseCase } from '../../application/use-cases/reencolar-pendientes.use-case';
 
 const INTERVALO_MS = 30_000;
@@ -19,7 +22,7 @@ export class BarridoPendientesTask {
   constructor(
     private readonly reencolar: ReencolarPendientesUseCase,
     private readonly metrics: MetricsService,
-    private readonly cadena: ConfiguracionCadenaPort,
+    @Inject(CONFIG_CADENA) private readonly cadena: ConfiguracionCadenaPort,
     private readonly logger: PinoLogger,
   ) {
     this.logger.setContext(BarridoPendientesTask.name);

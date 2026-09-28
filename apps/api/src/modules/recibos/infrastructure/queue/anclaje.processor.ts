@@ -1,5 +1,5 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import type { Job } from 'bullmq';
 import { PinoLogger } from 'nestjs-pino';
 
@@ -9,12 +9,14 @@ import {
   JOB_ANULAR_RECIBO,
 } from '../../../../infrastructure/queue/queue.constants';
 import { MetricsService } from '../../../../infrastructure/metrics/metrics.service';
-import type { ConfiguracionCadenaPort } from '../../application/ports/configuracion-cadena.port';
+import {
+  CONFIG_CADENA,
+  type ConfiguracionCadenaPort,
+} from '../../application/ports/configuracion-cadena.port';
 import type { RecibosRepositoryPort } from '../../application/ports/recibos.repository.port';
 import { RECIBOS_REPOSITORY } from '../../application/ports/recibos.repository.port';
 import { AnclarReciboUseCase } from '../../application/use-cases/anclar-recibo.use-case';
 import { AnularReciboEnCadenaUseCase } from '../../application/use-cases/anular-recibo-en-cadena.use-case';
-import { Inject } from '@nestjs/common';
 
 /**
  * Procesador de la cola `anclaje-recibos`:
@@ -28,7 +30,7 @@ export class AnclajeProcessor extends WorkerHost {
     private readonly anclarRecibo: AnclarReciboUseCase,
     private readonly anularRecibo: AnularReciboEnCadenaUseCase,
     @Inject(RECIBOS_REPOSITORY) private readonly recibos: RecibosRepositoryPort,
-    private readonly cadena: ConfiguracionCadenaPort,
+    @Inject(CONFIG_CADENA) private readonly cadena: ConfiguracionCadenaPort,
     private readonly metrics: MetricsService,
     private readonly logger: PinoLogger,
   ) {
