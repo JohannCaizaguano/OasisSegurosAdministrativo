@@ -52,13 +52,18 @@ nvm use                                   # Node 24
 npm install -g pnpm@12                    # o instalar corepack por separado
 pnpm install
 cp .env.example apps/api/.env             # y completar secretos locales
+pnpm --filter @oasis/api exec prisma migrate deploy   # esquema + tablas
+pnpm --filter @oasis/api seed                           # datos iniciales
 ```
+
+`prisma generate` corre como parte de `pnpm --filter @oasis/api build` (y del
+`build` raíz), así que el cliente generado existe antes de compilar o de sembrar.
 
 ## Desarrollo (rápido)
 
 ```bash
 pnpm dev:infra                 # postgres + redis (+ nodo Hardhat en Docker)
-pnpm --filter @oasis/contracts hardhat node   # alternativa nativa al nodo Docker
+pnpm --filter @oasis/contracts exec hardhat node   # alternativa nativa al nodo Docker
 pnpm dev:chain                 # Ignition + REGISTRADOR_ROLE + apps/api/.env
 pnpm dev                       # API, worker y SPA con recarga en caliente
 ```

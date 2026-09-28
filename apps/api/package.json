@@ -4,7 +4,7 @@
   "private": true,
   "description": "API HTTP y worker de anclaje de Oasis Seguros (NestJS, hexagonal)",
   "scripts": {
-    "build": "nest build",
+    "build": "prisma generate && nest build",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.spec.json --noEmit",
     "test": "jest",

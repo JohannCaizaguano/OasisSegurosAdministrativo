@@ -33,7 +33,7 @@ services:
       retries: 10
 
   # Nodo Hardhat local. En Windows puede ejecutarse nativamente como
-  # alternativa: pnpm --filter @oasis/contracts hardhat node
+  # alternativa: pnpm --filter @oasis/contracts exec hardhat node
   hardhat-node:
     image: node:24
     container_name: oasis-hardhat-dev
@@ -44,10 +44,11 @@ services:
       - ./:/workspace
       - hardhat_root_modules:/workspace/node_modules
       - hardhat_contracts_modules:/workspace/packages/contracts/node_modules
+    # `exec` (no `run`): `pnpm --filter <pkg> <binario>` no existe en pnpm 12.
     command: >
       sh -c "corepack enable &&
              pnpm install --frozen-lockfile &&
-             pnpm --filter @oasis/contracts hardhat node --hostname 0.0.0.0"
+             pnpm --filter @oasis/contracts exec hardhat node --hostname 0.0.0.0"
 
 volumes:
   pgdata_dev:

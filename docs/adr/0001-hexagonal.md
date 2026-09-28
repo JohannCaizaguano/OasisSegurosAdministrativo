@@ -23,7 +23,17 @@ Aplicar puertos y adaptadores (hexagonal) dentro de cada módulo:
 - Composición explícita en `*.module.ts` con `useFactory` e `inject` por token.
 
 La regla se verifica automáticamente con **dependency-cruiser** (`pnpm depcruise`), que
-falla el CI si `domain` importa un framework o si `presentation` importa `infrastructure`.
+falla el CI si `domain` importa un framework, si `application` importa `infrastructure` o
+si `presentation` importa un adaptador. La configuración fija `baseDir` y ancla el patrón
+de exclusión a `^(dist|build|src/generated)`: sin ese anclaje, `dist` también coincidía con
+las rutas resueltas de paquetes de `node_modules` y los puntos de entrada de
+`@nestjs/bullmq`, `bullmq`, `nestjs-pino` y `@oasis/shared` quedaban fuera del grafo, con
+lo que las reglas no podían detectarlos.
+
+`domain` **sí** puede importar los tipos de dominio compartidos de `@oasis/shared`
+(`Rol`, `EstadoPago`, `MetodoPago`, `EstadoRecibo`…): son uniones de literales sin
+dependencias y son la fuente de verdad compartida con el frontend. La prohibición real es
+la de los frameworks de la capa interna (NestJS, Prisma, viem, BullMQ, ioredis, prom-client).
 
 ## Alternativas descartadas
 
