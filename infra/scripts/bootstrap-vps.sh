@@ -12,18 +12,54 @@ if ! id "${USUARIO_DEPLOY}" >/dev/null 2>&1; then
   usermod -aG sudo "${USUARIO_DEPLOY}"
 fi
 install -d -m 700 -o "${USUARIO_DEPLOY}" -g "${USUARIO_DEPLOY}" "/home/${USUARIO_DEPLOY}/.ssh"
+
+# Desactivar el login por contraseña sin una clave verificada deja al operador
+# fuera del servidor y exige entrar por la consola del proveedor. Se aborta.
 if [ ! -s "/home/${USUARIO_DEPLOY}/.ssh/authorized_keys" ]; then
-  echo "ATENCIÓN: copie la clave pública a /home/${USUARIO_DEPLOY}/.ssh/authorized_keys antes de cerrar esta sesión."
+  cat <<AVISO >&2
+
+ERROR: /home/${USUARIO_DEPLOY}/.ssh/authorized_keys está vacío.
+
+Copie su clave pública antes de continuar:
+  ssh-copy-id -i ~/.ssh/id_ed25519.pub ${USUARIO_DEPLOY}@<IP_DEL_VPS>
+o, desde otra sesión ya abierta como root:
+  echo '<CLAVE_PUBLICA>' > /home/${USUARIO_DEPLOY}/.ssh/authorized_keys
+
+Verifique que puede entrar con:
+  ssh ${USUARIO_DEPLOY}@<IP_DEL_VPS> 'echo ok'
+
+Vuelva a ejecutar este script cuando el acceso por clave funcione.
+
+AVISO
+  exit 1
 fi
-chmod 600 "/home/${USUARIO_DEPLOY}/.ssh/authorized_keys" 2>/dev/null || true
-sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
-sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-sed -i 's/^#\?PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+chown "${USUARIO_DEPLOY}:${USUARIO_DEPLOY}" "/home/${USUARIO_DEPLOY}/.ssh/authorized_keys"
+chmod 600 "/home/${USUARIO_DEPLOY}/.ssh/authorized_keys"
+# Ubuntu 24.04 y las imágenes de OVHcloud incluyen `Include
+# /etc/ssh/sshd_config.d/*.conf` al principio de sshd_config, y sshd usa el
+# PRIMER valor obtenido. Editar sshd_config a mano deja de tener efecto
+# porque el drop-in de cloud-init gana: se escribe un drop-in propio con
+# prioridad 99.
+cat > /etc/ssh/sshd_config.d/99-oasis.conf <<'SSHD'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+SSHD
+chmod 644 /etc/ssh/sshd_config.d/99-oasis.conf
+sshd -t
 systemctl reload ssh
 
 echo "== 2/7 Firewall (ufw) y actualizaciones automáticas =="
 apt-get update
 apt-get install -y ufw fail2ban unattended-upgrades ca-certificates curl gnupg
+# `dpkg-reconfigure` no habilita las actualizaciones automáticas: hay que
+# escribir la configuración de los periodos de APT.
+cat > /etc/apt/apt.conf.d/20auto-upgrades <<'APT'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+APT
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow 22/tcp

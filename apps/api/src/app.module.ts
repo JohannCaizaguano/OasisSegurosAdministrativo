@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
+import { AppConfig } from './config/app.config';
 import { AppConfigModule } from './config/config.module';
 import { BlockchainModule } from './infrastructure/blockchain/blockchain.module';
 import { ClockModule } from './infrastructure/clock/clock.module';
@@ -63,8 +64,15 @@ export function opcionesLogger() {
   imports: [
     AppConfigModule,
     opcionesLogger(),
-    ThrottlerModule.forRoot({
-      throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
+    // Límite global por IP y minuto. Configurable para que la medición de carga
+    // no mida el limitador en lugar del API (ver .env.example). Se resuelve
+    // con forRootAsync porque el decorador se evalúa antes de que exista DI.
+    ThrottlerModule.forRootAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfig],
+      useFactory: (config: AppConfig) => ({
+        throttlers: [{ name: 'default', ttl: 60_000, limit: config.throttle.global }],
+      }),
     }),
     ClockModule,
     PrismaModule,

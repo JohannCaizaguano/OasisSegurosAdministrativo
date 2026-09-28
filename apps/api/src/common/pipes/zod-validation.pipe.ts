@@ -20,3 +20,9 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
 export const ZodBody = <T>(schema: z.ZodType<T>) => Body(new ZodValidationPipe(schema));
 export const ZodQuery = <T>(schema: z.ZodType<T>) => Query(new ZodValidationPipe(schema));
 export const ZodParam = <T>(schema: z.ZodType<T>) => Param(new ZodValidationPipe(schema));
+/**
+ * Igual que `ZodParam`, pero para un parámetro de ruta concreto: devuelve solo
+ * ese campo ya validado, no el objeto de parámetros completo.
+ */
+export const ZodParamCampo = <T>(campo: string, schema: z.ZodType<T>) =>
+  Param(campo, new ZodValidationPipe(schema));

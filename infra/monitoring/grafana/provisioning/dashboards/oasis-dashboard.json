@@ -4,14 +4,25 @@
   "schemaVersion": 39,
   "version": 1,
   "refresh": "15s",
-  "time": { "from": "now-1h", "to": "now" },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
   "panels": [
     {
       "id": 1,
       "title": "Latencia del API (p50 / p95)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
@@ -27,8 +38,16 @@
       "id": 2,
       "title": "Peticiones por segundo (RPS)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(rate(http_requests_total[1m]))",
@@ -40,8 +59,16 @@
       "id": 3,
       "title": "CPU por contenedor",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\".+\"}[1m])) by (name)",
@@ -53,8 +80,16 @@
       "id": 4,
       "title": "Memoria por contenedor",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
           "expr": "sum(container_memory_working_set_bytes{name=~\".+\"}) by (name) / 1024 / 1024",
@@ -66,11 +101,19 @@
       "id": 5,
       "title": "Recibos anclados por minuto",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
-          "expr": "sum(rate(recibos_anclados_total[1m])) * 60",
+          "expr": "sum(rate(recibos_anclados_total{app=\"oasis-worker\"}[1m])) * 60",
           "legendFormat": "anclajes/min"
         }
       ]
@@ -79,11 +122,19 @@
       "id": 6,
       "title": "Recibos pendientes de anclaje",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
       "targets": [
         {
-          "expr": "recibos_pendientes_anclaje",
+          "expr": "sum(recibos_pendientes_anclaje{app=\"oasis-worker\"})",
           "legendFormat": "pendientes"
         }
       ]

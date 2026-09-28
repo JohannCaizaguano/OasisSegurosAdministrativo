@@ -34,8 +34,11 @@ services:
       - grafanadata:/var/lib/grafana
     networks: [oasis_internal]
     depends_on: [prometheus]
-    # Sin puertos públicos: acceso solo por túnel SSH.
-    expose: ['3000']
+    # Sin puertos publicados hacia Internet: se enlaza solo a loopback del
+    # host y se accede por túnel SSH. Publicar el puerto del contenedor sin
+    # restringir la interfaz expondría Grafana a toda la red.
+    ports:
+      - '127.0.0.1:3001:3000'
     deploy:
       resources:
         limits: { cpus: '0.5', memory: 512M }

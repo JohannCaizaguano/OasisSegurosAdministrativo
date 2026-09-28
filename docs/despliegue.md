@@ -89,7 +89,11 @@ docker inspect oasis-worker-1 --format '{{range .Config.Env}}{{println .}}{{end}
 ```
 
 El contenedor `migrate` aplica las migraciones y termina; `api` y `worker` esperan a que
-complete. Verifique: `curl -fsS https://$DOMINIO/api/v1/health`.
+complete. Verifique con el dominio del `.env`:
+
+```bash
+curl -fsS "https://$(grep '^DOMAIN=' /opt/oasis/.env | cut -d= -f2)/api/v1/health"
+```
 
 Datos iniciales (solo la primera vez):
 
@@ -166,32 +170,82 @@ Manual: `infra/scripts/deploy.sh <tag>`.
 
 ## 7. Día de la evaluación
 
+### 7.1 Preparación
+
 ```bash
-# 1. Levantar el stack de monitoreo (se combina con producción)
-docker network create --internal oasis_internal 2>/dev/null || true
+# 1. Levantar el stack de monitoreo (se combina con producción).
+#    NO se crea la red a mano: compose.prod.yaml ya declara `oasis_internal`
+#    como interna y no externa. Crearla por delante provoca un error de
+#    etiquetas y compose se niega a arrancar.
 docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d
 
-# 2. Desde una máquina externa, ejecutar los escenarios de carga
-k6 run -e BASE_URL=https://$DOMINIO infra/k6/login.js
-k6 run -e BASE_URL=https://$DOMINIO infra/k6/listar-pagos.js
-k6 run -e BASE_URL=https://$DOMINIO infra/k6/verificacion-publica.js
-k6 run -e BASE_URL=https://$DOMINIO infra/k6/validar-pago.js \
-  --out json=resultados-validar-pago.json
+# 2. Levantar el rate limiter para la medición.
+#    Los valores por defecto son de seguridad (login 5/min, verificación
+#    pública 20/min) y hacen que los escenarios midan el limitador. Se suben,
+#    se reinicia el API y se anota el valor usado en el informe.
+sed -i 's/^THROTTLE_.*=.*/# &/' .env
+cat >> .env <<'LIMITES'
+THROTTLE_GLOBAL_LIMIT=600
+THROTTLE_LOGIN_LIMIT=120
+THROTTLE_REFRESH_LIMIT=120
+THROTTLE_VERIFICACION_PUBLICA_LIMIT=300
+LIMITES
+docker compose -f compose.prod.yaml up -d api
+```
 
-# 3. Exportar métricas para el informe
-#    Grafana vía túnel SSH:
-ssh -L 3001:localhost:3000 deploy@<IP_VPS>     # luego http://localhost:3001
-#    O directo de Prometheus:
+### 7.2 Escenarios de carga
+
+Desde una máquina externa al VPS (el enunciado pide medir desde fuera):
+
+```bash
+export BASE_URL="https://$(grep '^DOMAIN=' /opt/oasis/.env | cut -d= -f2)"
+export EMAIL='operador@oasis.com'
+export PASSWORD='<la del seed>'
+
+k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/login.js
+k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/listar-pagos.js
+k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/verificacion-publica.js
+k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/validar-pago.js \
+  --out json=resultados-validar-pago.json
+```
+
+Los escenarios calculan su cadencia a partir de los límites vigente
+(`-e THROTTLE_LOGIN_LIMIT=...`, etc.). Si no se suben los límites en el servidor,
+la cadencia se ajusta a los valores por defecto y la prueba no satura el
+limitador.
+
+`validar-pago.js` emite recibos reales: deja la base con varios pagos `VALIDADO`
+y sus recibos `ANCLADO`. Es lo esperado tras la evaluación.
+
+### 7.3 Exportar métricas
+
+```bash
+# Grafana: el puerto está enlazado solo a loopback del host, así que el túnel
+# apunta al puerto del host (3001), no al del contenedor.
+ssh -L 3001:localhost:3001 deploy@<IP_VPS>   # luego http://localhost:3001
+# usuario: admin · contraseña: $GRAFANA_ADMIN_PASSWORD
+
+# O consulta directa a Prometheus (p. ej. p95 del API):
 docker compose -f compose.prod.yaml -f compose.monitoring.yaml exec prometheus \
   wget -qO- 'http://localhost:9090/api/v1/query?query=histogram_quantile(0.95,sum(rate(http_request_duration_seconds_bucket[5m]))by(le))'
-
-# 4. Bajar el monitoreo al terminar
-docker compose -f compose.prod.yaml -f compose.monitoring.yaml down
 ```
 
 Métricas clave (ISO/IEC 25023): latencia p50/p95 y RPS del API, CPU/RAM por contenedor
 (cAdvisor), recibos anclados por minuto y pendientes de anclaje, y la latencia de anclaje
 (`recibo_anclaje_latencia_segundos`, derivada de `creadoEn`/`ancladoEn`).
+
+Las de anclaje las emite el **worker**, que se expone en `worker:9101/metrics`
+dentro de la red interna. Prometheus las scrapea con la etiqueta `app="oasis-worker"`.
+
+### 7.4 Cerrar
+
+```bash
+# Restaurar los límites de seguridad y reiniciar.
+sed -i '/^THROTTLE_/d' .env
+docker compose -f compose.prod.yaml up -d api
+
+docker compose -f compose.prod.yaml -f compose.monitoring.yaml down
+```
 
 ## 8. Operación
 

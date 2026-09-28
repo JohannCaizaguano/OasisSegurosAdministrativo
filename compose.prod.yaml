@@ -89,6 +89,11 @@ services:
   worker:
     <<: *api-common
     command: ['node', 'dist/worker.js']
+    # Exporter de métricas del anclaje. No publica puertos: Prometheus lo
+    # consume por la red interna y Caddy no lo expone.
+    expose: ['9101']
+    environment:
+      WORKER_METRICS_PORT: '9101'
     # `.env.worker` se carga DESPUÉS de `.env`, de modo que sus variables
     # tienen prioridad. Solo el worker recibe este archivo.
     env_file: [.env, .env.worker]

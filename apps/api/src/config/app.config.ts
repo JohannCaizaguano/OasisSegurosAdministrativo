@@ -9,6 +9,13 @@ export interface ConfiguracionRedis {
   password?: string;
 }
 
+export interface ConfiguracionThrottle {
+  global: number;
+  login: number;
+  refresh: number;
+  verificacionPublica: number;
+}
+
 export interface ConfiguracionAuth {
   accessSecret: string;
   refreshSecret: string;
@@ -80,5 +87,14 @@ export class AppConfig {
 
   get dominio(): string {
     return this.config.get('DOMAIN', { infer: true });
+  }
+
+  get throttle(): ConfiguracionThrottle {
+    return {
+      global: this.config.get('THROTTLE_GLOBAL_LIMIT', { infer: true }),
+      login: this.config.get('THROTTLE_LOGIN_LIMIT', { infer: true }),
+      refresh: this.config.get('THROTTLE_REFRESH_LIMIT', { infer: true }),
+      verificacionPublica: this.config.get('THROTTLE_VERIFICACION_PUBLICA_LIMIT', { infer: true }),
+    };
   }
 }

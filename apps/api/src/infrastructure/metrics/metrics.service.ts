@@ -11,6 +11,8 @@ import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom
 export class MetricsService {
   readonly registry = new Registry();
 
+  readonly app: string;
+
   readonly httpDuracion: Histogram<'method' | 'route' | 'status'>;
   readonly httpTotal: Counter<'method' | 'route' | 'status'>;
   readonly recibosAncladosTotal: Counter<'red'>;
@@ -19,23 +21,31 @@ export class MetricsService {
   readonly recibosPendientes: Gauge<'red'>;
 
   constructor() {
-    this.registry.setDefaultLabels({ app: 'oasis-api' });
+    // El API y el worker usan el mismo registro. La etiqueta `app` los
+    // distingue en Prometheus, de modo que las métricas del anclaje (que solo
+    // emite el worker) no se mezclen con las del tráfico HTTP.
+    this.app = process.env['METRICS_APP'] ?? 'oasis-api';
+    this.registry.setDefaultLabels({ app: this.app });
     collectDefaultMetrics({ register: this.registry });
 
-    this.httpDuracion = new Histogram({
-      name: 'http_request_duration_seconds',
-      help: 'Duración de las peticiones HTTP en segundos',
-      labelNames: ['method', 'route', 'status'],
-      buckets: [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
-      registers: [this.registry],
-    });
+    // En el worker no hay tráfico HTTP: el interceptor no se registra, así que
+    // estas métricas nunca tendrían valores y solo añadirían ruido.
+    if (this.app === 'oasis-api') {
+      this.httpDuracion = new Histogram({
+        name: 'http_request_duration_seconds',
+        help: 'Duración de las peticiones HTTP en segundos',
+        labelNames: ['method', 'route', 'status'],
+        buckets: [0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5],
+        registers: [this.registry],
+      });
 
-    this.httpTotal = new Counter({
-      name: 'http_requests_total',
-      help: 'Total de peticiones HTTP',
-      labelNames: ['method', 'route', 'status'],
-      registers: [this.registry],
-    });
+      this.httpTotal = new Counter({
+        name: 'http_requests_total',
+        help: 'Total de peticiones HTTP',
+        labelNames: ['method', 'route', 'status'],
+        registers: [this.registry],
+      });
+    }
 
     this.recibosAncladosTotal = new Counter({
       name: 'recibos_anclados_total',

@@ -75,7 +75,15 @@ jobs:
           script: |
             set -euo pipefail
             cd /opt/oasis
-            sed -i "s/^OASIS_TAG=.*/OASIS_TAG=${{ needs.publicar.outputs.tag }}/" .env || echo "OASIS_TAG=${{ needs.publicar.outputs.tag }}" >> .env
+            # `sed` sale con 0 aunque no sustituya nada, así que el `|| echo`
+            # no se disparaba y OASIS_TAG se quedaba sin definir: compose
+            # usaba el `:latest` por defecto y desplegaba la imagen vieja.
+            if grep -q '^OASIS_TAG=' .env; then
+              sed -i "s/^OASIS_TAG=.*/OASIS_TAG=${{ needs.publicar.outputs.tag }}/" .env
+            else
+              echo "OASIS_TAG=${{ needs.publicar.outputs.tag }}" >> .env
+            fi
+            grep '^OASIS_TAG=' .env
             docker compose -f compose.prod.yaml pull
             docker compose -f compose.prod.yaml run --rm migrate
             docker compose -f compose.prod.yaml up -d

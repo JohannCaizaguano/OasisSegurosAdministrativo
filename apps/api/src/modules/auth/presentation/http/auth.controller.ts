@@ -8,6 +8,7 @@ import { loginSchema } from '@oasis/shared';
 import { NoAutorizadoError } from '../../../../shared-kernel/domain-error';
 import { duracionASegundos } from '../../../../shared-kernel/duracion';
 import { AppConfig } from '../../../../config/app.config';
+import { limitesThrottle } from '../../../../config/throttle';
 import { Public, UsuarioActual, type UsuarioAutenticado } from '../../../../common/auth/decorators';
 import { ZodValidationPipe } from '../../../../common/pipes/zod-validation.pipe';
 import { CerrarSesionUseCase } from '../../application/use-cases/cerrar-sesion.use-case';
@@ -31,7 +32,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: limitesThrottle().login, ttl: 60_000 } })
   @Post('login')
   @HttpCode(200)
   @ApiOperation({ summary: 'Inicia sesión y entrega un access token + cookie de refresh' })
@@ -46,7 +47,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Throttle({ default: { limit: limitesThrottle().refresh, ttl: 60_000 } })
   @Post('refresh')
   @HttpCode(200)
   @ApiOperation({ summary: 'Rota el refresh token y entrega un nuevo access token' })
@@ -64,7 +65,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Throttle({ default: { limit: limitesThrottle().refresh, ttl: 60_000 } })
   @Post('logout')
   @HttpCode(204)
   @ApiOperation({ summary: 'Cierra la sesión y revoca el refresh token' })

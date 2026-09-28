@@ -40,6 +40,18 @@ export const envSchema = z.object({
   EXPLORER_BASE_URL: z.url('EXPLORER_BASE_URL inválida').default('https://amoy.polygonscan.com'),
 
   DOMAIN: z.string().min(1).default('localhost'),
+
+  /**
+   * Límites del rate limiter (peticiones por minuto y por IP). Son configurables
+   * porque los valores por defecto son de seguridad (5/min en login protege
+   * contra fuerza bruta) y no de rendimiento: con ellos, una prueba de carga de
+   * `POST /auth/login` mediría el throttler y no el API. Durante la evaluación
+   * se suben y se documenta el valor usado (ver docs/despliegue.md).
+   */
+  THROTTLE_GLOBAL_LIMIT: z.coerce.number().int().positive().default(100),
+  THROTTLE_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
+  THROTTLE_REFRESH_LIMIT: z.coerce.number().int().positive().default(20),
+  THROTTLE_VERIFICACION_PUBLICA_LIMIT: z.coerce.number().int().positive().default(20),
 });
 
 export type Env = z.infer<typeof envSchema>;

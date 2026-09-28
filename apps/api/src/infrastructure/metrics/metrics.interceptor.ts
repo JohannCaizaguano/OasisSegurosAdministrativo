@@ -13,6 +13,11 @@ export class MetricsInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    // El worker no registra métricas HTTP: se omite para no crear series vacías.
+    if (!this.metrics.httpDuracion || !this.metrics.httpTotal) {
+      return next.handle();
+    }
+
     const http = context.switchToHttp();
     const request = http.getRequest<Request & { route?: { path?: string } }>();
     const response = http.getResponse<Response>();
