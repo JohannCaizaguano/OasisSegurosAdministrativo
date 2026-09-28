@@ -2,10 +2,11 @@ import type { Cliente, CrearClienteInput, RespuestaPaginada } from '@oasis/share
 import { crearClienteSchema } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -26,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -50,6 +50,10 @@ function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
   const formulario = useForm<CrearClienteInput>({
     resolver: zodResolver(crearClienteSchema),
     defaultValues: { tipoIdentificacion: 'CEDULA', identificacion: '', email: '' },
+    // Sin esto, los campos de la rama anterior (razonSocial <-> nombres) se
+    // quedan en el estado del formulario y viajan en el cuerpo al cambiar de
+    // tipo de identificación.
+    shouldUnregister: true,
   });
 
   const crear = useMutation({
@@ -62,22 +66,28 @@ function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
       toast.error(error instanceof ApiError ? error.message : 'No fue posible crear el cliente'),
   });
 
-  const tipo = formulario.watch('tipoIdentificacion');
+  // `watch` en el cuerpo del componente re-renderiza el formulario entero en
+  // cada pulsación y ESLint marca uso de una API no memorizable; `useWatch`
+  // suscribe solo a ese campo.
+  const tipo = useWatch({ control: formulario.control, name: 'tipoIdentificacion' });
 
   return (
     <form className="grid gap-4" onSubmit={formulario.handleSubmit((datos) => crear.mutate(datos))}>
       <div className="grid gap-2">
-        <Label>Tipo de identificación</Label>
+        <Label htmlFor="tipo-identificacion">Tipo de identificación</Label>
         <Select
           value={tipo}
           onValueChange={(valor) =>
             formulario.setValue(
               'tipoIdentificacion',
               valor as CrearClienteInput['tipoIdentificacion'],
+              // Revalida para que el error de RUC (que depende del tipo)
+              // desaparezca al cambiar a Cédula, sin esperar al submit.
+              { shouldValidate: true, shouldDirty: true },
             )
           }
         >
-          <SelectTrigger>
+          <SelectTrigger id="tipo-identificacion">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -89,9 +99,16 @@ function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
       </div>
       <div className="grid gap-2">
         <Label htmlFor="identificacion">Identificación</Label>
-        <Input id="identificacion" {...formulario.register('identificacion')} />
+        <Input
+          id="identificacion"
+          aria-invalid={formulario.formState.errors.identificacion ? true : undefined}
+          aria-describedby={
+            formulario.formState.errors.identificacion ? 'identificacion-error' : undefined
+          }
+          {...formulario.register('identificacion')}
+        />
         {formulario.formState.errors.identificacion && (
-          <p className="text-sm text-[var(--destructive)]">
+          <p id="identificacion-error" role="alert" className="text-sm text-[var(--destructive)]">
             {formulario.formState.errors.identificacion.message}
           </p>
         )}
@@ -115,9 +132,15 @@ function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
       )}
       <div className="grid gap-2">
         <Label htmlFor="email">Correo electrónico</Label>
-        <Input id="email" type="email" {...formulario.register('email')} />
+        <Input
+          id="email"
+          type="email"
+          aria-invalid={formulario.formState.errors.email ? true : undefined}
+          aria-describedby={formulario.formState.errors.email ? 'email-error' : undefined}
+          {...formulario.register('email')}
+        />
         {formulario.formState.errors.email && (
-          <p className="text-sm text-[var(--destructive)]">
+          <p id="email-error" role="alert" className="text-sm text-[var(--destructive)]">
             {formulario.formState.errors.email.message}
           </p>
         )}
@@ -178,10 +201,9 @@ export function ClientesPage() {
         </CardHeader>
         <CardContent>
           {consulta.isLoading ? (
-            <div className="grid gap-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+            <EsqueletoTabla />
+          ) : consulta.isError ? (
+            <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : (
             <Table>
               <TableHeader>

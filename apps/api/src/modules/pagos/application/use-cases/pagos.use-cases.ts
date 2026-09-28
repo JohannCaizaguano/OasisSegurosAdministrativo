@@ -26,7 +26,12 @@ export class ListarPagosUseCase {
 export class RechazarPagoUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
-  async ejecutar(pagoId: string, rechazadoPorId: string, cuando: Date): Promise<Pago> {
+  async ejecutar(
+    pagoId: string,
+    rechazadoPorId: string,
+    cuando: Date,
+    motivo: string,
+  ): Promise<Pago> {
     const pago = await this.pagos.buscarPorId(pagoId);
     if (!pago) {
       throw new NoEncontradoError('Pago', pagoId);
@@ -34,6 +39,6 @@ export class RechazarPagoUseCase {
     if (!pago.puedeRechazarse()) {
       throw new ReglaNegocioError(`El pago ya está ${pago.estado.toLowerCase()}`);
     }
-    return this.pagos.rechazar(pagoId, rechazadoPorId, cuando);
+    return this.pagos.rechazar(pagoId, rechazadoPorId, cuando, motivo);
   }
 }

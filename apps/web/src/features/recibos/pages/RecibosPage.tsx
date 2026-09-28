@@ -1,10 +1,10 @@
 import type { EstadoRecibo } from '@oasis/shared';
 import { Link } from 'react-router-dom';
 
+import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -44,10 +44,9 @@ export function RecibosPage() {
         </CardHeader>
         <CardContent>
           {consulta.isLoading ? (
-            <div className="grid gap-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+            <EsqueletoTabla />
+          ) : consulta.isError ? (
+            <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : (
             <Table>
               <TableHeader>

@@ -1,3 +1,4 @@
+import type { RechazarPagoInput, ValidarPagoInput } from '@oasis/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -16,7 +17,8 @@ export function usePagos(filtros: FiltrosPagos) {
 export function useValidarPago() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => pagosApi.validar(id),
+    mutationFn: ({ id, entrada }: { id: string; entrada: ValidarPagoInput }) =>
+      pagosApi.validar(id, entrada),
     onSuccess: (respuesta) => {
       toast.success(`Recibo ${respuesta.recibo.codigo} emitido`, {
         description: 'El anclaje en Polygon Amoy comenzó en segundo plano.',
@@ -33,7 +35,8 @@ export function useValidarPago() {
 export function useRechazarPago() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => pagosApi.rechazar(id),
+    mutationFn: ({ id, entrada }: { id: string; entrada: RechazarPagoInput }) =>
+      pagosApi.rechazar(id, entrada),
     onSuccess: (pago) => {
       toast.success(`Pago ${pago.referencia ?? pago.id.slice(0, 8)} rechazado`);
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });

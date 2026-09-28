@@ -46,20 +46,35 @@ export function VerificacionPage() {
   const { codigo } = useParams<{ codigo: string }>();
   const navegar = useNavigate();
   const [entrada, setEntrada] = useState(codigo ?? '');
+  const [codigoPrevio, setCodigoPrevio] = useState(codigo);
 
   const consulta = useQuery({
     queryKey: ['verificacion', codigo],
-    queryFn: () => api.get<VerificacionPublica>(`/public/recibos/${codigo}/verificacion`),
+    // `encodeURIComponent`: el código viene de la URL o de lo que el usuario
+    // escribe, y sin escapar un `/` o un `?` rompería la ruta o la consulta.
+    queryFn: () =>
+      api.get<VerificacionPublica>(
+        `/public/recibos/${encodeURIComponent(codigo ?? '')}/verificacion`,
+      ),
     enabled: !!codigo,
     retry: false,
     staleTime: 0,
   });
 
+  // Al navegar de /verificar/A a /verificar/B React reutiliza la misma
+  // instancia del componente, así que el input debe seguir a la ruta. Se ajusta
+  // durante el render (patrón de React para estado derivado de props) y no en
+  // un efecto, que provocaría un segundo render en cascada.
+  if (codigo !== codigoPrevio) {
+    setCodigoPrevio(codigo);
+    setEntrada(codigo ?? '');
+  }
+
   const enviar = (evento: FormEvent) => {
     evento.preventDefault();
     const limpio = entrada.trim().toUpperCase();
     if (limpio) {
-      navegar(`/verificar/${limpio}`);
+      navegar(`/verificar/${encodeURIComponent(limpio)}`);
     }
   };
 

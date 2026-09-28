@@ -25,7 +25,11 @@ export class ValidarPagoUseCase {
     private readonly clock: ClockPort,
   ) {}
 
-  async ejecutar(pagoId: string, validadoPorId: string): Promise<ResultadoValidacion> {
+  async ejecutar(
+    pagoId: string,
+    validadoPorId: string,
+    nota?: string | null,
+  ): Promise<ResultadoValidacion> {
     const pago = await this.pagos.buscarPorId(pagoId);
     if (!pago) {
       throw new NoEncontradoError('Pago', pagoId);
@@ -47,6 +51,7 @@ export class ValidarPagoUseCase {
       pagoId: pago.id,
       validadoPorId,
       validadoEn: ahora,
+      nota: nota ?? null,
       recibo: datosRecibo,
     });
 

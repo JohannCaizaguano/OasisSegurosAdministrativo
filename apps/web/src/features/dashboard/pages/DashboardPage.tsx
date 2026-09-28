@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query';
 import { FileText, Receipt, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -80,7 +80,9 @@ function PanelPersonal() {
         </CardHeader>
         <CardContent>
           {recibos.isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <EsqueletoTabla />
+          ) : recibos.isError ? (
+            <AvisoError error={recibos.error} alReintentar={() => void recibos.refetch()} />
           ) : (
             <Table>
               <TableHeader>
@@ -136,7 +138,9 @@ function PanelCliente() {
         </CardHeader>
         <CardContent>
           {polizas.isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <EsqueletoTabla />
+          ) : polizas.isError ? (
+            <AvisoError error={polizas.error} alReintentar={() => void polizas.refetch()} />
           ) : (
             <Table>
               <TableHeader>
@@ -173,7 +177,9 @@ function PanelCliente() {
         </CardHeader>
         <CardContent>
           {pagos.isLoading ? (
-            <Skeleton className="h-10 w-full" />
+            <EsqueletoTabla />
+          ) : pagos.isError ? (
+            <AvisoError error={pagos.error} alReintentar={() => void pagos.refetch()} />
           ) : (
             <Table>
               <TableHeader>

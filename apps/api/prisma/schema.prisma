@@ -124,6 +124,9 @@ model Pago {
   estado        EstadoPago @default(REGISTRADO)
   validadoPorId String?    @db.Uuid
   validadoEn    DateTime?
+  // Nota de auditoría del operador al validar o rechazar. Es interna: nunca
+  // entra al payload canónico del recibo ni a la blockchain.
+  nota          String?
   poliza        Poliza     @relation(fields: [polizaId], references: [id])
   validadoPor   Usuario?   @relation("PagoValidadoPor", fields: [validadoPorId], references: [id])
   recibo        Recibo?

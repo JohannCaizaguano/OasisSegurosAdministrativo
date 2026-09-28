@@ -24,6 +24,7 @@ interface FilaPago {
   estado: 'REGISTRADO' | 'VALIDADO' | 'RECHAZADO';
   validadoPorId: string | null;
   validadoEn: Date | null;
+  nota: string | null;
   createdAt: Date;
   updatedAt: Date;
   poliza?: { numero: string };
@@ -97,6 +98,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
           estado: 'VALIDADO',
           validadoPorId: datos.validadoPorId,
           validadoEn: datos.validadoEn,
+          nota: datos.nota ?? null,
         },
       });
 
@@ -138,10 +140,15 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
     });
   }
 
-  async rechazar(id: string, rechazadoPorId: string, cuando: Date): Promise<Pago> {
+  async rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago> {
     const resultado = await this.prisma.pago.updateMany({
       where: { id, estado: 'REGISTRADO' },
-      data: { estado: 'RECHAZADO', validadoPorId: rechazadoPorId, validadoEn: cuando },
+      data: {
+        estado: 'RECHAZADO',
+        validadoPorId: rechazadoPorId,
+        validadoEn: cuando,
+        nota: motivo,
+      },
     });
     if (resultado.count === 0) {
       throw new ReglaNegocioError('El pago ya fue validado o rechazado');
@@ -165,6 +172,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       estado: fila.estado,
       validadoPorId: fila.validadoPorId,
       validadoEn: fila.validadoEn === null ? null : fila.validadoEn.toISOString(),
+      nota: fila.nota,
       createdAt: fila.createdAt.toISOString(),
       updatedAt: fila.updatedAt.toISOString(),
     });

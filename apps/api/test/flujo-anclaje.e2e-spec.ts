@@ -65,6 +65,7 @@ describe('Flujo de anclaje (e2e)', () => {
     const validar = await request(app.getHttpServer())
       .patch(`/api/v1/pagos/${crear.body.id}/validar`)
       .set('Authorization', `Bearer ${token}`)
+      .send({ confirmado: true, nota: 'e2e' })
       .expect(200);
 
     expect(validar.body.pago.estado).toBe('VALIDADO');

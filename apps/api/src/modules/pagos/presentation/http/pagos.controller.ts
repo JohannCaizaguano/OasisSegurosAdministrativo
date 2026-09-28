@@ -1,5 +1,16 @@
-import type { Pago as PagoRespuesta, ValidarPagoResponse } from '@oasis/shared';
-import { crearPagoSchema, idUuidParamSchema, listarPagosQuerySchema } from '@oasis/shared';
+import type {
+  Pago as PagoRespuesta,
+  RechazarPagoInput,
+  ValidarPagoInput,
+  ValidarPagoResponse,
+} from '@oasis/shared';
+import {
+  crearPagoSchema,
+  idUuidParamSchema,
+  listarPagosQuerySchema,
+  rechazarPagoSchema,
+  validarPagoSchema,
+} from '@oasis/shared';
 import { Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -74,9 +85,10 @@ export class PagosController {
   @ApiOperation({ summary: 'Valida el pago y emite el recibo (dispara el anclaje)' })
   async validar(
     @ZodParam(idUuidParamSchema) params: { id: string },
+    @ZodBody(validarPagoSchema) body: ValidarPagoInput,
     @UsuarioActual() usuario: UsuarioAutenticado,
   ): Promise<ValidarPagoResponse> {
-    const { pago, recibo } = await this.validarPago.ejecutar(params.id, usuario.id);
+    const { pago, recibo } = await this.validarPago.ejecutar(params.id, usuario.id, body.nota);
     return {
       pago: this.aRespuesta(pago),
       recibo: {
@@ -98,10 +110,11 @@ export class PagosController {
   @ApiOperation({ summary: 'Rechaza un pago registrado' })
   async rechazar(
     @ZodParam(idUuidParamSchema) params: { id: string },
+    @ZodBody(rechazarPagoSchema) body: RechazarPagoInput,
     @UsuarioActual() usuario: UsuarioAutenticado,
   ) {
     return this.aRespuesta(
-      await this.rechazarPago.ejecutar(params.id, usuario.id, this.clock.ahora()),
+      await this.rechazarPago.ejecutar(params.id, usuario.id, this.clock.ahora(), body.motivo),
     );
   }
 
@@ -117,6 +130,7 @@ export class PagosController {
       estado: pago.estado,
       validadoPorId: pago.validadoPorId,
       validadoEn: pago.validadoEn,
+      nota: pago.nota,
       createdAt: pago.createdAt,
       updatedAt: pago.updatedAt,
     };

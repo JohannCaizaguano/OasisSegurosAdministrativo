@@ -1,9 +1,9 @@
 import type { Aseguradora, Cliente, EstadoPoliza, Poliza, RespuestaPaginada } from '@oasis/shared';
 import { useQuery } from '@tanstack/react-query';
 
+import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -48,10 +48,9 @@ export function PolizasPage() {
         </CardHeader>
         <CardContent>
           {consulta.isLoading ? (
-            <div className="grid gap-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+            <EsqueletoTabla />
+          ) : consulta.isError ? (
+            <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : (
             <Table>
               <TableHeader>

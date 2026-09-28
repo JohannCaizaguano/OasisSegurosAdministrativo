@@ -33,6 +33,8 @@ export interface DatosValidarPago {
   pagoId: string;
   validadoPorId: string;
   validadoEn: Date;
+  /** Nota de auditoría del operador; interna, no se ancla. */
+  nota?: string | null;
   recibo: DatosNuevoRecibo;
 }
 
@@ -47,5 +49,5 @@ export interface PagosRepositoryPort {
   buscarPorId(id: string): Promise<Pago | null>;
   /** En UNA transacción: pago = VALIDADO y creación del Recibo PENDIENTE_ANCLAJE. */
   validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion>;
-  rechazar(id: string, rechazadoPorId: string, cuando: Date): Promise<Pago>;
+  rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago>;
 }

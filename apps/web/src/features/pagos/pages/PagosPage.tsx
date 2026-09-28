@@ -1,10 +1,12 @@
-import type { EstadoPago } from '@oasis/shared';
-import { useState } from 'react';
+import type { EstadoPago, Pago } from '@oasis/shared';
+import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { AvisoError, EsqueletoTabla } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -12,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Table,
   TableBody,
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/table';
 import { formatearFecha, formatearMoneda } from '@/lib/format';
 
+import { ConfirmarPagoDialog, type AccionPago } from '../components/ConfirmarPagoDialog';
 import { usePagos, useRechazarPago, useValidarPago } from '../hooks';
 
 const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
@@ -40,8 +42,11 @@ function varianteEstado(estado: EstadoPago) {
 }
 
 export function PagosPage() {
+  const idFiltro = useId();
   const [estado, setEstado] = useState<EstadoPago | 'TODOS'>('TODOS');
   const [pagina, setPagina] = useState(1);
+  const [pendiente, setPendiente] = useState<{ pago: Pago; accion: AccionPago } | null>(null);
+
   const validar = useValidarPago();
   const rechazar = useRechazarPago();
 
@@ -51,7 +56,15 @@ export function PagosPage() {
     estado: estado === 'TODOS' ? undefined : estado,
   });
 
-  const registrados = consulta.data?.data.filter((pago) => pago.estado === 'REGISTRADO') ?? [];
+  const enCurso = validar.isPending || rechazar.isPending;
+  const registrados = consulta.data?.data.filter((p) => p.estado === 'REGISTRADO').length ?? 0;
+  const meta = consulta.data?.meta;
+
+  function cerrarDialogo() {
+    if (!enCurso) {
+      setPendiente(null);
+    }
+  }
 
   return (
     <div className="grid gap-4">
@@ -62,39 +75,38 @@ export function PagosPage() {
             Valide un pago para emitir su recibo y anclarlo en Polygon.
           </p>
         </div>
-        <Select
-          value={estado}
-          onValueChange={(valor) => {
-            setEstado(valor as EstadoPago | 'TODOS');
-            setPagina(1);
-          }}
-        >
-          <SelectTrigger className="w-52" data-testid="filtro-estado-pagos">
-            <SelectValue placeholder="Estado" />
-          </SelectTrigger>
-          <SelectContent>
-            {ESTADOS.map((opcion) => (
-              <SelectItem key={opcion.valor} value={opcion.valor}>
-                {opcion.texto}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid gap-1.5">
+          <Label htmlFor={idFiltro}>Filtrar por estado</Label>
+          <Select
+            value={estado}
+            onValueChange={(valor) => {
+              setEstado(valor as EstadoPago | 'TODOS');
+              setPagina(1);
+            }}
+          >
+            <SelectTrigger id={idFiltro} className="w-52" data-testid="filtro-estado-pagos">
+              <SelectValue placeholder="Estado" />
+            </SelectTrigger>
+            <SelectContent>
+              {ESTADOS.map((opcion) => (
+                <SelectItem key={opcion.valor} value={opcion.valor}>
+                  {opcion.texto}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            {consulta.data ? `${consulta.data.meta.total} pagos` : 'Pagos'}
-          </CardTitle>
+          <CardTitle className="text-base">{meta ? `${meta.total} pagos` : 'Pagos'}</CardTitle>
         </CardHeader>
         <CardContent>
           {consulta.isLoading ? (
-            <div className="grid gap-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
+            <EsqueletoTabla />
+          ) : consulta.isError ? (
+            <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : (
             <Table>
               <TableHeader>
@@ -109,7 +121,7 @@ export function PagosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {consulta.data?.data.length === 0 && (
+                {consulta.data && consulta.data.data.length === 0 && (
                   <TableEmpty mensaje="No hay pagos con este filtro" />
                 )}
                 {consulta.data?.data.map((pago) => (
@@ -118,7 +130,9 @@ export function PagosPage() {
                     <TableCell className="font-mono text-xs">{pago.numeroPoliza ?? '—'}</TableCell>
                     <TableCell>{pago.referencia ?? '—'}</TableCell>
                     <TableCell>{pago.metodo}</TableCell>
-                    <TableCell className="text-right">{formatearMoneda(pago.monto)}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatearMoneda(pago.monto)}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={varianteEstado(pago.estado)}>{pago.estado}</Badge>
                     </TableCell>
@@ -126,19 +140,21 @@ export function PagosPage() {
                       {pago.estado === 'REGISTRADO' ? (
                         <div className="flex justify-end gap-2">
                           <Button
+                            type="button"
                             size="sm"
                             data-testid={`boton-validar-${pago.id}`}
-                            disabled={validar.isPending}
-                            onClick={() => validar.mutate(pago.id)}
+                            disabled={enCurso}
+                            onClick={() => setPendiente({ pago, accion: 'validar' })}
                           >
                             Validar
                           </Button>
                           <Button
+                            type="button"
                             size="sm"
                             variant="outline"
                             data-testid={`boton-rechazar-${pago.id}`}
-                            disabled={rechazar.isPending}
-                            onClick={() => rechazar.mutate(pago.id)}
+                            disabled={enCurso}
+                            onClick={() => setPendiente({ pago, accion: 'rechazar' })}
                           >
                             Rechazar
                           </Button>
@@ -158,25 +174,27 @@ export function PagosPage() {
       </Card>
 
       <div className="flex items-center justify-between text-sm text-[var(--muted-foreground)]">
-        <span data-testid="contador-registrados">
-          {registrados.length} validables en esta página
-        </span>
+        <span data-testid="contador-registrados">{registrados} validables en esta página</span>
         <div className="flex gap-2">
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            disabled={pagina <= 1}
+            disabled={pagina <= 1 || consulta.isFetching}
             onClick={() => setPagina((valor) => valor - 1)}
           >
             Anterior
           </Button>
           <span className="py-1.5">
-            Página {consulta.data?.meta.page ?? 1} de {consulta.data?.meta.totalPages ?? 1}
+            Página {meta?.page ?? 1} de {meta?.totalPages ?? 1}
           </span>
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            disabled={!!consulta.data && pagina >= consulta.data.meta.totalPages}
+            // Sin `meta` no se sabe si hay página siguiente: se bloquea para no
+            // avanzar a ciegas mientras la consulta aún no ha resuelto.
+            disabled={!meta || meta.page >= meta.totalPages || consulta.isFetching}
             onClick={() => setPagina((valor) => valor + 1)}
           >
             Siguiente
@@ -190,6 +208,34 @@ export function PagosPage() {
           Ir a Recibos
         </Link>
       </p>
+
+      {pendiente ? (
+        <ConfirmarPagoDialog
+          pago={pendiente.pago}
+          accion={pendiente.accion}
+          abierto
+          enCurso={enCurso}
+          alCambiarAbierto={(abierto) => {
+            if (!abierto) {
+              cerrarDialogo();
+            }
+          }}
+          alConfirmar={(datos) => {
+            const { pago, accion } = pendiente;
+            if (accion === 'validar') {
+              validar.mutate(
+                { id: pago.id, entrada: { confirmado: true, nota: datos.nota } },
+                { onSettled: () => setPendiente(null) },
+              );
+            } else {
+              rechazar.mutate(
+                { id: pago.id, entrada: { confirmado: true, motivo: datos.motivo ?? '' } },
+                { onSettled: () => setPendiente(null) },
+              );
+            }
+          }}
+        />
+      ) : null}
     </div>
   );
 }

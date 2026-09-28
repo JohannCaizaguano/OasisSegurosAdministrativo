@@ -1,4 +1,11 @@
-import type { EstadoPago, Pago, RespuestaPaginada, ValidarPagoResponse } from '@oasis/shared';
+import type {
+  EstadoPago,
+  Pago,
+  RechazarPagoInput,
+  RespuestaPaginada,
+  ValidarPagoInput,
+  ValidarPagoResponse,
+} from '@oasis/shared';
 
 import { api } from '@/lib/api-client';
 import { construirQuery } from '@/lib/utils';
@@ -13,6 +20,10 @@ export interface FiltrosPagos {
 export const pagosApi = {
   listar: (filtros: FiltrosPagos) =>
     api.get<RespuestaPaginada<Pago>>(`/pagos${construirQuery({ ...filtros })}`),
-  validar: (id: string) => api.patch<ValidarPagoResponse>(`/pagos/${id}/validar`),
-  rechazar: (id: string) => api.patch<Pago>(`/pagos/${id}/rechazar`),
+  // El API exige `confirmado: true`: es la garantía de que hubo una
+  // confirmación explícita y no un clic accidental.
+  validar: (id: string, entrada: ValidarPagoInput) =>
+    api.patch<ValidarPagoResponse>(`/pagos/${id}/validar`, entrada),
+  rechazar: (id: string, entrada: RechazarPagoInput) =>
+    api.patch<Pago>(`/pagos/${id}/rechazar`, entrada),
 };

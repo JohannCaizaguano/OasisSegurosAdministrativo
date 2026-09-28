@@ -13,6 +13,8 @@ export interface PropsPago {
   estado: EstadoPago;
   validadoPorId: string | null;
   validadoEn: string | null;
+  /** Nota de auditoría del operador. Interna: nunca se ancla. */
+  nota: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +62,10 @@ export class Pago extends Entity<PropsPago> {
 
   get validadoEn(): string | null {
     return this.props.validadoEn;
+  }
+
+  get nota(): string | null {
+    return this.props.nota;
   }
 
   get createdAt(): string {

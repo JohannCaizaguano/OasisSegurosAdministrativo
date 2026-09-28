@@ -110,6 +110,7 @@ describe('Idempotencia del anclaje (e2e)', () => {
     const validar = await request(app.getHttpServer())
       .patch(`/api/v1/pagos/${crear.body.id}/validar`)
       .set('Authorization', `Bearer ${token}`)
+      .send({ confirmado: true, nota: 'e2e' })
       .expect(200);
 
     const recibo = await repositorio.buscarPorId(validar.body.recibo.id);

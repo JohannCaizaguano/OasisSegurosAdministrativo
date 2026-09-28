@@ -14,22 +14,46 @@ export class ApiError extends Error {
   }
 }
 
-type Sesion = {
+export type Sesion = {
   accessToken: string | null;
   establecerSesion: (respuesta: LoginResponse) => void;
   cerrarSesionLocal: () => void;
 };
 
 let obtenerStore: (() => Sesion) | null = null;
+let limpiarCache: (() => void) | null = null;
 
-/** Inyección tardía del store para evitar ciclos de importación con zustand. */
-export function configurarApiClient(store: () => Sesion): void {
+/**
+ * Inyección tardía del store para evitar ciclos de importación con zustand.
+ * `alCerrarSesion` permite vaciar la caché de TanStack Query cuando la sesión
+ * se cierra sola: sin esto, el siguiente usuario que entre en la misma pestaña
+ * vería los datos cacheados del anterior (las claves de consulta no incluyen
+ * el usuario).
+ */
+export function configurarApiClient(
+  store: () => Sesion,
+  opciones: { alCerrarSesion?: () => void } = {},
+): void {
   obtenerStore = store;
+  limpiarCache = opciones.alCerrarSesion ?? null;
 }
 
-let refrescoEnCurso: Promise<boolean> | null = null;
+let refrescoEnCurso: Promise<string | null> | null = null;
 
-async function refrescarToken(): Promise<boolean> {
+/**
+ * Rota el refresh token. Devuelve el nuevo access token, o null si no hay sesión.
+ *
+ * Todas las llamadas comparten una única promesa ("single flight"): el refresh
+ * token es de un solo uso y el API detecta su reutilización, así que dos
+ * refrescos concurrentes con la misma cookie no serían dos sesiones válidas
+ * sino una señal de robo que el servidor responde revocando todos los tokens.
+ *
+ * Se exporta para que la restauración inicial de sesión la reutilice y no
+ * dispare una segunda rotación. Devolver el `accessToken` permite a la SPA
+ * distinguir "mi token caducó" de "otro proceso ya lo renovó", y así no cerrar
+ * sesión por error ante un 401 rezagado.
+ */
+export function refrescarToken(): Promise<string | null> {
   if (!refrescoEnCurso) {
     refrescoEnCurso = fetch(`${BASE}/auth/refresh`, {
       method: 'POST',
@@ -37,18 +61,28 @@ async function refrescarToken(): Promise<boolean> {
     })
       .then(async (respuesta) => {
         if (!respuesta.ok) {
-          return false;
+          return null;
         }
         const datos = (await respuesta.json()) as LoginResponse;
         obtenerStore?.().establecerSesion(datos);
-        return true;
+        return datos.accessToken;
       })
-      .catch(() => false)
+      .catch(() => null)
       .finally(() => {
         refrescoEnCurso = null;
       });
   }
   return refrescoEnCurso;
+}
+
+/**
+ * Rutas de autenticación: un 401 aquí significa "no hay sesión", no "token
+ * caducado". Intentar refrescar en respuesta a un 401 de `/auth/refresh`
+ * provocaba una recursión y dos llamadas por carga de página (el rate limit de
+ * refresh es de 20/min).
+ */
+function esRutaDeAuth(ruta: string): boolean {
+  return /^\/auth\/(login|refresh|logout)/.test(ruta);
 }
 
 interface OpcionesPeticion extends RequestInit {
@@ -70,12 +104,20 @@ export async function apiFetch<T>(ruta: string, opciones: OpcionesPeticion = {})
     },
   });
 
-  if (respuesta.status === 401 && !sinReintento && !ruta.startsWith('/auth/login')) {
-    const refrescado = await refrescarToken();
-    if (refrescado) {
+  if (respuesta.status === 401 && !sinReintento && !esRutaDeAuth(ruta)) {
+    const tokenAnterior = store?.accessToken ?? null;
+    const tokenNuevo = await refrescarToken();
+    if (tokenNuevo) {
+      return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
+    }
+    // Solo se cierra la sesión si el token realmente caducó. Si otro proceso
+    // ya lo renovó mientras esperábamos (p. ej. dos pestañas), este 401 es
+    // rezagado y cerrar sesión expulsaría al usuario con una sesión válida.
+    if (store?.accessToken !== tokenAnterior) {
       return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
     }
     store?.cerrarSesionLocal();
+    limpiarCache?.();
   }
 
   if (respuesta.status === 204) {

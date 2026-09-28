@@ -60,10 +60,12 @@ export function LoginPage() {
                 id="email"
                 type="email"
                 autoComplete="email"
+                aria-invalid={formulario.formState.errors.email ? true : undefined}
+                aria-describedby={formulario.formState.errors.email ? 'email-error' : undefined}
                 {...formulario.register('email')}
               />
               {formulario.formState.errors.email && (
-                <p className="text-sm text-[var(--destructive)]">
+                <p id="email-error" role="alert" className="text-sm text-[var(--destructive)]">
                   {formulario.formState.errors.email.message}
                 </p>
               )}
@@ -74,10 +76,14 @@ export function LoginPage() {
                 id="password"
                 type="password"
                 autoComplete="current-password"
+                aria-invalid={formulario.formState.errors.password ? true : undefined}
+                aria-describedby={
+                  formulario.formState.errors.password ? 'password-error' : undefined
+                }
                 {...formulario.register('password')}
               />
               {formulario.formState.errors.password && (
-                <p className="text-sm text-[var(--destructive)]">
+                <p id="password-error" role="alert" className="text-sm text-[var(--destructive)]">
                   {formulario.formState.errors.password.message}
                 </p>
               )}

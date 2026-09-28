@@ -2,16 +2,23 @@ import { expect, test } from '@playwright/test';
 
 /**
  * Flujo completo desde la SPA:
- *   login (OPERADOR) -> validar un pago -> recibo ANCLADO -> detalle con QR ->
- *   verificación pública sin sesión (se cierra sesión antes).
+ *   login (OPERADOR) -> validar un pago (con confirmación explícita) ->
+ *   recibo ANCLADO -> detalle con QR -> verificación pública sin sesión.
  *
- * Requisitos: postgres, redis, nodo Hardhat, contrato desplegado, API, worker
- * y Vite dev server en marcha (pnpm dev).
+ * Este test es de pila completa: necesita postgres, redis, el nodo Hardhat con
+ * el contrato desplegado y la API + worker compilados. `playwright.config.ts`
+ * arranca Vite y `apps/api/test/start-servicios.mjs` levanta el resto, pero la
+ * migración y el seed se aplican antes a mano (ver `test:stack` en el README).
+ *
+ * Las credenciales vienen del entorno para que el seed pueda usar contraseñas
+ * distintas de las de por defecto sin romper el test.
  */
+const EMAIL = process.env.E2E_EMAIL ?? 'operador@oasis.com';
+const PASSWORD = process.env.E2E_PASSWORD ?? 'Operador.Oasis1';
 test('flujo completo de validación, anclaje y verificación pública', async ({ page, request }) => {
   // 0. Preparación por API: asegurar un pago REGISTRADO que validar en la UI.
   const loginApi = await request.post('/api/v1/auth/login', {
-    data: { email: 'operador@oasis.com', password: 'Operador.Oasis1' },
+    data: { email: EMAIL, password: PASSWORD },
   });
   expect(loginApi.ok()).toBeTruthy();
   const { accessToken } = (await loginApi.json()) as { accessToken: string };
@@ -24,6 +31,9 @@ test('flujo completo de validación, anclaje y verificación pública', async ({
   };
   expect(polizas.data.length).toBeGreaterThan(0);
 
+  // Referencia única por ejecución: permite localizar la fila exacta en la UI
+  // en lugar de confiar en el orden de la tabla.
+  const referencia = `E2E-WEB-${Date.now()}`;
   const crearPago = await request.post('/api/v1/pagos', {
     headers: cabeceras,
     data: {
@@ -31,15 +41,15 @@ test('flujo completo de validación, anclaje y verificación pública', async ({
       monto: '19.75',
       fechaPago: new Date().toISOString().slice(0, 10),
       metodo: 'TRANSFERENCIA',
-      referencia: `E2E-WEB-${Date.now()}`,
+      referencia,
     },
   });
   expect(crearPago.ok()).toBeTruthy();
 
   // 1. Login
   await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill('operador@oasis.com');
-  await page.getByLabel('Contraseña').fill('Operador.Oasis1');
+  await page.getByLabel('Correo electrónico').fill(EMAIL);
+  await page.getByLabel('Contraseña').fill(PASSWORD);
   await page.getByTestId('boton-login').click();
   await expect(page.getByRole('heading', { name: /Hola,/ })).toBeVisible();
 
@@ -47,9 +57,20 @@ test('flujo completo de validación, anclaje y verificación pública', async ({
   await page.getByRole('link', { name: 'Pagos', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos', exact: true })).toBeVisible();
 
-  const botonValidar = page.locator('[data-testid^="boton-validar-"]').first();
-  await expect(botonValidar).toBeVisible({ timeout: 15_000 });
-  await botonValidar.click();
+  // Se localiza la fila por su referencia: antes se validaba el primer botón
+  // de la página, que podía ser otro pago distinto al preparado.
+  await page.getByLabel('Filtrar por estado').click();
+  await page.getByRole('option', { name: 'Registrados' }).click();
+  const filaPago = page.locator('tbody tr', { hasText: referencia });
+  await expect(filaPago).toBeVisible({ timeout: 15_000 });
+
+  await filaPago.getByRole('button', { name: 'Validar' }).click();
+
+  // Confirmación explícita: la acción es irreversible.
+  const dialogo = page.getByRole('dialog');
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByLabel(/confirmo que revisé/i).check();
+  await dialogo.getByTestId('confirmar-validar').click();
 
   const toast = page.getByText(/Recibo RC-[A-Z0-9]+/).first();
   await expect(toast).toBeVisible();

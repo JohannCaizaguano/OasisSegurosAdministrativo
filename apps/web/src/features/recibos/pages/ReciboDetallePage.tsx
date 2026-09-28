@@ -2,6 +2,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link, useParams } from 'react-router-dom';
 
+import { AvisoError } from '@/components/data-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,11 +16,26 @@ export function ReciboDetallePage() {
   const consulta = useRecibo(id);
   const recibo = consulta.data;
 
-  if (consulta.isLoading || !recibo) {
+  if (consulta.isLoading) {
     return (
       <div className="grid gap-4">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // Sin esta rama, un 404 o un 500 dejaban el esqueleto girando para siempre:
+  // `!recibo` también es cierto cuando la consulta falló.
+  if (consulta.isError || !recibo) {
+    return (
+      <div className="grid gap-4">
+        <Button asChild variant="ghost" size="sm" className="justify-start">
+          <Link to="/recibos">
+            <ArrowLeft className="size-4" /> Recibos
+          </Link>
+        </Button>
+        <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
       </div>
     );
   }

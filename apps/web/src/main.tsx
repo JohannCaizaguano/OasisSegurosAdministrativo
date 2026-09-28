@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
+import { ErrorBoundary } from './app/error-boundary';
 import { Providers } from './app/providers';
 import { router } from './app/router';
 import { useRestaurarSesion } from './features/auth/hooks';
@@ -18,7 +19,11 @@ function App() {
     );
   }
 
-  return <RouterProvider router={router} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  );
 }
 
 const contenedor = document.getElementById('root');
