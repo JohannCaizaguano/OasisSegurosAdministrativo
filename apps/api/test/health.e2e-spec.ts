@@ -10,10 +10,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 const REQUEST_ID = '22222222-2222-4222-8222-222222222222';
 
 /**
- * `GET /health` y `x-request-id` de extremo a extremo contra los servicios
- * reales (PostgreSQL y Redis de `compose.dev.yaml`). El caso 503 se provoca
- * sustituyendo el cliente de Redis por uno que falla: así la prueba del
- * contrato no depende de detener un contenedor.
+ * E2E de `GET /health` y `x-request-id` contra servicios reales; el 503 se
+ * provoca con un cliente de Redis que falla.
  */
 describe('GET /health (e2e)', () => {
   let app: INestApplication;

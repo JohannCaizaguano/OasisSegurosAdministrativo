@@ -1,7 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-import { AvisoError } from '@/components/data-state';
+import { AvisoError } from '@/components/DataState';
 import { Button } from '@/components/ui/button';
 
 interface Estado {
@@ -9,10 +9,7 @@ interface Estado {
 }
 
 /**
- * Frontera de error de la aplicación.
- *
- * Sin ella, cualquier excepción de render desmontaba el árbol completo y
- * dejaba la SPA en blanco, sin mensaje ni forma de reintentar.
+ * Frontera de error: evita que una excepción de render deje la SPA en blanco.
  */
 export class ErrorBoundary extends Component<{ children: ReactNode }, Estado> {
   override state: Estado = { error: null };

@@ -34,22 +34,12 @@ type Formulario = {
   motivo?: string;
 };
 
-/**
- * Los esquemas de `@oasis/shared` exigen `confirmado: true` (literal). El tipo
- * del formulario usa `boolean` porque RHF no modela literales en sus valores por
- * defecto; el resolver se ajusta para que ambos tipos coincidan.
- */
+/** RHF usa `boolean` donde el esquema exige el literal `true`; el resolver se ajusta. */
 type ResolverAjustado = NonNullable<Parameters<typeof useForm<Formulario>>[0]>['resolver'];
 
 /**
- * Confirmación de las dos acciones irreversibles sobre un pago.
- *
- * Validar un pago emite un recibo y dispara una transacción real en Polygon;
- * rechazarlo cierra la puerta al cobro. Ninguna debe quedar en un
- * `<Button onClick>` sin confirmar. El formulario se valida con los esquemas de
- * `@oasis/shared` (los mismos que exige el API): `confirmado` debe ser
- * literalmente `true` y el rechazo exige además un motivo, que queda en la
- * auditoría del pago.
+ * Confirmación de las dos acciones irreversibles sobre un pago, validada con
+ * los esquemas del API.
  */
 export function ConfirmarPagoDialog({
   pago,

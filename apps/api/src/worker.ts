@@ -7,10 +7,8 @@ import { MetricsService } from './infrastructure/metrics/metrics.service';
 import { WorkerModule } from './worker.module';
 
 /**
- * El worker se levanta con `createApplicationContext`: no hay servidor HTTP, de
- * modo que las métricas que emite (anclajes, latencia, backlog del outbox)
- * nunca llegaban a Prometheus y los paneles del dashboard quedaban vacíos.
- * Se exponen con un servidor mínimo, solo en la red interna.
+ * Exporter mínimo de métricas del worker (no tiene servidor HTTP), solo en la
+ * red interna.
  */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.createApplicationContext(WorkerModule, { bufferLogs: true });

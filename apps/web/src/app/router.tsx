@@ -11,7 +11,7 @@ import { RecibosPage } from '@/features/recibos/pages/RecibosPage';
 import { VerificacionPage } from '@/features/verificacion/pages/VerificacionPage';
 import { useAuthStore } from '@/lib/auth-store';
 
-import { RutaProtegida } from './guards';
+import { RutaProtegida } from './Guards';
 
 /** Redirige al inicio a los usuarios ya autenticados que visitan /login. */
 function SoloInvitados() {
@@ -19,7 +19,6 @@ function SoloInvitados() {
   return autenticado ? <Navigate to="/" replace /> : <Outlet />;
 }
 
-/** Ruta desconocida: antes redirigía al inicio, sin explicar nada. */
 function NoEncontrado() {
   return (
     <div className="mx-auto grid min-h-screen max-w-lg content-center gap-4 p-6 text-center">

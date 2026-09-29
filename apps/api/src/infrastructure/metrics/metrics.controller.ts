@@ -5,8 +5,8 @@ import { Public } from '../../common/auth/decorators';
 import { MetricsService } from './metrics.service';
 
 /**
- * Excluido del prefijo global: se expone como GET /metrics y Caddy no lo publica.
- * Solo accesible desde la red interna (Prometheus).
+ * GET /metrics, excluido del prefijo global y no publicado por Caddy: solo
+ * accesible desde la red interna (Prometheus).
  */
 @Controller('metrics')
 export class MetricsController {

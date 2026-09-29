@@ -20,8 +20,8 @@ const booleano = z
   .transform((valor) => valor === 'true');
 
 /**
- * Esquema de entorno del API. Nótese que NO incluye OPERATOR_PRIVATE_KEY:
- * la clave privada operadora solo existe en el proceso worker.
+ * Esquema del API: NO incluye OPERATOR_PRIVATE_KEY, que solo existe en el
+ * proceso worker (ADR-006).
  */
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -36,7 +36,7 @@ export const envSchema = z.object({
   WORKER_METRICS_PORT: z.coerce.number().int().min(1).max(65535).default(9101),
 
   // Orígenes permitidos para el SPA en desarrollo (lista separada por comas).
-  // En producción Caddy sirve SPA y API en el mismo origen (ADR-009) y CORS no aplica.
+  // En producción Caddy sirve SPA y API en el mismo origen (ADR-009).
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
@@ -60,11 +60,9 @@ export const envSchema = z.object({
   DOMAIN: z.string().min(1).default('localhost'),
 
   /**
-   * Límites del rate limiter (peticiones por minuto y por IP). Son configurables
-   * porque los valores por defecto son de seguridad (5/min en login protege
-   * contra fuerza bruta) y no de rendimiento: con ellos, una prueba de carga de
-   * `POST /auth/login` mediría el throttler y no el API. Durante la evaluación
-   * se suben y se documenta el valor usado (ver docs/despliegue.md).
+   * Límites del rate limiter por IP/min. Configurables porque los valores por
+   * defecto son de seguridad (5/min en login) y una prueba de carga mediría el
+   * limitador; ver docs/despliegue.md.
    */
   THROTTLE_GLOBAL_LIMIT: z.coerce.number().int().positive().default(100),
   THROTTLE_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
@@ -109,9 +107,8 @@ export function validateWorkerEnv(raw: Record<string, unknown>): WorkerEnv {
 }
 
 /**
- * Lee y valida la clave de la cuenta operadora. Vive en la capa de
- * configuración porque el esquema del API no la conoce (ADR-006): solo el
- * proceso worker puede invocarla.
+ * Lee y valida la clave de la cuenta operadora (ADR-006); solo la invoca el
+ * proceso worker.
  */
 export function claveOperadoraDelEntorno(
   raw: Record<string, unknown> = process.env,

@@ -1,11 +1,5 @@
-// Escenario k6: validar un pago (crea el recibo y dispara el anclaje en cadena).
-//
+// Escenario k6: validar un pago (emite recibo y transacción real en la cadena).
 // Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/validar-pago.js
-//
-// Cada iteración hace 3 peticiones (crear pago, validar, leer recibo) y cada
-// validación emite un recibo, es decir, una transacción real en la cadena de
-// pruebas. El ritmo es lento a propósito: además del límite de peticiones, cada
-// validación consume una transacción del RPC.
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 

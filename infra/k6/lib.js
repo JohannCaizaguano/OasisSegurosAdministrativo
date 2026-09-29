@@ -1,15 +1,5 @@
-// Utilidades compartidas por los escenarios k6 de Oasis Seguros.
-//
-// El API limita por IP y minuto. Los valores por defecto son de seguridad
-// (THROTTLE_GLOBAL_LIMIT=100, THROTTLE_LOGIN_LIMIT=5,
-// THROTTLE_VERIFICACION_PUBLICA_LIMIT=20), pensados para frenar abuso, no para
-// medir: superarlos hace que el escenario mida el rate limiter y falle sus
-// umbrales sin que el rendimiento del API tenga nada que ver.
-//
-// Para la medición hay dos vías, y ambas se documentan en docs/despliegue.md:
-//   1. Subir los límites en el `.env` del servidor antes de la prueba.
-//   2. Mantener los límites por defecto y usar la cadencia de cada escenario,
-//      que ya está calculada para no superarlos.
+// Utilidades de los escenarios k6. Los límites del API son de seguridad: la
+// cadencia se calcula para no superarlos o se suben antes (docs/despliegue.md).
 import http from 'k6/http';
 
 export const LIMITE_POR_DEFECTO = {

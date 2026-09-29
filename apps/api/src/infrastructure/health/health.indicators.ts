@@ -6,10 +6,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
 /**
- * Tiempo máximo que un chequeo espera a su dependencia antes de reportarla
- * caída. Es imprescindible con Redis: BullMQ configura `ioredis` con
- * `maxRetriesPerRequest: null` (reintentos infinitos), así que un `ping` con el
- * servidor caído se queda encolado y `/health` nunca respondería 503.
+ * Tiempo máximo que un chequeo espera a su dependencia. Con Redis es
+ * imprescindible: BullMQ usa `maxRetriesPerRequest: null` y un `ping` con el
+ * servidor caído se queda encolado.
  */
 const TIEMPO_LIMITE_MS = 2_000;
 

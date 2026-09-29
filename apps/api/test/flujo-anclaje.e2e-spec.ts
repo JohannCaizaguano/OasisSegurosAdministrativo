@@ -9,12 +9,8 @@ import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
 import { WorkerModule } from '../src/worker.module';
 
 /**
- * Flujo central de extremo a extremo contra el nodo Hardhat local:
- *   login -> registrar pago -> validar (emite recibo PENDIENTE) -> el worker
- *   ancla -> ANCLADO -> verificación pública OK.
- *
- * Requisitos: postgres, redis, nodo Hardhat local y contrato desplegado
- * (pnpm dev:infra && pnpm dev:chain).
+ * E2E del flujo completo (login → validar → anclaje → verificación pública);
+ * requiere infraestructura y contrato desplegado.
  */
 describe('Flujo de anclaje (e2e)', () => {
   let app: INestApplication;

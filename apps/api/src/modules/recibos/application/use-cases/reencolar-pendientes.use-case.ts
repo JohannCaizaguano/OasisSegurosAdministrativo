@@ -26,9 +26,8 @@ export class ReencolarPendientesUseCase {
     const pendientes = await this.recibos.listarPendientes(corte);
 
     for (const recibo of pendientes) {
-      // Igual que en el reintento manual: sin retirar el job previo, un recibo
-      // cuyo job ya terminó (por ejemplo el que devolvió ENVIADO tras agotar
-      // la espera del receipt) nunca volvería a encolarse.
+      // Sin retirar el job previo, un recibo cuyo job ya terminó no volvería a
+      // encolarse.
       await this.cola.desencolarAnclaje(recibo.id);
       await this.cola.encolarAnclaje(recibo.id);
     }

@@ -95,12 +95,8 @@ export class AuthController {
   }
 
   /**
-   * `secure` se deriva del protocolo real de la petición (`X-Forwarded-Proto`
-   * resuelto por `trust proxy`), no de NODE_ENV. Decidirlo por NODE_ENV emitía
-   * cookies sin `Secure` en cualquier entorno que no fuese exactamente
-   * `production` (staging, preview), y un token de 7 días viaja sin protección
-   * en la red. Con HTTPS (producción detrás de Caddy) siempre lleva `Secure`;
-   * en local por HTTP sigue funcionando para el desarrollo.
+   * `secure` se deriva del protocolo real de la petición (`trust proxy`), no de
+   * NODE_ENV: en local por HTTP sigue funcionando.
    */
   private escribirCookie(peticion: Request, respuesta: Response, token: string): void {
     respuesta.cookie(REFRESH_COOKIE, token, {

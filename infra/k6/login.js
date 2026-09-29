@@ -1,12 +1,6 @@
-// Escenario k6: inicio de sesión de operadores.
+// Escenario k6: login de operadores. `POST /auth/login` limita a 5/min, así que
+// la cadencia se calcula desde el límite vigente (docs/despliegue.md).
 // Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/login.js
-//
-// `POST /auth/login` está limitado a 5/min por IP (protección contra fuerza
-// bruta). Con 10 VU sin espera se generarían ~300 logins en 30 s, el 98 % con
-// 429 y el escenario fallaría sin que el rendimiento del API tenga nada que ver.
-// Por eso la cadencia se calcula a partir del límite vigente; para medir por
-// encima hay que subir antes THROTTLE_LOGIN_LIMIT en el servidor y pasarlo
-// también a k6 con `-e THROTTLE_LOGIN_LIMIT=<valor>`.
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
