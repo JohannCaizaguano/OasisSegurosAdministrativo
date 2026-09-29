@@ -143,6 +143,10 @@ Prisma 7 con adaptador `pg`, migración inicial, seed, `GET /health`, logs JSON 
   (S2, S11 y S14).
 - El seed crea una aseguradora, un cliente y una póliza de demostración para que los e2e y el
   desarrollo local tengan datos; los datos reales de Oasis Seguros llegan en S15 (HT-09).
+- El job **Slither** de `ci.yml` falla en la primera ejecución real en GitHub (la acción no
+  completa el análisis). Es alcance de HT-02 (S2): revisar el informe de Slither, ajustar
+  `packages/contracts/slither.config.json` o el `fail-on` y dejar el análisis en verde junto con el
+  contrato.
 - Documentos originales `.docx` (arquitectura y ERS) sin versionar: decidir si se incorporan.
 - Los diagramas `arquitectura_img/*.png` quedan pendientes de versionar.
 
