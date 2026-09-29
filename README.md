@@ -26,8 +26,8 @@ exponga ningún dato personal.
   refresh token viaja en cookie `httpOnly`/`Secure`/`SameSite=Strict` con rotación.
 - **Medición**: `/metrics` (prom-client) solo en la red interna y stack opcional
   Prometheus + Grafana + cAdvisor + node-exporter.
-- Documentación: `docs/arquitectura` (C4 + secuencia en Mermaid), `docs/adr` (6 ADR) y
-  `docs/despliegue.md`.
+- Documentación: `docs/referencia` (fuentes de verdad), `docs/arquitectura` (C4 +
+  secuencia en Mermaid), `docs/adr` (12 ADR), `docs/sprints` y `docs/despliegue.md`.
 
 ## Estructura
 
@@ -74,16 +74,17 @@ pnpm dev                       # API, worker y SPA con recarga en caliente
 
 ## Scripts raíz
 
-| Script                                       | Descripción                                         |
-| -------------------------------------------- | --------------------------------------------------- |
-| `pnpm build` / `lint` / `typecheck` / `test` | Tareas en todo el workspace.                        |
-| `pnpm test:e2e`                              | E2E del API (requiere la infraestructura arriba).   |
-| `pnpm depcruise`                             | Verifica la regla hexagonal.                        |
-| `pnpm dev:infra` / `dev:infra:down`          | Postgres, Redis y nodo Hardhat (compose.dev).       |
-| `pnpm dev:chain`                             | Despliegue local (Ignition) + rol + `.env` del API. |
-| `pnpm dev`                                   | API + worker + SPA en modo desarrollo.              |
-| `pnpm format` / `format:check`               | Prettier sobre el monorepo.                         |
-| `pnpm --filter @oasis/contracts reporte`     | Cobertura (con umbral) y reporte de gas.            |
+| Script                                       | Descripción                                                                             |
+| -------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `pnpm build` / `lint` / `typecheck` / `test` | Tareas en todo el workspace.                                                            |
+| `pnpm test:e2e`                              | E2E del API (requiere la infraestructura arriba).                                       |
+| `pnpm deps:check`                            | Verifica la regla hexagonal.                                                            |
+| `pnpm deps:check:negativo`                   | Prueba negativa: confirma que `deps:check` falla si el dominio importa infraestructura. |
+| `pnpm dev:infra` / `dev:infra:down`          | Postgres, Redis y nodo Hardhat (compose.dev).                                           |
+| `pnpm dev:chain`                             | Despliegue local (Ignition) + rol + `.env` del API.                                     |
+| `pnpm dev`                                   | API + worker + SPA en modo desarrollo.                                                  |
+| `pnpm format` / `format:check`               | Prettier sobre el monorepo.                                                             |
+| `pnpm --filter @oasis/contracts reporte`     | Cobertura (con umbral) y reporte de gas.                                                |
 
 ## Pruebas
 
@@ -129,11 +130,11 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 ## Seguridad
 
 - Ningún dato personal ni monto se escribe en la blockchain: solo `idOnchain` y
-  `hashRecibo` (`bytes32`), con sal aleatoria que nunca sale de PostgreSQL (ADR 0006).
+  `hashRecibo` (`bytes32`), con sal aleatoria que nunca sale de PostgreSQL (ADR-004).
 - `OPERATOR_PRIVATE_KEY` **solo** existe en el contenedor `worker`: vive en `.env.worker`
   (plantilla en `.env.worker.example`), que `compose.prod.yaml` inyecta únicamente en ese
   servicio. Ni `.env` ni el entorno del `api` o del `migrate` la contienen, y el esquema de
-  entorno del API tampoco la incluye (ADR 0004).
+  entorno del API tampoco la incluye (ADR-006).
 - `.env` y `.env.worker` ignorados por git; `.env.example` y `.env.worker.example`
   documentan las variables; ningún secreto se versiona.
 - Contraseñas con argon2; JWT de acceso de 15 min; refresh de 7 días con rotación y
@@ -144,36 +145,41 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 
 `.env.example` y `.env.worker.example` son las plantillas comentadas. Resumen:
 
-| Variable                                                                     | Dónde                        | Por defecto                      | Para qué                                                                     |
-| ---------------------------------------------------------------------------- | ---------------------------- | -------------------------------- | ---------------------------------------------------------------------------- |
-| `NODE_ENV`                                                                   | ambos                        | `development`                    | `development` \| `test` \| `production`. Condiciona Swagger y CORS.          |
-| `PORT`                                                                       | API                          | `3000`                           | Puerto HTTP del API.                                                         |
-| `DATABASE_URL`                                                               | ambos                        | —                                | Cadena de conexión de PostgreSQL. En Docker el host es `postgres`.           |
-| `REDIS_HOST` / `REDIS_PORT`                                                  | ambos                        | `localhost` / `6379`             | Redis de BullMQ y de los refresh tokens.                                     |
-| `REDIS_PASSWORD`                                                             | ambos                        | vacío                            | Opcional.                                                                    |
-| `JWT_ACCESS_SECRET`                                                          | ambos                        | —                                | Firma del access token (≥ 32 caracteres).                                    |
-| `JWT_REFRESH_SECRET`                                                         | ambos                        | —                                | Firma del refresh token, distinta de la anterior.                            |
-| `JWT_ACCESS_TTL`                                                             | ambos                        | `15m`                            | Vigencia del access token.                                                   |
-| `JWT_REFRESH_TTL`                                                            | ambos                        | `7d`                             | Vigencia de la cookie httpOnly.                                              |
-| `CHAIN_ID`                                                                   | ambos                        | `31337`                          | `31337` local \| `80002` Amoy \| `137` Polygon. Selecciona la chain en viem. |
-| `RPC_URL`                                                                    | ambos                        | `http://127.0.0.1:8545`          | RPC principal.                                                               |
-| `RPC_URL_FALLBACK`                                                           | ambos                        | vacío                            | RPC de respaldo (transporte `fallback` de viem).                             |
-| `CONTRACT_ADDRESS`                                                           | ambos                        | vacío                            | Dirección de `RegistroRecibos`.                                              |
-| `MAX_FEE_PER_GAS_GWEI`                                                       | ambos                        | `50`                             | Tope de `maxFeePerGas` al anclar.                                            |
-| `EXPLORER_BASE_URL`                                                          | ambos                        | `https://amoy.polygonscan.com`   | Base de los enlaces públicos.                                                |
-| `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR 0004).   |
-| `OPERATOR_ADDRESS`                                                           | scripts de contratos         | —                                | Cuenta `REGISTRADOR_ROLE` para `grant-registrador.ts` (no es secreto).       |
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`                        | `.env` (Docker)              | `oasis`                          | Credenciales de la imagen de PostgreSQL en compose.                          |
-| `SEED_ADMIN_PASSWORD` / `SEED_OPERADOR_PASSWORD` / `SEED_CLIENTE_PASSWORD`   | seed                         | `Admin.Oasis1` …                 | Contraseñas del seed (opcionales).                                           |
-| `THROTTLE_GLOBAL_LIMIT`                                                      | ambos                        | `100`                            | Peticiones/min por IP del límite global.                                     |
-| `THROTTLE_LOGIN_LIMIT`                                                       | ambos                        | `5`                              | Por minuto en `POST /auth/login`.                                            |
-| `THROTTLE_REFRESH_LIMIT`                                                     | ambos                        | `20`                             | Por minuto en `/auth/refresh` y `/auth/logout`.                              |
-| `THROTTLE_VERIFICACION_PUBLICA_LIMIT`                                        | ambos                        | `20`                             | Por minuto en la verificación pública.                                       |
-| `WORKER_METRICS_PORT`                                                        | worker                       | `9101`                           | Exporter de métricas del anclaje (red interna).                              |
-| `DOMAIN`                                                                     | ambos                        | `localhost`                      | Dominio que sirve Caddy con TLS automático.                                  |
-| `OASIS_API_IMAGE` / `OASIS_MIGRATOR_IMAGE` / `OASIS_WEB_IMAGE` / `OASIS_TAG` | `.env`                       | `ghcr.io/oasis-seguros/*:latest` | Imágenes y etiqueta de `compose.prod.yaml`.                                  |
-| `GRAFANA_ADMIN_PASSWORD`                                                     | `.env`                       | —                                | Solo el día de evaluación (`compose.monitoring.yaml`).                       |
-| `VITE_API_BASE_URL`                                                          | SPA                          | `/api/v1`                        | Solo en `pnpm dev`; en producción Caddy sirve el mismo origen.               |
+| Variable                                                                     | Dónde                        | Por defecto                      | Para qué                                                                                              |
+| ---------------------------------------------------------------------------- | ---------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                                                                   | ambos                        | `development`                    | `development` \| `test` \| `production`. Condiciona Swagger y CORS.                                   |
+| `PORT`                                                                       | API                          | `3000`                           | Puerto HTTP del API.                                                                                  |
+| `LOG_LEVEL`                                                                  | ambos                        | `info`                           | Nivel de pino (`trace`…`fatal`).                                                                      |
+| `LOG_PRETTY`                                                                 | desarrollo                   | `false`                          | Salida legible solo con `pnpm dev:pretty`; en JSON por defecto.                                       |
+| `CORS_ORIGIN`                                                                | desarrollo                   | `http://localhost:5173`          | Orígenes del SPA (lista por comas). En producción no aplica (mismo origen).                           |
+| `METRICS_APP` / `WORKER_METRICS_PORT`                                        | worker                       | `oasis-api` / `9101`             | Etiqueta de Prometheus y exporter del worker (red interna).                                           |
+| `DATABASE_URL`                                                               | ambos                        | —                                | Cadena de conexión de PostgreSQL. En Docker el host es `postgres`.                                    |
+| `REDIS_HOST` / `REDIS_PORT`                                                  | ambos                        | `localhost` / `6379`             | Redis de BullMQ y de los refresh tokens.                                                              |
+| `REDIS_PASSWORD`                                                             | ambos                        | vacío                            | Opcional.                                                                                             |
+| `JWT_ACCESS_SECRET`                                                          | ambos                        | —                                | Firma del access token (≥ 32 caracteres).                                                             |
+| `JWT_REFRESH_SECRET`                                                         | ambos                        | —                                | Firma del refresh token, distinta de la anterior.                                                     |
+| `JWT_ACCESS_TTL`                                                             | ambos                        | `15m`                            | Vigencia del access token.                                                                            |
+| `JWT_REFRESH_TTL`                                                            | ambos                        | `7d`                             | Vigencia de la cookie httpOnly.                                                                       |
+| `CHAIN_ID`                                                                   | ambos                        | `31337`                          | `31337` local \| `80002` Amoy \| `137` Polygon. Selecciona la chain en viem.                          |
+| `RPC_URL`                                                                    | ambos                        | `http://127.0.0.1:8545`          | RPC principal.                                                                                        |
+| `RPC_URL_FALLBACK`                                                           | ambos                        | vacío                            | RPC de respaldo (transporte `fallback` de viem).                                                      |
+| `CONTRACT_ADDRESS`                                                           | ambos                        | vacío                            | Dirección de `RegistroRecibos`.                                                                       |
+| `MAX_FEE_PER_GAS_GWEI`                                                       | ambos                        | `50`                             | Tope de `maxFeePerGas` al anclar.                                                                     |
+| `EXPLORER_BASE_URL`                                                          | ambos                        | `https://amoy.polygonscan.com`   | Base de los enlaces públicos.                                                                         |
+| `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR-006).                             |
+| `OPERATOR_ADDRESS`                                                           | scripts de contratos         | —                                | Cuenta `REGISTRADOR_ROLE` para `grant-registrador.ts` (no es secreto).                                |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`                        | `.env` (Docker)              | `oasis`                          | Credenciales de la imagen de PostgreSQL en compose.                                                   |
+| `SEED_ADMIN_EMAIL`                                                           | seed                         | `admin@oasis.com`                | Correo del ADMIN sembrado.                                                                            |
+| `SEED_ADMIN_PASSWORD` / `SEED_OPERADOR_PASSWORD` / `SEED_CLIENTE_PASSWORD`   | seed                         | `Admin.Oasis1` …                 | Contraseñas del seed (opcionales). En producción el seed **se niega** a usar los valores por defecto. |
+| `THROTTLE_GLOBAL_LIMIT`                                                      | ambos                        | `100`                            | Peticiones/min por IP del límite global.                                                              |
+| `THROTTLE_LOGIN_LIMIT`                                                       | ambos                        | `5`                              | Por minuto en `POST /auth/login`.                                                                     |
+| `THROTTLE_REFRESH_LIMIT`                                                     | ambos                        | `20`                             | Por minuto en `/auth/refresh` y `/auth/logout`.                                                       |
+| `THROTTLE_VERIFICACION_PUBLICA_LIMIT`                                        | ambos                        | `20`                             | Por minuto en la verificación pública.                                                                |
+| `WORKER_METRICS_PORT`                                                        | worker                       | `9101`                           | Exporter de métricas del anclaje (red interna).                                                       |
+| `DOMAIN`                                                                     | ambos                        | `localhost`                      | Dominio que sirve Caddy con TLS automático.                                                           |
+| `OASIS_API_IMAGE` / `OASIS_MIGRATOR_IMAGE` / `OASIS_WEB_IMAGE` / `OASIS_TAG` | `.env`                       | `ghcr.io/oasis-seguros/*:latest` | Imágenes y etiqueta de `compose.prod.yaml`.                                                           |
+| `GRAFANA_ADMIN_PASSWORD`                                                     | `.env`                       | —                                | Solo el día de evaluación (`compose.monitoring.yaml`).                                                |
+| `VITE_API_BASE_URL`                                                          | SPA                          | `/api/v1`                        | Solo en `pnpm dev`; en producción Caddy sirve el mismo origen.                                        |
 
 ## Notas de fidelidad a la documentación oficial
 

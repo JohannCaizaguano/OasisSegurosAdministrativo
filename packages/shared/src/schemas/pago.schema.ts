@@ -33,10 +33,13 @@ export const pagoSchema = z.object({
   metodo: metodoPagoSchema,
   referencia: z.string().nullish(),
   estado: estadoPagoSchema,
+  registradoPorId: z.uuid().nullish(),
   validadoPorId: z.uuid().nullish(),
   validadoEn: z.iso.datetime().nullish(),
   /** Nota de auditoría del operador. Interna: nunca se ancla. */
   nota: z.string().nullish(),
+  /** Motivo obligatorio del rechazo (HU-19). */
+  motivoRechazo: z.string().nullish(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

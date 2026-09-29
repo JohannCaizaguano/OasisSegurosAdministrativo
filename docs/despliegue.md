@@ -79,7 +79,7 @@ cd /opt/oasis && docker compose -f compose.prod.yaml up -d
 ```
 
 `compose.prod.yaml` carga `.env.worker` únicamente en el servicio `worker`, así que
-`docker inspect` del contenedor `api` no muestra la clave (ADR 0004). Verifíquelo:
+`docker inspect` del contenedor `api` no muestra la clave (ADR-006). Verifíquelo:
 
 ```bash
 docker inspect oasis-api-1 --format '{{range .Config.Env}}{{println .}}{{end}}' \

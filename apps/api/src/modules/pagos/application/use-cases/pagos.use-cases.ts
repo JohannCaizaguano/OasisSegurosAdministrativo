@@ -1,7 +1,11 @@
-import { NoEncontradoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
+import {
+  NoEncontradoError,
+  ReglaNegocioError,
+  ValidacionError,
+} from '../../../../shared-kernel/domain-error';
 import type { Pago } from '../../domain/pago';
 import type {
-  DatosCrearPago,
+  ComandoCrearPago,
   FiltrosPagos,
   PaginaPagos,
   PagosRepositoryPort,
@@ -10,8 +14,13 @@ import type {
 export class CrearPagoUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
-  ejecutar(datos: DatosCrearPago): Promise<Pago> {
-    return this.pagos.crear(datos);
+  async ejecutar(datos: ComandoCrearPago): Promise<Pago> {
+    const metodo = await this.pagos.buscarMetodoPago(datos.metodo);
+    if (!metodo) {
+      throw new ValidacionError(`Método de pago no reconocido: ${datos.metodo}`);
+    }
+    const { metodo: _metodo, ...resto } = datos;
+    return this.pagos.crear({ ...resto, metodoPagoId: metodo.id });
   }
 }
 

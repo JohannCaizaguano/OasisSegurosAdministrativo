@@ -13,6 +13,12 @@ const direccionOpcional = z.preprocess(
     .optional(),
 );
 
+/** Acepta solo "true"/"false" (evita el `z.coerce.boolean()` que convierte "false" en true). */
+const booleano = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((valor) => valor === 'true');
+
 /**
  * Esquema de entorno del API. Nótese que NO incluye OPERATOR_PRIVATE_KEY:
  * la clave privada operadora solo existe en el proceso worker.
@@ -20,6 +26,18 @@ const direccionOpcional = z.preprocess(
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+
+  // Logs: JSON siempre; la salida legible es una opción explícita de desarrollo.
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  LOG_PRETTY: booleano,
+
+  // Identidad y puerto del exporter de métricas (lo usa sobre todo el worker).
+  METRICS_APP: z.string().min(1).default('oasis-api'),
+  WORKER_METRICS_PORT: z.coerce.number().int().min(1).max(65535).default(9101),
+
+  // Orígenes permitidos para el SPA en desarrollo (lista separada por comas).
+  // En producción Caddy sirve SPA y API en el mismo origen (ADR-009) y CORS no aplica.
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
 
@@ -88,4 +106,21 @@ export function validateWorkerEnv(raw: Record<string, unknown>): WorkerEnv {
     );
   }
   return resultado.data;
+}
+
+/**
+ * Lee y valida la clave de la cuenta operadora. Vive en la capa de
+ * configuración porque el esquema del API no la conoce (ADR-006): solo el
+ * proceso worker puede invocarla.
+ */
+export function claveOperadoraDelEntorno(
+  raw: Record<string, unknown> = process.env,
+): `0x${string}` {
+  const parseo = workerEnvSchema.shape.OPERATOR_PRIVATE_KEY.safeParse(raw.OPERATOR_PRIVATE_KEY);
+  if (!parseo.success) {
+    throw new Error(
+      'OPERATOR_PRIVATE_KEY ausente o inválida. Solo el proceso worker debe configurarla.',
+    );
+  }
+  return parseo.data as `0x${string}`;
 }

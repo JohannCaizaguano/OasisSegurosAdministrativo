@@ -1,4 +1,4 @@
-# ADR 0004 · Firma custodial con separación de roles
+# ADR-006 · Firma custodial con separación de roles
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09

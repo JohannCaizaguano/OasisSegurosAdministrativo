@@ -10,7 +10,7 @@ x-logging: &logging
       max-file: '3'
 
 # La clave privada de la cuenta operadora vive en `.env.worker`, que SÓLO se
-# inyecta en el contenedor `worker` (ADR 0004). `.env` nunca debe contener
+# inyecta en el contenedor `worker` (ADR-006). `.env` nunca debe contener
 # OPERATOR_PRIVATE_KEY: el api y el migrador no la necesitan y no deben poder
 # leerla (visible en `docker inspect` y en /proc/1/environ).
 x-api-common: &api-common

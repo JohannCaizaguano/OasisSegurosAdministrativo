@@ -1,4 +1,4 @@
-# ADR 0005 · Caddy sirviendo SPA y API en el mismo origen
+# ADR-009 · Caddy sirviendo SPA y API en el mismo origen
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09

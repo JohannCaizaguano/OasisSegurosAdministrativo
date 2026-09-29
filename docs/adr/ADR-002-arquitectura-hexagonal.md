@@ -1,4 +1,4 @@
-# ADR 0001 · Arquitectura hexagonal por módulo de negocio
+# ADR-002 · Arquitectura hexagonal por módulo de negocio
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09
@@ -22,7 +22,7 @@ Aplicar puertos y adaptadores (hexagonal) dentro de cada módulo:
 - `presentation`: controladores NestJS que dependen solo de casos de uso.
 - Composición explícita en `*.module.ts` con `useFactory` e `inject` por token.
 
-La regla se verifica automáticamente con **dependency-cruiser** (`pnpm depcruise`), que
+La regla se verifica automáticamente con **dependency-cruiser** (`pnpm deps:check`), que
 falla el CI si `domain` importa un framework, si `application` importa `infrastructure` o
 si `presentation` importa un adaptador. La configuración fija `baseDir` y ancla el patrón
 de exclusión a `^(dist|build|src/generated)`: sin ese anclaje, `dist` también coincidía con

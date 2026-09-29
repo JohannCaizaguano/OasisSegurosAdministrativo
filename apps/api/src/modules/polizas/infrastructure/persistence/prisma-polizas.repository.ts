@@ -9,6 +9,7 @@ import type {
   FiltrosPolizas,
   PaginaPolizas,
   PolizasRepositoryPort,
+  RamoResumen,
 } from '../../application/ports/polizas.repository.port';
 
 interface FilaPoliza {
@@ -16,7 +17,8 @@ interface FilaPoliza {
   numero: string;
   clienteId: string;
   aseguradoraId: string;
-  ramo: string;
+  ramoId: string;
+  ramo: { nombre: string };
   primaTotal: { toString(): string };
   fechaInicio: Date;
   fechaFin: Date;
@@ -25,6 +27,16 @@ interface FilaPoliza {
   updatedAt: Date;
   cliente?: { nombres: string | null; apellidos: string | null; razonSocial: string | null };
   aseguradora?: { nombre: string };
+}
+
+/** Normaliza un ramo para compararlo con el código del catálogo. */
+function comoCodigo(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '_');
 }
 
 @Injectable()
@@ -37,13 +49,13 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
         numero: datos.numero,
         clienteId: datos.clienteId,
         aseguradoraId: datos.aseguradoraId,
-        ramo: datos.ramo,
+        ramoId: datos.ramoId,
         primaTotal: datos.primaTotal,
         fechaInicio: new Date(`${datos.fechaInicio}T00:00:00.000Z`),
         fechaFin: new Date(`${datos.fechaFin}T00:00:00.000Z`),
         estado: datos.estado,
       },
-      include: { cliente: true, aseguradora: true },
+      include: { cliente: true, aseguradora: true, ramo: true },
     });
     return this.mapear(fila);
   }
@@ -56,7 +68,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
         ? {
             OR: [
               { numero: { contains: filtros.q, mode: 'insensitive' as const } },
-              { ramo: { contains: filtros.q, mode: 'insensitive' as const } },
+              { ramo: { nombre: { contains: filtros.q, mode: 'insensitive' as const } } },
             ],
           }
         : {}),
@@ -65,7 +77,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     const [filas, total] = await this.prisma.$transaction([
       this.prisma.poliza.findMany({
         where,
-        include: { cliente: true, aseguradora: true },
+        include: { cliente: true, aseguradora: true, ramo: true },
         orderBy: { createdAt: 'desc' },
         skip: (filtros.pagina - 1) * filtros.porPagina,
         take: filtros.porPagina,
@@ -79,7 +91,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
   async buscarPorId(id: string): Promise<Poliza | null> {
     const fila = await this.prisma.poliza.findUnique({
       where: { id },
-      include: { cliente: true, aseguradora: true },
+      include: { cliente: true, aseguradora: true, ramo: true },
     });
     return fila ? this.mapear(fila) : null;
   }
@@ -94,7 +106,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
           : {}),
         ...(datos.fechaFin ? { fechaFin: new Date(`${datos.fechaFin}T00:00:00.000Z`) } : {}),
       },
-      include: { cliente: true, aseguradora: true },
+      include: { cliente: true, aseguradora: true, ramo: true },
     });
     return this.mapear(fila);
   }
@@ -115,13 +127,28 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     return fila !== null && fila.id !== exceptoId;
   }
 
+  async buscarRamo(valor: string): Promise<RamoResumen | null> {
+    const ramo = await this.prisma.ramo.findFirst({
+      where: {
+        activo: true,
+        OR: [
+          { codigo: comoCodigo(valor) },
+          { nombre: { equals: valor.trim(), mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, nombre: true },
+    });
+    return ramo;
+  }
+
   private mapear(fila: FilaPoliza): Poliza {
     return Poliza.reconstituir({
       id: fila.id,
       numero: fila.numero,
       clienteId: fila.clienteId,
       aseguradoraId: fila.aseguradoraId,
-      ramo: fila.ramo,
+      ramoId: fila.ramoId,
+      ramo: fila.ramo.nombre,
       primaTotal: fila.primaTotal.toString(),
       fechaInicio: fila.fechaInicio.toISOString().slice(0, 10),
       fechaFin: fila.fechaFin.toISOString().slice(0, 10),

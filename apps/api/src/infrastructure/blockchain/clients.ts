@@ -17,7 +17,7 @@ export function crearTransporte(config: AppConfig) {
 
 export function crearPublicClient(config: AppConfig): PublicClient {
   const chain = seleccionarChain(config.blockchain.chainId);
-  return createPublicClient({ chain, transport: crearTransporte(config) }) as PublicClient;
+  return createPublicClient({ chain, transport: crearTransporte(config) });
 }
 
 export function cadenaActual(config: AppConfig): Chain | undefined {
