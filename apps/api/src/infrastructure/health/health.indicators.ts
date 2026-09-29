@@ -5,6 +5,32 @@ import type Redis from 'ioredis';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
 
+/**
+ * Tiempo máximo que un chequeo espera a su dependencia antes de reportarla
+ * caída. Es imprescindible con Redis: BullMQ configura `ioredis` con
+ * `maxRetriesPerRequest: null` (reintentos infinitos), así que un `ping` con el
+ * servidor caído se queda encolado y `/health` nunca respondería 503.
+ */
+const TIEMPO_LIMITE_MS = 2_000;
+
+function conTiempoLimite<T>(promesa: Promise<T>, descripcion: string): Promise<T> {
+  return new Promise<T>((resolver, rechazar) => {
+    const temporizador = setTimeout(
+      () => rechazar(new Error(`${descripcion} no respondió en ${TIEMPO_LIMITE_MS} ms`)),
+      TIEMPO_LIMITE_MS,
+    );
+    promesa
+      .then((valor) => {
+        clearTimeout(temporizador);
+        resolver(valor);
+      })
+      .catch((error: unknown) => {
+        clearTimeout(temporizador);
+        rechazar(error instanceof Error ? error : new Error(String(error)));
+      });
+  });
+}
+
 @Injectable()
 export class PrismaHealthIndicator {
   constructor(
@@ -15,7 +41,7 @@ export class PrismaHealthIndicator {
   async isHealthy(key: string) {
     const check = this.indicador.check(key);
     try {
-      await this.prisma.$queryRaw`SELECT 1`;
+      await conTiempoLimite(this.prisma.$queryRaw`SELECT 1`, 'PostgreSQL');
       return check.up();
     } catch (error) {
       return check.down({ message: (error as Error).message });
@@ -33,7 +59,7 @@ export class RedisHealthIndicator {
   async isHealthy(key: string) {
     const check = this.indicador.check(key);
     try {
-      const respuesta = await this.redis.ping();
+      const respuesta = await conTiempoLimite(this.redis.ping(), 'Redis');
       return respuesta === 'PONG' ? check.up() : check.down({ message: `Respuesta: ${respuesta}` });
     } catch (error) {
       return check.down({ message: (error as Error).message });

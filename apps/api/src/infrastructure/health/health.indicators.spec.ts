@@ -65,4 +65,31 @@ describe('Indicadores de salud', () => {
       redis: { status: 'down', message: 'socket cerrado' },
     });
   });
+
+  it('reporta Redis abajo si el ping queda encolado (ioredis con caída)', async () => {
+    // Con `maxRetriesPerRequest: null` el comando nunca se rechaza: sin tiempo
+    // límite, /health quedaría colgado en lugar de responder 503.
+    const redis = { ping: jest.fn(() => new Promise<string>(() => undefined)) };
+    const indicador = new RedisHealthIndicator(crearIndicadorTerminus(), redis as unknown as never);
+
+    const resultado = (await indicador.isHealthy('redis')) as {
+      redis: { status: string; message: string };
+    };
+    expect(resultado.redis.status).toBe('down');
+    expect(resultado.redis.message).toMatch(/no respondió/);
+  }, 5_000);
+
+  it('reporta PostgreSQL abajo si la consulta excede el tiempo límite', async () => {
+    const prisma = { $queryRaw: jest.fn(() => new Promise<never>(() => undefined)) };
+    const indicador = new PrismaHealthIndicator(
+      crearIndicadorTerminus(),
+      prisma as unknown as PrismaService,
+    );
+
+    const resultado = (await indicador.isHealthy('database')) as {
+      database: { status: string; message: string };
+    };
+    expect(resultado.database.status).toBe('down');
+    expect(resultado.database.message).toMatch(/no respondió/);
+  }, 5_000);
 });
