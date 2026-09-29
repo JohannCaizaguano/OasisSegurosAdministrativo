@@ -64,8 +64,9 @@ infrastructure → implementa puertos (Nest, Prisma, viem, BullMQ)
 presentation   → casos de uso (nunca adaptadores)
 ```
 
-`pnpm deps:check` falla si se viola esta regla; se probó introduciendo una importación de
-`viem` en `domain/` y la regla la detecta.
+`pnpm deps:check` falla si se viola esta regla y `pnpm deps:check:negativo` lo
+comprueba de forma reproducible: crea un archivo temporal en un `domain/` que
+importa infraestructura, verifica que `deps:check` falle y lo elimina.
 
 ## Hash del recibo
 
