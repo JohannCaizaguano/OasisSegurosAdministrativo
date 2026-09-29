@@ -1,5 +1,5 @@
 /**
- * Regla de dependencias de la arquitectura hexagonal (ver docs/adr/0001-hexagonal.md).
+ * Regla de dependencias de la arquitectura hexagonal (ver docs/adr/ADR-002-arquitectura-hexagonal.md).
  *
  *   domain         -> no conoce Nest, Prisma, viem, BullMQ ni ioredis
  *   application    -> solo domain, sus puertos y utilidades puras

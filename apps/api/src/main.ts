@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
   const config = app.get(AppConfig);
   const logger = app.get(Logger);
 
-  // Caddy es el único proxy hacia el API (mismo origen, ADR 0005). Sin esto,
+  // Caddy es el único proxy hacia el API (mismo origen, ADR-009). Sin esto,
   // Express reporta la IP del contenedor `web` como `req.ip` y el Throttler
   // agrupa a todos los clientes en un único cubo global: el throttling por
   // cliente del endpoint público de verificación quedaría inoperante.

@@ -26,7 +26,7 @@ exponga ningún dato personal.
   refresh token viaja en cookie `httpOnly`/`Secure`/`SameSite=Strict` con rotación.
 - **Medición**: `/metrics` (prom-client) solo en la red interna y stack opcional
   Prometheus + Grafana + cAdvisor + node-exporter.
-- Documentación: `docs/arquitectura` (C4 + secuencia en Mermaid), `docs/adr` (6 ADR) y
+- Documentación: `docs/arquitectura` (C4 + secuencia en Mermaid), `docs/adr` (12 ADR) y
   `docs/despliegue.md`.
 
 ## Estructura
@@ -129,11 +129,11 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 ## Seguridad
 
 - Ningún dato personal ni monto se escribe en la blockchain: solo `idOnchain` y
-  `hashRecibo` (`bytes32`), con sal aleatoria que nunca sale de PostgreSQL (ADR 0006).
+  `hashRecibo` (`bytes32`), con sal aleatoria que nunca sale de PostgreSQL (ADR-004).
 - `OPERATOR_PRIVATE_KEY` **solo** existe en el contenedor `worker`: vive en `.env.worker`
   (plantilla en `.env.worker.example`), que `compose.prod.yaml` inyecta únicamente en ese
   servicio. Ni `.env` ni el entorno del `api` o del `migrate` la contienen, y el esquema de
-  entorno del API tampoco la incluye (ADR 0004).
+  entorno del API tampoco la incluye (ADR-006).
 - `.env` y `.env.worker` ignorados por git; `.env.example` y `.env.worker.example`
   documentan las variables; ningún secreto se versiona.
 - Contraseñas con argon2; JWT de acceso de 15 min; refresh de 7 días con rotación y
@@ -161,7 +161,7 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d   # evaluac
 | `CONTRACT_ADDRESS`                                                           | ambos                        | vacío                            | Dirección de `RegistroRecibos`.                                              |
 | `MAX_FEE_PER_GAS_GWEI`                                                       | ambos                        | `50`                             | Tope de `maxFeePerGas` al anclar.                                            |
 | `EXPLORER_BASE_URL`                                                          | ambos                        | `https://amoy.polygonscan.com`   | Base de los enlaces públicos.                                                |
-| `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR 0004).   |
+| `OPERATOR_PRIVATE_KEY`                                                       | **`.env.worker` únicamente** | —                                | Clave de la cuenta `REGISTRADOR_ROLE`. El API no la puede leer (ADR-006).    |
 | `OPERATOR_ADDRESS`                                                           | scripts de contratos         | —                                | Cuenta `REGISTRADOR_ROLE` para `grant-registrador.ts` (no es secreto).       |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB`                        | `.env` (Docker)              | `oasis`                          | Credenciales de la imagen de PostgreSQL en compose.                          |
 | `SEED_ADMIN_PASSWORD` / `SEED_OPERADOR_PASSWORD` / `SEED_CLIENTE_PASSWORD`   | seed                         | `Admin.Oasis1` …                 | Contraseñas del seed (opcionales).                                           |

@@ -1,4 +1,4 @@
-# ADR 0003 · Transactional Outbox con BullMQ
+# ADR-005 · Transactional Outbox con BullMQ
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09

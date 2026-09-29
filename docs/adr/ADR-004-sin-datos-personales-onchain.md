@@ -1,4 +1,4 @@
-# ADR 0006 · Ningún dato personal en la blockchain
+# ADR-004 · Ningún dato personal en la blockchain
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09

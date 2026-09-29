@@ -1,4 +1,4 @@
-# ADR 0002 · Polygon PoS (testnet Amoy) para el anclaje
+# ADR-003 · Polygon PoS (testnet Amoy) para el anclaje
 
 - **Estado**: aceptado
 - **Fecha**: 2026-09
