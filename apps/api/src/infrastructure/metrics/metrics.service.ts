@@ -23,15 +23,12 @@ export class MetricsService {
   readonly recibosPendientes: Gauge<'red'>;
 
   constructor(@Inject(METRICS_APP) app: string) {
-    // El API y el worker usan el mismo registro. La etiqueta `app` los
-    // distingue en Prometheus, de modo que las métricas del anclaje (que solo
-    // emite el worker) no se mezclen con las del tráfico HTTP.
+    // La etiqueta `app` distingue API y worker en Prometheus.
     this.app = app;
     this.registry.setDefaultLabels({ app: this.app });
     collectDefaultMetrics({ register: this.registry });
 
-    // En el worker no hay tráfico HTTP: el interceptor no se registra, así que
-    // estas métricas nunca tendrían valores y solo añadirían ruido.
+    // En el worker no hay tráfico HTTP: estas métricas solo añadirían ruido.
     if (this.app === 'oasis-api') {
       this.httpDuracion = new Histogram({
         name: 'http_request_duration_seconds',

@@ -30,9 +30,8 @@ import { UsuariosModule } from './modules/usuarios/usuarios.module';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /**
- * Logger de pino: JSON en todos los entornos, con `requestId` por solicitud.
- * `LOG_PRETTY=true` (solo desarrollo, ver `pnpm dev:pretty`) habilita la salida
- * legible; en producción nunca se activa y las cabeceras sensibles se redactan.
+ * Logger de pino en JSON con `requestId` por solicitud; `LOG_PRETTY=true`
+ * (solo desarrollo) habilita la salida legible.
  */
 export function opcionesLogger() {
   return LoggerModule.forRootAsync({
@@ -67,9 +66,8 @@ export function opcionesLogger() {
   imports: [
     AppConfigModule,
     opcionesLogger(),
-    // Límite global por IP y minuto. Configurable para que la medición de carga
-    // no mida el limitador en lugar del API (ver .env.example). Se resuelve
-    // con forRootAsync porque el decorador se evalúa antes de que exista DI.
+    // Límite global por IP/min, configurable para las pruebas de carga
+    // (`.env.example`); `forRootAsync` porque el decorador se evalúa antes de DI.
     ThrottlerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfig],
@@ -93,10 +91,8 @@ export function opcionesLogger() {
     RecibosModule,
   ],
   providers: [
-    // El orden importa: los guards globales se ejecutan en el orden declarado.
-    // Throttler va primero para que el rate limit también aplique a las
-    // peticiones no autenticadas (login, verificación pública); si fuera último,
-    // JwtAuthGuard respondería 401 antes de que el throttler llegue a contar.
+    // El orden importa: Throttler primero para que el límite aplique también a
+    // las rutas no autenticadas (login, verificación pública).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

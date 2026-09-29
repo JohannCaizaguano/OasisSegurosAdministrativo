@@ -128,10 +128,8 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
         include: { poliza: true, metodoPago: true },
       });
 
-      // Se construye el agregado con `Recibo.nuevo()` en lugar de escribir las
-      // columnas a mano: así los invariantes de creación (estado inicial,
-      // txHash/gas/block nulos, contadores a cero) quedan garantizados por el
-      // dominio y no por una cadena literal repetida en el adaptador.
+      // El agregado se construye con `Recibo.nuevo()` para que los invariantes
+      // de creación los garantice el dominio.
       const recibo = Recibo.nuevo(datos.recibo);
       const filaRecibo = await tx.recibo.create({
         data: {
@@ -185,9 +183,8 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       monto: fila.monto.toString(),
       fechaPago: fila.fechaPago.toISOString().slice(0, 10),
       metodoPagoId: fila.metodoPagoId,
-      // El catálogo solo contiene los códigos de `METODOS_PAGO` (el alta de un
-      // pago los valida en `CrearPagoUseCase`); Prisma tipa la columna como
-      // `string`, de ahí la conversión.
+      // Prisma tipa la columna como `string`; el catálogo solo contiene códigos
+      // de `METODOS_PAGO`.
       metodo: fila.metodoPago.codigo as MetodoPago,
       referencia: fila.referencia,
       estado: fila.estado,

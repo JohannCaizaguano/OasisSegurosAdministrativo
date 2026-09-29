@@ -41,12 +41,8 @@ export const listarRecibosQuerySchema = paginacionQuerySchema.extend({
 export type ListarRecibosQuery = z.infer<typeof listarRecibosQuerySchema>;
 
 /**
- * Respuesta pública de verificación. NUNCA incluye datos personales:
- * solo identificadores opacos, hashes, estado y metadatos de la cadena.
- */
-/**
- * Código público del recibo (`RC-` + 12 hex). Se valida en el endpoint público
- * para que una cadena arbitraria no llegue a la consulta a la base de datos.
+ * Código público del recibo (`RC-` + 12 hex); se valida para que una cadena
+ * arbitraria no llegue a la consulta a la base de datos.
  */
 export const codigoReciboSchema = z
   .string()
@@ -54,6 +50,10 @@ export const codigoReciboSchema = z
   .toUpperCase()
   .regex(/^RC-[0-9A-F]{12}$/, 'El código del recibo tiene el formato RC-XXXXXXXXXXXX');
 
+/**
+ * Respuesta pública de verificación: solo identificadores opacos, hashes,
+ * estado y metadatos de la cadena (nunca datos personales).
+ */
 export const verificacionPublicaSchema = z.object({
   codigo: z.string(),
   estado: estadoVerificacionSchema,

@@ -5,11 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { acortarHash } from '@/lib/format';
 
-/**
- * Tarjeta con el QR y el enlace a la verificación pública del recibo.
- * La URL se compone en el cliente: en producción el origen es el del dominio
- * servido por Caddy (mismo origen, sin CORS).
- */
+/** Tarjeta con el QR y el enlace a la verificación pública del recibo. */
 export function TarjetaVerificacionPublica({
   codigo,
   hashRecibo,

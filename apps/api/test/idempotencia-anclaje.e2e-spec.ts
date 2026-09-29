@@ -25,13 +25,8 @@ import type { ClockPort } from '../src/shared-kernel/clock.port';
 import { TOKENS_TRANSVERSALES } from '../src/shared-kernel/tokens';
 
 /**
- * Idempotencia del anclaje: se simula la caída del worker después de enviar la
- * transacción (antes de guardar el estado) y se verifica que al reanudar:
- *   - detecta el registro on-chain y marca ANCLADO sin enviar otra transacción
- *   - una segunda ejecución termina en SIN_CAMBIOS
- *   - la cadena contiene exactamente UN evento ReciboRegistrado para ese id
- *
- * El worker NO se levanta en este test: el job queda encolado pero sin procesar.
+ * Idempotencia del anclaje: caída simulada del worker tras enviar la
+ * transacción; al reanudar se detecta el registro on-chain sin reenviar.
  */
 describe('Idempotencia del anclaje (e2e)', () => {
   let app: INestApplication;
@@ -134,8 +129,7 @@ describe('Idempotencia del anclaje (e2e)', () => {
   it('recupera un envío huérfano (caída tras broadcast) sin reenviar la transacción', async () => {
     const recibo = await crearReciboPendiente();
 
-    // Caída simulada: la transacción se difunde pero el worker muere antes de
-    // guardar txHash/estado en la base de datos.
+    // Caída simulada: transacción difundida, estado no persistido.
     const { txHash } = await registro.enviarRegistro(recibo.idOnchain, recibo.hashRecibo, {
       maxFeePerGasGwei: cadena.maxFeePerGasGwei,
     });

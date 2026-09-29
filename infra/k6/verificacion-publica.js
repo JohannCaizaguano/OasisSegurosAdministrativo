@@ -1,11 +1,7 @@
-// Escenario k6: verificación pública de recibos (sin autenticación).
+// Escenario k6: verificación pública (sin autenticación). El endpoint está
+// limitado a 20/min; la cadencia se calcula desde el límite vigente.
 //
 // Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/verificacion-publica.js
-//
-// Este endpoint está limitado a 20/min por IP (`THROTTLE_VERIFICACION_PUBLICA_LIMIT`),
-// que es la protección deliberadamente estricta que pide el enunciado. La
-// cadencia se calcula a partir del límite vigente; para medir por encima hay que
-// subirlo antes en el servidor y pasarlo también a k6.
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 

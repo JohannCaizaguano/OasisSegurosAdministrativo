@@ -2,7 +2,7 @@ import type { EstadoPago, Pago } from '@oasis/shared';
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { AvisoError, EsqueletoTabla } from '@/components/data-state';
+import { AvisoError, EsqueletoTabla } from '@/components/DataState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -192,8 +192,7 @@ export function PagosPage() {
             type="button"
             variant="outline"
             size="sm"
-            // Sin `meta` no se sabe si hay página siguiente: se bloquea para no
-            // avanzar a ciegas mientras la consulta aún no ha resuelto.
+            // Sin `meta` no se sabe si hay página siguiente.
             disabled={!meta || meta.page >= meta.totalPages || consulta.isFetching}
             onClick={() => setPagina((valor) => valor + 1)}
           >

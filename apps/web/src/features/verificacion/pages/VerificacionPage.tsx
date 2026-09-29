@@ -50,10 +50,8 @@ export function VerificacionPage() {
 
   const consulta = useVerificacion(codigo);
 
-  // Al navegar de /verificar/A a /verificar/B React reutiliza la misma
-  // instancia del componente, así que el input debe seguir a la ruta. Se ajusta
-  // durante el render (patrón de React para estado derivado de props) y no en
-  // un efecto, que provocaría un segundo render en cascada.
+  // El input sigue a la ruta (React reutiliza la instancia); ajuste durante el
+  // render, no en un efecto.
   if (codigo !== codigoPrevio) {
     setCodigoPrevio(codigo);
     setEntrada(codigo ?? '');

@@ -1,10 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 
-/**
- * Polyfills que jsdom no implementa y que necesitan los componentes basados en
- * Radix (Select, Dialog, DropdownMenu). Sin ellos, el primer test de render de
- * un componente de estos falla con errores poco descriptivos.
- */
+/** Polyfills que jsdom no implementa y que necesitan los componentes Radix. */
 if (!window.matchMedia) {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,

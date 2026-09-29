@@ -3,17 +3,8 @@ import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * Verifica la cobertura de los contratos y genera el reporte de gas.
- *
- * Alcance real de la medición: el plugin de cobertura de Hardhat 3 instrumenta
- * líneas y sentencias, pero NO ramas ni funciones. Su informe HTML muestra
- * "100 % Branches" y "100 % Functions" con 0/0 en ambos casos: es una plantilla
- * vacía, no una medición. Este script solo afirma lo que el instrumentador
- * mide de verdad (líneas y sentencias) y falla el build si baja del umbral.
- * Para cobertura de ramas haría falta migrar los tests a Foundry.
- *
- * Uso (desde packages/contracts):
- *   pnpm run reporte        (= test --coverage --gas-stats + este script)
+ * Cobertura (líneas/sentencias; Hardhat 3 no instrumenta ramas) y reporte de
+ * gas; falla si baja del umbral. Uso: `pnpm run reporte`.
  */
 
 const UMBRAL = 90;
@@ -54,11 +45,8 @@ function porcentaje(cubiertas: number, total: number): number {
 }
 
 /**
- * Mide el bytecode desplegable de un perfil, recompilando desde cero.
- *
- * No se puede leer el artefacto que dejó la corrida con `--coverage`: esa
- * compilación inyecta instrumentación y el bytecode sale inflado (3.994 bytes
- * reales frente a 5.155 instrumentados), con lo que el número sería falso.
+ * Mide el bytecode desplegable recompilando: el artefacto de `--coverage` sale
+ * instrumentado.
  */
 function medirBytecode(perfil?: 'production'): number {
   rmSync(join(RAIZ, 'artifacts'), { recursive: true, force: true });
@@ -124,8 +112,7 @@ function escribirGas(): void {
   const tamanoDefault = medirBytecode();
   const tamanoProduction = medirBytecode('production');
   const reduccion = (((tamanoDefault - tamanoProduction) / tamanoDefault) * 100).toFixed(0);
-  // Gas de despliegue recompilado con el perfil de producción (el que se
-  // despliega); el gas de la corrida con --coverage viene del perfil default.
+  // Gas del perfil de producción (el que se despliega).
   const gasDespliegueDefault = despliegue;
 
   const filas = [...porFuncion.entries()]

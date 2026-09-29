@@ -1,11 +1,4 @@
-/**
- * Tipos de dominio compartidos entre el API y la SPA.
- *
- * Todos son alias derivados de los esquemas Zod y de las constantes, que siguen
- * siendo la única fuente de verdad; este módulo solo los agrupa para ofrecer un
- * único punto de importación (por ejemplo, `import type { Pago } from '@oasis/shared'`)
- * sin duplicar declaraciones ni crear dependencias circulares.
- */
+/** Tipos de dominio compartidos entre API y SPA (alias de los esquemas Zod). */
 
 // --- Entidades y modelos de lectura ------------------------------------------
 export type { Aseguradora } from '../schemas/aseguradora.schema';

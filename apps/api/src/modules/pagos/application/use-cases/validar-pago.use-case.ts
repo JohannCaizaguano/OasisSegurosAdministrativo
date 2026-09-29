@@ -12,10 +12,8 @@ export interface ResultadoValidacion {
 }
 
 /**
- * Flujo crítico: valida el pago y emite el recibo en una única transacción de
- * base de datos. Después del commit encola el anclaje (Transactional Outbox):
- * si el proceso cae entre el commit y el encolado, el barrido del worker
- * recupera los recibos que sigan en PENDIENTE_ANCLAJE.
+ * Flujo crítico: valida el pago y emite el recibo en una única transacción;
+ * tras el commit encola el anclaje (Transactional Outbox).
  */
 export class ValidarPagoUseCase {
   constructor(

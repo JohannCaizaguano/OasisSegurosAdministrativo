@@ -28,14 +28,8 @@ export function useLogout() {
 }
 
 /**
- * Restaura la sesión al cargar la SPA usando la cookie httpOnly de refresh.
- * Devuelve true cuando ya se intentó (para no mostrar los guards en falso).
- *
- * Se reutiliza `refrescarToken` del api-client, que deduplica el refresco: bajo
- * `StrictMode` el efecto se monta dos veces en desarrollo, y dos POST a
- * `/auth/refresh` con la misma cookie rotarían dos veces el mismo token de un
- * solo uso. El API lo detecta como reutilización y revoca todos los tokens,
- * dejando al usuario sin sesión en cada arranque en frío.
+ * Restaura la sesión al cargar usando la cookie de refresh; `refrescarToken`
+ * deduplica el intento (StrictMode monta el efecto dos veces).
  */
 export function useRestaurarSesion(): boolean {
   const [listo, setListo] = useState(false);
