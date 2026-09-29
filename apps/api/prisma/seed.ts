@@ -14,7 +14,14 @@ if (!connectionString) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const NODE_ENV = process.env.NODE_ENV ?? 'development';
-const ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@oasis.com';
+
+/** Lee una variable de entorno tratando la cadena vacía como ausente. */
+function leerTexto(variable: string): string | undefined {
+  const valor = process.env[variable];
+  return valor !== undefined && valor.trim().length > 0 ? valor.trim() : undefined;
+}
+
+const ADMIN_EMAIL = leerTexto('SEED_ADMIN_EMAIL') ?? 'admin@oasis.com';
 
 const CLAVES_POR_DEFECTO = {
   SEED_ADMIN_PASSWORD: 'Admin.Oasis1',
@@ -27,7 +34,7 @@ const CLAVES_POR_DEFECTO = {
  * contraseña por defecto (o sin definirla).
  */
 function claveDeSeed(variable: keyof typeof CLAVES_POR_DEFECTO): string {
-  const valor = process.env[variable];
+  const valor = leerTexto(variable);
   const porDefecto: string = CLAVES_POR_DEFECTO[variable];
   if (NODE_ENV === 'production' && (valor === undefined || valor === porDefecto)) {
     throw new Error(
