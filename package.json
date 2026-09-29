@@ -21,7 +21,7 @@
     "dev:infra": "docker compose -f compose.dev.yaml up -d",
     "dev:infra:down": "docker compose -f compose.dev.yaml down",
     "dev:chain": "node infra/scripts/dev-chain.mjs",
-    "depcruise": "pnpm --filter @oasis/api depcruise"
+    "deps:check": "pnpm --filter @oasis/api deps:check"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",

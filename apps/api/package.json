@@ -16,7 +16,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
-    "depcruise": "depcruise src --config .dependency-cruiser.cjs"
+    "deps:check": "depcruise src --config .dependency-cruiser.cjs"
   },
   "jest": {
     "moduleFileExtensions": [

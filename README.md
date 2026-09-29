@@ -78,7 +78,7 @@ pnpm dev                       # API, worker y SPA con recarga en caliente
 | -------------------------------------------- | --------------------------------------------------- |
 | `pnpm build` / `lint` / `typecheck` / `test` | Tareas en todo el workspace.                        |
 | `pnpm test:e2e`                              | E2E del API (requiere la infraestructura arriba).   |
-| `pnpm depcruise`                             | Verifica la regla hexagonal.                        |
+| `pnpm deps:check`                            | Verifica la regla hexagonal.                        |
 | `pnpm dev:infra` / `dev:infra:down`          | Postgres, Redis y nodo Hardhat (compose.dev).       |
 | `pnpm dev:chain`                             | Despliegue local (Ignition) + rol + `.env` del API. |
 | `pnpm dev`                                   | API + worker + SPA en modo desarrollo.              |

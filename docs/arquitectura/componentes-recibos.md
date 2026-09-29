@@ -64,7 +64,7 @@ infrastructure → implementa puertos (Nest, Prisma, viem, BullMQ)
 presentation   → casos de uso (nunca adaptadores)
 ```
 
-`pnpm depcruise` falla si se viola esta regla; se probó introduciendo una importación de
+`pnpm deps:check` falla si se viola esta regla; se probó introduciendo una importación de
 `viem` en `domain/` y la regla la detecta.
 
 ## Hash del recibo
