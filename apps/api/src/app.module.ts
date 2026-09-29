@@ -14,6 +14,7 @@ import { ClockModule } from './infrastructure/clock/clock.module';
 import { HealthModule } from './infrastructure/health/health.module';
 import { MetricsInterceptor } from './infrastructure/metrics/metrics.interceptor';
 import { MetricsModule } from './infrastructure/metrics/metrics.module';
+
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
@@ -25,38 +26,40 @@ import { PolizasModule } from './modules/polizas/polizas.module';
 import { RecibosModule } from './modules/recibos/recibos.module';
 import { UsuariosModule } from './modules/usuarios/usuarios.module';
 
-function transportePretty() {
-  if (process.env.NODE_ENV === 'production') {
-    return undefined;
-  }
-  try {
-    require.resolve('pino-pretty');
-  } catch {
-    // En imágenes de producción sin devDependencies no hay pino-pretty.
-    return undefined;
-  }
-  return {
-    target: 'pino-pretty',
-    options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss' },
-  };
-}
+/** Acepta un `x-request-id` entrante solo si es un UUID válido. */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+/**
+ * Logger de pino: JSON en todos los entornos, con `requestId` por solicitud.
+ * `LOG_PRETTY=true` (solo desarrollo, ver `pnpm dev:pretty`) habilita la salida
+ * legible; en producción nunca se activa y las cabeceras sensibles se redactan.
+ */
 export function opcionesLogger() {
-  return LoggerModule.forRoot({
-    pinoHttp: {
-      level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-      genReqId: (req, res) => {
-        const existente = req.headers['x-request-id'];
-        const id = typeof existente === 'string' && existente.length > 0 ? existente : randomUUID();
-        res.setHeader('x-request-id', id);
-        return id;
+  return LoggerModule.forRootAsync({
+    imports: [AppConfigModule],
+    inject: [AppConfig],
+    useFactory: (config: AppConfig) => ({
+      pinoHttp: {
+        level: config.logLevel,
+        genReqId: (req, res) => {
+          const existente = req.headers['x-request-id'];
+          const id =
+            typeof existente === 'string' && UUID_RE.test(existente) ? existente : randomUUID();
+          res.setHeader('x-request-id', id);
+          return id;
+        },
+        redact: {
+          paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+          censor: '[REDACTADO]',
+        },
+        transport: config.logPretty
+          ? {
+              target: 'pino-pretty',
+              options: { singleLine: true, colorize: true, translateTime: 'SYS:HH:MM:ss' },
+            }
+          : undefined,
       },
-      redact: {
-        paths: ['req.headers.authorization', 'req.headers.cookie'],
-        censor: '[REDACTADO]',
-      },
-      transport: transportePretty(),
-    },
+    }),
   });
 }
 
@@ -79,7 +82,7 @@ export function opcionesLogger() {
     RedisModule,
     QueueModule,
     BlockchainModule,
-    MetricsModule,
+    MetricsModule.forRoot('oasis-api'),
     HealthModule,
     AuthModule,
     UsuariosModule,

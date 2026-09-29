@@ -5,7 +5,7 @@ import { createNonceManager, jsonRpc } from 'viem/nonce';
 import { privateKeyToAccount } from 'viem/accounts';
 
 import { AppConfig } from '../../config/app.config';
-import { workerEnvSchema } from '../../config/env.schema';
+import { claveOperadoraDelEntorno } from '../../config/env.schema';
 import { APP_CHAIN, WALLET_CLIENT } from './blockchain.constants';
 import { crearTransporte } from './clients';
 
@@ -20,16 +20,8 @@ export const proveedorWalletClient: Provider = {
   provide: WALLET_CLIENT,
   inject: [AppConfig, APP_CHAIN],
   useFactory: (config: AppConfig, chain: Chain | undefined): WalletClient => {
-    const parseo = workerEnvSchema.shape.OPERATOR_PRIVATE_KEY.safeParse(
-      process.env.OPERATOR_PRIVATE_KEY,
-    );
-    if (!parseo.success) {
-      throw new Error(
-        'OPERATOR_PRIVATE_KEY ausente o inválida. Solo el proceso worker debe configurarla.',
-      );
-    }
-
-    const account = privateKeyToAccount(parseo.data as `0x${string}`, { nonceManager });
+    const clave = claveOperadoraDelEntorno();
+    const account = privateKeyToAccount(clave, { nonceManager });
 
     return createWalletClient({
       account,

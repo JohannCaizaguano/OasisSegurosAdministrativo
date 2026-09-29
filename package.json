@@ -18,6 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dev": "pnpm --parallel --filter @oasis/api --filter @oasis/web dev",
+    "dev:pretty": "pnpm --filter @oasis/api dev:pretty",
     "dev:infra": "docker compose -f compose.dev.yaml up -d",
     "dev:infra:down": "docker compose -f compose.dev.yaml down",
     "dev:chain": "node infra/scripts/dev-chain.mjs",

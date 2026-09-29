@@ -26,7 +26,7 @@ async function bootstrap(): Promise<void> {
 
   // Mismo origen en producción (Caddy hace de reverse proxy): CORS solo en dev.
   if (!config.esProduccion) {
-    app.enableCors({ origin: true, credentials: true });
+    app.enableCors({ origin: config.corsOrigins, credentials: true });
   }
 
   app.setGlobalPrefix('api/v1', { exclude: ['metrics'] });

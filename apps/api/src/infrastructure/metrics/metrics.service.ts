@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { Counter, Gauge, Histogram, Registry, collectDefaultMetrics } from 'prom-client';
+
+import { METRICS_APP } from './metrics.constants';
 
 /**
  * Registro de métricas Prometheus del API y del worker (ISO/IEC 25023).
@@ -20,11 +22,11 @@ export class MetricsService {
   readonly reciboAnclajeLatencia: Histogram<'red'>;
   readonly recibosPendientes: Gauge<'red'>;
 
-  constructor() {
+  constructor(@Inject(METRICS_APP) app: string) {
     // El API y el worker usan el mismo registro. La etiqueta `app` los
     // distingue en Prometheus, de modo que las métricas del anclaje (que solo
     // emite el worker) no se mezclen con las del tráfico HTTP.
-    this.app = process.env['METRICS_APP'] ?? 'oasis-api';
+    this.app = app;
     this.registry.setDefaultLabels({ app: this.app });
     collectDefaultMetrics({ register: this.registry });
 
