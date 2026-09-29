@@ -67,6 +67,25 @@ export default tseslint.config(
       globals: { ...globals.jest },
     },
   },
+  // Reglas con información de tipos para el código de aplicación del backend y
+  // del paquete compartido. Las pruebas y los e2e quedan con el config base:
+  // viven en tsconfig.spec.json/jest-e2e.json, fuera del tsconfig de build, y
+  // su tipado ya lo verifica `pnpm typecheck`.
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['apps/api/**/*.ts', 'packages/shared/**/*.ts'],
+    ignores: ['apps/api/src/generated/**', '**/*.spec.ts', 'apps/api/test/**'],
+  })),
+  {
+    files: ['apps/api/**/*.ts', 'packages/shared/**/*.ts'],
+    ignores: ['apps/api/src/generated/**', '**/*.spec.ts', 'apps/api/test/**'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
   {
     files: ['**/*.cjs'],
     languageOptions: {
