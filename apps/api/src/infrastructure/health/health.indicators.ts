@@ -59,7 +59,9 @@ export class RedisHealthIndicator {
   async isHealthy(key: string) {
     const check = this.indicador.check(key);
     try {
-      const respuesta = await conTiempoLimite(this.redis.ping(), 'Redis');
+      // ioredis tipa `ping()` como `Promise<'PONG'>`; en la práctica devuelve
+      // cualquier respuesta del servidor, así que se ensancha a string.
+      const respuesta = await conTiempoLimite(this.redis.ping() as Promise<string>, 'Redis');
       return respuesta === 'PONG' ? check.up() : check.down({ message: `Respuesta: ${respuesta}` });
     } catch (error) {
       return check.down({ message: (error as Error).message });

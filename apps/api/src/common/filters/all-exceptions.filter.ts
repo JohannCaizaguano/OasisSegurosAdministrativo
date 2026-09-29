@@ -22,6 +22,11 @@ interface CuerpoError {
   details?: unknown;
 }
 
+interface AdaptadorHttp {
+  getRequestUrl(request: unknown): string;
+  reply(response: unknown, body: unknown, status: number): void;
+}
+
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(
@@ -32,7 +37,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
   }
 
   catch(exception: unknown, host: ArgumentsHost): void {
-    const { httpAdapter } = this.httpAdapterHost;
+    // El adaptador de Nest devuelve `any`; se acota aquí para conservar el
+    // tipado estricto en el resto del filtro.
+    const adaptador = this.httpAdapterHost.httpAdapter as unknown as AdaptadorHttp;
     const ctx = host.switchToHttp();
     const request = ctx.getRequest<{
       id?: string;
@@ -40,17 +47,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
       method?: string;
       headers?: Record<string, unknown>;
     }>();
-    const response = ctx.getResponse();
+    const response = ctx.getResponse<unknown>();
 
     const requestId =
       typeof request?.id === 'string'
         ? request.id
         : typeof request?.headers?.['x-request-id'] === 'string'
-          ? (request.headers['x-request-id'] as string)
+          ? request.headers['x-request-id']
           : 'sin-request-id';
 
     const cuerpo = this.normalizar(exception);
-    const path = httpAdapter.getRequestUrl(request);
+    const path = adaptador.getRequestUrl(request);
 
     if (cuerpo.statusCode >= 500) {
       this.logger.error(
@@ -64,7 +71,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
-    httpAdapter.reply(
+    adaptador.reply(
       response,
       {
         statusCode: cuerpo.statusCode,

@@ -27,6 +27,6 @@ export const proveedorWalletClient: Provider = {
       account,
       chain,
       transport: crearTransporte(config),
-    }) as WalletClient;
+    });
   },
 };
