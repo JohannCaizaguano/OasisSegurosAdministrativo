@@ -10,6 +10,7 @@
     "test": "jest",
     "test:e2e": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --config test/jest-e2e.json --runInBand --forceExit",
     "dev": "concurrently -n api,worker -c cyan,magenta \"nest start --watch\" \"nest start --watch --entryFile worker\"",
+    "dev:pretty": "cross-env LOG_PRETTY=true pnpm dev",
     "start": "node dist/main.js",
     "start:worker": "node dist/worker.js",
     "prisma:generate": "prisma generate",
@@ -43,6 +44,9 @@
     "transformIgnorePatterns": [
       "node_modules/(?!(.pnpm/)?canonicalize)"
     ],
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
     "testEnvironment": "node",
     "coverageDirectory": "../coverage",
     "collectCoverageFrom": [
