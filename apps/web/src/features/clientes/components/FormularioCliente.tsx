@@ -21,17 +21,14 @@ export function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
   const formulario = useForm<CrearClienteInput>({
     resolver: zodResolver(crearClienteSchema),
     defaultValues: { tipoIdentificacion: 'CEDULA', identificacion: '', email: '' },
-    // Sin esto, los campos de la rama anterior (razonSocial <-> nombres) se
-    // quedan en el estado del formulario y viajan en el cuerpo al cambiar de
-    // tipo de identificación.
+    // Evita que los campos de la rama anterior viajen en el cuerpo al cambiar
+    // de tipo de identificación.
     shouldUnregister: true,
   });
 
   const crear = useCrearCliente();
 
-  // `watch` en el cuerpo del componente re-renderiza el formulario entero en
-  // cada pulsación y ESLint marca uso de una API no memorizable; `useWatch`
-  // suscribe solo a ese campo.
+  // `useWatch` suscribe solo a ese campo (evita re-render por pulsación).
   const tipo = useWatch({ control: formulario.control, name: 'tipoIdentificacion' });
 
   return (

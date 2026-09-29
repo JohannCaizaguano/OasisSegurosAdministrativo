@@ -4,7 +4,7 @@ export type TipoIdentificacion = (typeof TIPOS_IDENTIFICACION)[number];
 export const ESTADOS_POLIZA = ['VIGENTE', 'VENCIDA', 'CANCELADA'] as const;
 export type EstadoPoliza = (typeof ESTADOS_POLIZA)[number];
 
-export const METODOS_PAGO = ['TRANSFERENCIA', 'EFECTIVO', 'TARJETA', 'CHEQUE'] as const;
+export const METODOS_PAGO = ['TRANSFERENCIA', 'DEPOSITO', 'EFECTIVO', 'TARJETA'] as const;
 export type MetodoPago = (typeof METODOS_PAGO)[number];
 
 export const ESTADOS_PAGO = ['REGISTRADO', 'VALIDADO', 'RECHAZADO'] as const;

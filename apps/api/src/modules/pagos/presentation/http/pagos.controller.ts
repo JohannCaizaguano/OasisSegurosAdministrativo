@@ -1,4 +1,5 @@
 import type {
+  CrearPagoInput,
   Pago as PagoRespuesta,
   RechazarPagoInput,
   ValidarPagoInput,
@@ -42,8 +43,13 @@ export class PagosController {
 
   @Post()
   @ApiOperation({ summary: 'Registra un pago' })
-  async crear(@ZodBody(crearPagoSchema) datos: Parameters<CrearPagoUseCase['ejecutar']>[0]) {
-    return this.aRespuesta(await this.crearPago.ejecutar(datos));
+  async crear(
+    @ZodBody(crearPagoSchema) datos: CrearPagoInput,
+    @UsuarioActual() usuario: UsuarioAutenticado,
+  ) {
+    return this.aRespuesta(
+      await this.crearPago.ejecutar({ ...datos, registradoPorId: usuario.id }),
+    );
   }
 
   @Get()
@@ -128,9 +134,11 @@ export class PagosController {
       metodo: pago.metodo,
       referencia: pago.referencia,
       estado: pago.estado,
+      registradoPorId: pago.registradoPorId,
       validadoPorId: pago.validadoPorId,
       validadoEn: pago.validadoEn,
       nota: pago.nota,
+      motivoRechazo: pago.motivoRechazo,
       createdAt: pago.createdAt,
       updatedAt: pago.updatedAt,
     };
@@ -170,6 +178,7 @@ export class MisPagosController {
         referencia: pago.referencia,
         estado: pago.estado,
         validadoEn: pago.validadoEn,
+        motivoRechazo: pago.motivoRechazo,
         createdAt: pago.createdAt,
         updatedAt: pago.updatedAt,
       })),

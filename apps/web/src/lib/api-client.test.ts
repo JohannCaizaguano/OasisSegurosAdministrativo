@@ -168,8 +168,7 @@ describe('Renovación de sesión', () => {
     await expect(apiFetch('/pagos')).rejects.toBeInstanceOf(ApiError);
 
     expect(estado.cerrarSesionLocal).toHaveBeenCalledOnce();
-    // Sin esto, el siguiente usuario de la misma pestaña vería los datos
-    // cacheados del anterior.
+    // La caché se vacía para que el siguiente usuario no vea datos del anterior.
     expect(limpiarCache).toHaveBeenCalledOnce();
   });
 

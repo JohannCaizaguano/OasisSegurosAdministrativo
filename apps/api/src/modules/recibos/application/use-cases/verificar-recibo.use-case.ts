@@ -42,10 +42,8 @@ export class VerificarReciboUseCase {
     const recibo = await this.recibos.buscarPorCodigo(codigo);
 
     if (!recibo) {
-      // No hay recibo, así que no hay instantánea propio: se informa del
-      // despliegue vigente. Se usa la variante que no lanza, para que consultar
-      // un código inexistente en un entorno sin contrato desplegado responda
-      // NO_ENCONTRADO en lugar de un 502.
+      // Sin recibo no hay snapshot propio: se usa la variante que no lanza para
+      // responder NO_ENCONTRADO aunque no haya contrato desplegado.
       return {
         codigo,
         estado: 'NO_ENCONTRADO',

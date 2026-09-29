@@ -8,11 +8,8 @@ export interface PropsHashRecibo {
 const HEX_32 = /^0x[0-9a-f]{64}$/i;
 
 /**
- * Value Object del hash anclado:
- *   hashRecibo = keccak256(sal ‖ payloadCanónico)
- * La sal (32 bytes aleatorios) solo se guarda en la base de datos; el cálculo
- * criptográfico vive en un adaptador (application/ports/hasher-recibos.port.ts)
- * para mantener el dominio libre de frameworks.
+ * Value Object del hash anclado: `keccak256(sal ‖ payloadCanónico)`. El cálculo
+ * vive en un adaptador; la sal solo se guarda en la base de datos.
  */
 export class HashRecibo extends ValueObject<PropsHashRecibo> {
   private constructor(props: PropsHashRecibo) {

@@ -2,24 +2,19 @@ import { NestFactory } from '@nestjs/core';
 import { createServer } from 'node:http';
 import { Logger } from 'nestjs-pino';
 
+import { AppConfig } from './config/app.config';
 import { MetricsService } from './infrastructure/metrics/metrics.service';
 import { WorkerModule } from './worker.module';
 
 /**
- * El worker se levanta con `createApplicationContext`: no hay servidor HTTP, de
- * modo que las métricas que emite (anclajes, latencia, backlog del outbox)
- * nunca llegaban a Prometheus y los paneles del dashboard quedaban vacíos.
- * Se exponen con un servidor mínimo, solo en la red interna.
+ * Exporter mínimo de métricas del worker (no tiene servidor HTTP), solo en la
+ * red interna.
  */
-const PUERTO_METRICAS = Number(process.env['WORKER_METRICS_PORT'] ?? 9101);
-
 async function bootstrap(): Promise<void> {
-  // Distingue las series del worker de las del API en Prometheus.
-  process.env['METRICS_APP'] = 'oasis-worker';
-
   const app = await NestFactory.createApplicationContext(WorkerModule, { bufferLogs: true });
   app.useLogger(app.get(Logger));
 
+  const config = app.get(AppConfig);
   const logger = app.get(Logger);
   logger.log('Worker de anclaje iniciado (barrido cada 30 s, concurrencia 1)');
 
@@ -40,8 +35,9 @@ async function bootstrap(): Promise<void> {
       });
   });
 
-  await new Promise<void>((resolver) => servidor.listen(PUERTO_METRICAS, '0.0.0.0', resolver));
-  logger.log(`Métricas del worker en http://0.0.0.0:${PUERTO_METRICAS}/metrics`);
+  const puertoMetricas = config.workerMetricsPort;
+  await new Promise<void>((resolver) => servidor.listen(puertoMetricas, '0.0.0.0', resolver));
+  logger.log(`Métricas del worker en http://0.0.0.0:${puertoMetricas}/metrics`);
 
   const apagar = async (senal: string): Promise<void> => {
     logger.log(`Señal ${senal} recibida: cerrando worker`);

@@ -63,12 +63,9 @@ export class PrismaRecibosRepository implements RecibosRepositoryPort {
   }
 
   /**
-   * El barrido cubre también los recibos ENVIADO: si el worker cayó después de
-   * enviar la transacción pero antes de guardar el ANCLADO (o si la espera del
-   * receipt agotó el tiempo), el recibo se quedaba sin nadie que lo retomara.
-   * Como `AnclarReciboUseCase` es idempotente y detecta el txHash guardado,
-   * reencolarlo solo sincroniza el estado. La antigüedad se mide desde
-   * `enviadoEn` en este caso, porque `creadoEn` ya pudo ser antiguo.
+   * El barrido cubre también los ENVIADO (caída tras enviar o espera del
+   * receipt agotada): `AnclarReciboUseCase` es idempotente y solo sincroniza; la
+   * antigüedad se mide desde `enviadoEn`.
    */
   async listarPendientes(antesDe: Date): Promise<Recibo[]> {
     const filas = await this.prisma.recibo.findMany({

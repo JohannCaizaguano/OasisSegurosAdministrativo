@@ -1,7 +1,7 @@
 import { FileText, Receipt, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-import { AvisoError, EsqueletoTabla } from '@/components/data-state';
+import { AvisoError, EsqueletoTabla } from '@/components/DataState';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -16,7 +16,7 @@ import {
 import { formatearFecha } from '@/lib/format';
 
 import { useResumenPagos, useResumenRecibos } from '../hooks';
-import { TarjetaResumen } from './tarjeta-resumen';
+import { TarjetaResumen } from './TarjetaResumen';
 
 /** Resumen operativo para ADMIN y OPERADOR. */
 export function PanelPersonal() {

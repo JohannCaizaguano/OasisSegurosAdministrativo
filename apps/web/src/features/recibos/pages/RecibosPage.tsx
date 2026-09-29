@@ -1,7 +1,7 @@
 import type { EstadoRecibo } from '@oasis/shared';
 import { Link } from 'react-router-dom';
 
-import { AvisoError, EsqueletoTabla } from '@/components/data-state';
+import { AvisoError, EsqueletoTabla } from '@/components/DataState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

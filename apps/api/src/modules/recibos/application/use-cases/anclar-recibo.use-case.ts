@@ -13,14 +13,9 @@ export interface SalidaAnclaje {
 }
 
 /**
- * Caso de uso idempotente ejecutado por el worker:
- *  1. Si el recibo ya está ANCLADO (o ANULADO), no hace nada.
- *  2. Si tiene txHash, consulta el receipt: si ya está confirmado y el
- *     contrato tiene el id registrado, sincroniza la base de datos.
- *  3. Si el contrato ya tiene el idOnchain (recuperación tras caída del
- *     worker posterior al envío), marca ANCLADO.
- *  4. En caso contrario simula, envía `registrar` con tope de maxFeePerGas,
- *     guarda txHash + ENVIADO, espera el receipt y guarda ANCLADO.
+ * Caso de uso idempotente del worker: sincroniza el recibo con la cadena
+ * (recuperación tras caída incluida) y, si falta, envía `registrar` y espera
+ * el receipt.
  */
 export class AnclarReciboUseCase {
   constructor(

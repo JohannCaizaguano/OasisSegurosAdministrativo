@@ -1,17 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * Flujo completo desde la SPA:
- *   login (OPERADOR) -> validar un pago (con confirmación explícita) ->
- *   recibo ANCLADO -> detalle con QR -> verificación pública sin sesión.
- *
- * Este test es de pila completa: necesita postgres, redis, el nodo Hardhat con
- * el contrato desplegado y la API + worker compilados. `playwright.config.ts`
- * arranca Vite y `apps/api/test/start-servicios.mjs` levanta el resto, pero la
- * migración y el seed se aplican antes a mano (ver `test:stack` en el README).
- *
- * Las credenciales vienen del entorno para que el seed pueda usar contraseñas
- * distintas de las de por defecto sin romper el test.
+ * E2E de la SPA: login → validar pago → ANCLADO → QR → verificación pública;
+ * requiere la pila completa (ver README).
  */
 const EMAIL = process.env.E2E_EMAIL ?? 'operador@oasis.com';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'Operador.Oasis1';
@@ -31,8 +22,7 @@ test('flujo completo de validación, anclaje y verificación pública', async ({
   };
   expect(polizas.data.length).toBeGreaterThan(0);
 
-  // Referencia única por ejecución: permite localizar la fila exacta en la UI
-  // en lugar de confiar en el orden de la tabla.
+  // Referencia única por ejecución para localizar la fila en la UI.
   const referencia = `E2E-WEB-${Date.now()}`;
   const crearPago = await request.post('/api/v1/pagos', {
     headers: cabeceras,
@@ -57,8 +47,7 @@ test('flujo completo de validación, anclaje y verificación pública', async ({
   await page.getByRole('link', { name: 'Pagos', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos', exact: true })).toBeVisible();
 
-  // Se localiza la fila por su referencia: antes se validaba el primer botón
-  // de la página, que podía ser otro pago distinto al preparado.
+  // Se localiza la fila por su referencia para no validar otro pago.
   await page.getByLabel('Filtrar por estado').click();
   await page.getByRole('option', { name: 'Registrados' }).click();
   const filaPago = page.locator('tbody tr', { hasText: referencia });

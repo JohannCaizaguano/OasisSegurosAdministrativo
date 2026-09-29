@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { AvisoError, EsqueletoTabla } from '@/components/data-state';
+import { AvisoError, EsqueletoTabla } from '@/components/DataState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -21,7 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { FormularioCliente } from '../components/formulario-cliente';
+import { FormularioCliente } from '../components/FormularioCliente';
 import { useClientes } from '../hooks';
 
 export function ClientesPage() {

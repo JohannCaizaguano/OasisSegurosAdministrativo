@@ -3,6 +3,10 @@ dist
 build
 coverage
 pnpm-lock.yaml
+# Documentos de referencia: se tratan como entrada inmutable y no se reformatean.
+docs/referencia/PRODUCT_BACKLOG.md
+docs/referencia/ARQUITECTURA.md
+docs/referencia/arquitectura_img
 apps/web/src/components/ui
 packages/shared/src/abi
 packages/contracts/artifacts

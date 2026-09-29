@@ -1,3 +1,4 @@
+import type { MetodoPago } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { ConflictoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
@@ -9,6 +10,7 @@ import type {
   DatosCrearPago,
   DatosValidarPago,
   FiltrosPagos,
+  MetodoPagoResumen,
   PaginaPagos,
   PagosRepositoryPort,
   ResultadoValidacion,
@@ -19,11 +21,14 @@ interface FilaPago {
   polizaId: string;
   monto: { toString(): string };
   fechaPago: Date;
-  metodo: 'TRANSFERENCIA' | 'EFECTIVO' | 'TARJETA' | 'CHEQUE';
+  metodoPagoId: string;
+  metodoPago: { codigo: string };
   referencia: string | null;
   estado: 'REGISTRADO' | 'VALIDADO' | 'RECHAZADO';
+  registradoPorId: string | null;
   validadoPorId: string | null;
   validadoEn: Date | null;
+  motivoRechazo: string | null;
   nota: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -41,10 +46,11 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
           polizaId: datos.polizaId,
           monto: datos.monto,
           fechaPago: new Date(`${datos.fechaPago}T00:00:00.000Z`),
-          metodo: datos.metodo,
+          metodoPagoId: datos.metodoPagoId,
+          registradoPorId: datos.registradoPorId,
           referencia: datos.referencia,
         },
-        include: { poliza: true },
+        include: { poliza: true, metodoPago: true },
       });
       return this.mapearPago(fila);
     } catch (error) {
@@ -74,7 +80,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
     const [filas, total] = await this.prisma.$transaction([
       this.prisma.pago.findMany({
         where,
-        include: { poliza: true },
+        include: { poliza: true, metodoPago: true },
         orderBy: { fechaPago: 'desc' },
         skip: (filtros.pagina - 1) * filtros.porPagina,
         take: filtros.porPagina,
@@ -86,8 +92,19 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
   }
 
   async buscarPorId(id: string): Promise<Pago | null> {
-    const fila = await this.prisma.pago.findUnique({ where: { id }, include: { poliza: true } });
+    const fila = await this.prisma.pago.findUnique({
+      where: { id },
+      include: { poliza: true, metodoPago: true },
+    });
     return fila ? this.mapearPago(fila) : null;
+  }
+
+  async buscarMetodoPago(codigo: MetodoPago): Promise<MetodoPagoResumen | null> {
+    const fila = await this.prisma.metodoPago.findFirst({
+      where: { activo: true, codigo },
+      select: { id: true, codigo: true },
+    });
+    return fila ? { id: fila.id, codigo: fila.codigo as MetodoPago } : null;
   }
 
   async validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion> {
@@ -108,13 +125,11 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
 
       const filaPago = await tx.pago.findUniqueOrThrow({
         where: { id: datos.pagoId },
-        include: { poliza: true },
+        include: { poliza: true, metodoPago: true },
       });
 
-      // Se construye el agregado con `Recibo.nuevo()` en lugar de escribir las
-      // columnas a mano: así los invariantes de creación (estado inicial,
-      // txHash/gas/block nulos, contadores a cero) quedan garantizados por el
-      // dominio y no por una cadena literal repetida en el adaptador.
+      // El agregado se construye con `Recibo.nuevo()` para que los invariantes
+      // de creación los garantice el dominio.
       const recibo = Recibo.nuevo(datos.recibo);
       const filaRecibo = await tx.recibo.create({
         data: {
@@ -147,7 +162,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
         estado: 'RECHAZADO',
         validadoPorId: rechazadoPorId,
         validadoEn: cuando,
-        nota: motivo,
+        motivoRechazo: motivo,
       },
     });
     if (resultado.count === 0) {
@@ -155,7 +170,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
     }
     const fila = await this.prisma.pago.findUniqueOrThrow({
       where: { id },
-      include: { poliza: true },
+      include: { poliza: true, metodoPago: true },
     });
     return this.mapearPago(fila);
   }
@@ -167,11 +182,16 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       numeroPoliza: fila.poliza?.numero,
       monto: fila.monto.toString(),
       fechaPago: fila.fechaPago.toISOString().slice(0, 10),
-      metodo: fila.metodo,
+      metodoPagoId: fila.metodoPagoId,
+      // Prisma tipa la columna como `string`; el catálogo solo contiene códigos
+      // de `METODOS_PAGO`.
+      metodo: fila.metodoPago.codigo as MetodoPago,
       referencia: fila.referencia,
       estado: fila.estado,
+      registradoPorId: fila.registradoPorId,
       validadoPorId: fila.validadoPorId,
       validadoEn: fila.validadoEn === null ? null : fila.validadoEn.toISOString(),
+      motivoRechazo: fila.motivoRechazo,
       nota: fila.nota,
       createdAt: fila.createdAt.toISOString(),
       updatedAt: fila.updatedAt.toISOString(),
