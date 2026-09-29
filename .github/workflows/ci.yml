@@ -114,6 +114,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @oasis/shared build
+      # El cliente de Prisma no se versiona (src/generated está en .gitignore):
+      # hay que generarlo antes de migrar, sembrar o compilar el API.
+      - name: Generar el cliente de Prisma
+        run: pnpm --filter @oasis/api exec prisma generate
       - run: pnpm --filter @oasis/api run test
       - name: Migrar y sembrar la base de datos
         working-directory: apps/api
