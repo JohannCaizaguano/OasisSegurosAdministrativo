@@ -1,7 +1,7 @@
 import { useAuthStore } from '@/lib/auth-store';
 
-import { PanelCliente } from '../components/panel-cliente';
-import { PanelPersonal } from '../components/panel-personal';
+import { PanelCliente } from '../components/PanelCliente';
+import { PanelPersonal } from '../components/PanelPersonal';
 
 export function DashboardPage() {
   const usuario = useAuthStore((estado) => estado.usuario);

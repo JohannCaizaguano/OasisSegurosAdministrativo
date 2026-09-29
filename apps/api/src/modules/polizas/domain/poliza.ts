@@ -7,6 +7,8 @@ export interface PropsPoliza {
   numero: string;
   clienteId: string;
   aseguradoraId: string;
+  ramoId: string;
+  /** Nombre visible del ramo (catálogo `Ramo`). */
   ramo: string;
   primaTotal: string;
   fechaInicio: string;
@@ -37,6 +39,10 @@ export class Poliza extends Entity<PropsPoliza> {
 
   get aseguradoraId(): string {
     return this.props.aseguradoraId;
+  }
+
+  get ramoId(): string {
+    return this.props.ramoId;
   }
 
   get ramo(): string {

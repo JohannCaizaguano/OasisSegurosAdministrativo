@@ -29,7 +29,7 @@ import { RecibosModule } from './modules/recibos/recibos.module';
     QueueModule,
     BlockchainModule,
     CuentaOperadoraModule,
-    MetricsModule,
+    MetricsModule.forRoot('oasis-worker'),
     RecibosModule,
   ],
   providers: [AnclajeProcessor, BarridoPendientesTask],

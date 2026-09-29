@@ -13,13 +13,31 @@ const direccionOpcional = z.preprocess(
     .optional(),
 );
 
+/** Acepta solo "true"/"false" (evita el `z.coerce.boolean()` que convierte "false" en true). */
+const booleano = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((valor) => valor === 'true');
+
 /**
- * Esquema de entorno del API. Nótese que NO incluye OPERATOR_PRIVATE_KEY:
- * la clave privada operadora solo existe en el proceso worker.
+ * Esquema del API: NO incluye OPERATOR_PRIVATE_KEY, que solo existe en el
+ * proceso worker (ADR-006).
  */
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+
+  // Logs: JSON siempre; la salida legible es una opción explícita de desarrollo.
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  LOG_PRETTY: booleano,
+
+  // Identidad y puerto del exporter de métricas (lo usa sobre todo el worker).
+  METRICS_APP: z.string().min(1).default('oasis-api'),
+  WORKER_METRICS_PORT: z.coerce.number().int().min(1).max(65535).default(9101),
+
+  // Orígenes permitidos para el SPA en desarrollo (lista separada por comas).
+  // En producción Caddy sirve SPA y API en el mismo origen (ADR-009).
+  CORS_ORIGIN: z.string().default('http://localhost:5173'),
 
   DATABASE_URL: z.string().min(1, 'DATABASE_URL es obligatoria'),
 
@@ -42,11 +60,9 @@ export const envSchema = z.object({
   DOMAIN: z.string().min(1).default('localhost'),
 
   /**
-   * Límites del rate limiter (peticiones por minuto y por IP). Son configurables
-   * porque los valores por defecto son de seguridad (5/min en login protege
-   * contra fuerza bruta) y no de rendimiento: con ellos, una prueba de carga de
-   * `POST /auth/login` mediría el throttler y no el API. Durante la evaluación
-   * se suben y se documenta el valor usado (ver docs/despliegue.md).
+   * Límites del rate limiter por IP/min. Configurables porque los valores por
+   * defecto son de seguridad (5/min en login) y una prueba de carga mediría el
+   * limitador; ver docs/despliegue.md.
    */
   THROTTLE_GLOBAL_LIMIT: z.coerce.number().int().positive().default(100),
   THROTTLE_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
@@ -88,4 +104,20 @@ export function validateWorkerEnv(raw: Record<string, unknown>): WorkerEnv {
     );
   }
   return resultado.data;
+}
+
+/**
+ * Lee y valida la clave de la cuenta operadora (ADR-006); solo la invoca el
+ * proceso worker.
+ */
+export function claveOperadoraDelEntorno(
+  raw: Record<string, unknown> = process.env,
+): `0x${string}` {
+  const parseo = workerEnvSchema.shape.OPERATOR_PRIVATE_KEY.safeParse(raw.OPERATOR_PRIVATE_KEY);
+  if (!parseo.success) {
+    throw new Error(
+      'OPERATOR_PRIVATE_KEY ausente o inválida. Solo el proceso worker debe configurarla.',
+    );
+  }
+  return parseo.data as `0x${string}`;
 }

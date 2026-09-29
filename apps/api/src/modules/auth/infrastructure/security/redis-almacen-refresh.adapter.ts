@@ -36,13 +36,9 @@ export class RedisAlmacenRefreshAdapter implements AlmacenRefreshPort {
   }
 
   /**
-   * Consume el jti solo si es el vigente, en una única operación atómica.
-   *
-   * Con `GET` seguido de `DEL`, dos peticiones concurrentes con el mismo token
-   * (doble pestaña, o el doble disparo de un efecto en React StrictMode) leían
-   * el mismo jti y ambas lo consideraban válido: se emitían dos sesiones a
-   * partir de un único refresh token, que es justo el escenario de reutilización
-   * que la rotación debe detectar. El script compara y borra en un solo paso.
+   * Consume el jti solo si es el vigente, en una operación atómica: con `GET` +
+   * `DEL` dos peticiones concurrentes con el mismo token pasaban ambas la
+   * validación.
    */
   async consumir(usuarioId: string, jti: string): Promise<boolean> {
     const resultado = await this.redis.eval(CONSUMIR_SI_COINCIDE, 1, this.clave(usuarioId), jti);

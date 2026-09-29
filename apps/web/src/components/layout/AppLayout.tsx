@@ -90,8 +90,6 @@ export function AppLayout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 items-center justify-between gap-3 border-b bg-[var(--card)] px-4 sm:px-5">
-          {/* Sin este disparador, por debajo de 768 px la barra lateral se
-              ocultaba y no quedaba ninguna forma de navegar. */}
           <Sheet>
             <SheetTrigger asChild>
               <Button
@@ -131,8 +129,7 @@ export function AppLayout() {
                 <DropdownMenuItem
                   data-testid="boton-logout"
                   onSelect={() => {
-                    // `useLogout` ya limpia el estado en `onSettled`; el guard
-                    // de ruta redirige solo, por eso no se navega dos veces.
+                    // `useLogout` limpia el estado; el guard de ruta redirige solo.
                     logout.mutate();
                   }}
                 >

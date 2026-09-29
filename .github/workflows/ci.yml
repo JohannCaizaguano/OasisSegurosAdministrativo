@@ -9,6 +9,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Permisos mínimos: el pipeline solo lee el repositorio.
+permissions:
+  contents: read
+
 env:
   JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-1234
   JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret-1234
@@ -25,10 +29,13 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # `build` va antes de `typecheck` porque `apps/api` genera el cliente de
+      # Prisma y `packages/contracts` los tipos de viem durante la compilación.
       - run: pnpm -r build
       - run: pnpm -r lint
+      - run: pnpm format:check
       - run: pnpm -r typecheck
-      - run: pnpm depcruise
+      - run: pnpm deps:check
 
   contratos:
     name: Contratos (compile, tests, cobertura, solhint)
@@ -107,6 +114,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @oasis/shared build
+      # El cliente de Prisma no se versiona (src/generated está en .gitignore):
+      # hay que generarlo antes de migrar, sembrar o compilar el API.
+      - name: Generar el cliente de Prisma
+        run: pnpm --filter @oasis/api exec prisma generate
       - run: pnpm --filter @oasis/api run test
       - name: Migrar y sembrar la base de datos
         working-directory: apps/api

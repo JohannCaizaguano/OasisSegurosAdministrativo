@@ -1,4 +1,4 @@
-import { AvisoError, EsqueletoTabla } from '@/components/data-state';
+import { AvisoError, EsqueletoTabla } from '@/components/DataState';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

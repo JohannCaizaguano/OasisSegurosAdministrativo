@@ -25,8 +25,20 @@ export interface DatosCrearPago {
   polizaId: string;
   monto: string;
   fechaPago: string;
-  metodo: MetodoPago;
+  metodoPagoId: string;
+  registradoPorId: string | null;
   referencia?: string;
+}
+
+/** Entrada de aplicación: el método llega como código del catálogo. */
+export interface ComandoCrearPago extends Omit<DatosCrearPago, 'metodoPagoId'> {
+  metodo: MetodoPago;
+}
+
+/** Proyección mínima del catálogo de métodos de pago que usa el módulo. */
+export interface MetodoPagoResumen {
+  id: string;
+  codigo: MetodoPago;
 }
 
 export interface DatosValidarPago {
@@ -50,4 +62,6 @@ export interface PagosRepositoryPort {
   /** En UNA transacción: pago = VALIDADO y creación del Recibo PENDIENTE_ANCLAJE. */
   validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion>;
   rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago>;
+  /** Resuelve un método de pago activo por su código (catálogo `MetodoPago`). */
+  buscarMetodoPago(codigo: MetodoPago): Promise<MetodoPagoResumen | null>;
 }

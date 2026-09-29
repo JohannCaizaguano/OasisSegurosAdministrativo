@@ -3,13 +3,7 @@ import { AlertTriangle, Inbox, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
-/**
- * Estados de carga, error y vacío compartidos por las páginas de datos.
- *
- * Antes cada página solo comprobaba `isLoading`: en error, `data` era
- * `undefined`, la condición de "sin resultados" no se cumplía y el usuario
- * veía una tabla con cabeceras y nada más, sin mensaje ni forma de reintentar.
- */
+/** Estados de carga, error y vacío compartidos por las páginas de datos. */
 export function EsqueletoTabla({ filas = 3 }: { filas?: number }) {
   return (
     <div className="grid gap-2" aria-hidden="true">

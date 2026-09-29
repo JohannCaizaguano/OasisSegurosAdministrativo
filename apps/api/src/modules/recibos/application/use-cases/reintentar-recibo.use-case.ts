@@ -22,9 +22,8 @@ export class ReintentarReciboUseCase {
     recibo.reintentar();
     const guardado = await this.recibos.guardar(recibo);
 
-    // El job anterior sigue retenido por BullMQ (removeOnFail) y su jobId
-    // coincide con el del recibo, así que `add` lo descartaría por duplicado y
-    // el reintento no encolaría nada. Hay que retirarlo primero.
+    // El job previo sigue retenido por BullMQ y `add` lo descartaría por
+    // duplicado: hay que retirarlo primero.
     await this.cola.desencolarAnclaje(recibo.id);
     await this.cola.encolarAnclaje(recibo.id);
 

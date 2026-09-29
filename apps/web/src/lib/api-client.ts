@@ -2,15 +2,7 @@ import { apiErrorSchema, type ApiError as CuerpoApiError, type LoginResponse } f
 
 const BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
 
-/**
- * Error de API de la SPA.
- *
- * Se construye validando el cuerpo con `apiErrorSchema` de `@oasis/shared`, que
- * es el mismo contrato que produce el filtro global de errores del API. Antes
- * esta clase declaraba sus propios campos (`status` en vez de `statusCode`, sin
- * `requestId` ni `path`) y el cuerpo se leía como un tipo anónimo: el contrato
- * de error no estaba verificado por ninguna de las dos partes.
- */
+/** Error de API validado con `apiErrorSchema` de `@oasis/shared`. */
 export class ApiError extends Error {
   readonly statusCode: number;
   readonly code: string;
@@ -44,11 +36,8 @@ let obtenerStore: (() => Sesion) | null = null;
 let limpiarCache: (() => void) | null = null;
 
 /**
- * Inyección tardía del store para evitar ciclos de importación con zustand.
- * `alCerrarSesion` permite vaciar la caché de TanStack Query cuando la sesión
- * se cierra sola: sin esto, el siguiente usuario que entre en la misma pestaña
- * vería los datos cacheados del anterior (las claves de consulta no incluyen
- * el usuario).
+ * Inyección tardía del store (evita ciclos con zustand); `alCerrarSesion` vacía
+ * la caché cuando la sesión expira.
  */
 export function configurarApiClient(
   store: () => Sesion,
@@ -61,17 +50,8 @@ export function configurarApiClient(
 let refrescoEnCurso: Promise<string | null> | null = null;
 
 /**
- * Rota el refresh token. Devuelve el nuevo access token, o null si no hay sesión.
- *
- * Todas las llamadas comparten una única promesa ("single flight"): el refresh
- * token es de un solo uso y el API detecta su reutilización, así que dos
- * refrescos concurrentes con la misma cookie no serían dos sesiones válidas
- * sino una señal de robo que el servidor responde revocando todos los tokens.
- *
- * Se exporta para que la restauración inicial de sesión la reutilice y no
- * dispare una segunda rotación. Devolver el `accessToken` permite a la SPA
- * distinguir "mi token caducó" de "otro proceso ya lo renovó", y así no cerrar
- * sesión por error ante un 401 rezagado.
+ * Rota el refresh token (single-flight: el token es de un solo uso y el API
+ * detecta su reutilización). Devuelve el access token nuevo o null.
  */
 export function refrescarToken(): Promise<string | null> {
   if (!refrescoEnCurso) {
@@ -96,10 +76,8 @@ export function refrescarToken(): Promise<string | null> {
 }
 
 /**
- * Rutas de autenticación: un 401 aquí significa "no hay sesión", no "token
- * caducado". Intentar refrescar en respuesta a un 401 de `/auth/refresh`
- * provocaba una recursión y dos llamadas por carga de página (el rate limit de
- * refresh es de 20/min).
+ * Un 401 en rutas de auth significa "sin sesión", no "token caducado": no se
+ * reintenta el refresco.
  */
 function esRutaDeAuth(ruta: string): boolean {
   return /^\/auth\/(login|refresh|logout)/.test(ruta);
@@ -130,9 +108,8 @@ export async function apiFetch<T>(ruta: string, opciones: OpcionesPeticion = {})
     if (tokenNuevo) {
       return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
     }
-    // Solo se cierra la sesión si el token realmente caducó. Si otro proceso
-    // ya lo renovó mientras esperábamos (p. ej. dos pestañas), este 401 es
-    // rezagado y cerrar sesión expulsaría al usuario con una sesión válida.
+    // Solo se cierra sesión si el token no fue renovado por otro proceso
+    // (p. ej. otra pestaña).
     if (store?.accessToken !== tokenAnterior) {
       return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
     }

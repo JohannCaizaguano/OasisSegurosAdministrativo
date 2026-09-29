@@ -1,7 +1,7 @@
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
-import { AvisoError } from '@/components/data-state';
+import { AvisoError } from '@/components/DataState';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatearFecha } from '@/lib/format';
 
 import { useRecibo } from '../hooks';
-import { TarjetaVerificacionPublica } from '../components/tarjeta-verificacion-publica';
+import { TarjetaVerificacionPublica } from '../components/TarjetaVerificacionPublica';
 
 export function ReciboDetallePage() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +25,6 @@ export function ReciboDetallePage() {
     );
   }
 
-  // Sin esta rama, un 404 o un 500 dejaban el esqueleto girando para siempre:
   // `!recibo` también es cierto cuando la consulta falló.
   if (consulta.isError || !recibo) {
     return (

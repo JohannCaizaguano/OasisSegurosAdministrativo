@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oasis}
       POSTGRES_DB: ${POSTGRES_DB:-oasis}
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - pgdata_dev:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +23,7 @@ services:
     container_name: oasis-redis-dev
     command: ['redis-server', '--appendonly', 'yes']
     ports:
-      - '6379:6379'
+      - '127.0.0.1:6379:6379'
     volumes:
       - redisdata_dev:/data
     healthcheck:
@@ -39,15 +39,12 @@ services:
     container_name: oasis-hardhat-dev
     working_dir: /workspace
     ports:
-      - '8545:8545'
+      - '127.0.0.1:8545:8545'
     volumes:
       - ./:/workspace
-      # `node_modules` de CADA paquete del workspace va en un volumen con nombre.
-      # Un `pnpm install` dentro del contenedor crea symlinks y shims de binarios
-      # (.bin) para cada proyecto del workspace: si `apps/api/node_modules` queda
-      # en el bind mount, el contenedor sobrescribe los shims de Windows del host
-      # con los suyos de Linux y rompe `pnpm exec` en el host. Aislar el árbol de
-      # dependencias en volúmenes es lo que hace seguro compartir el código.
+      # `node_modules` de cada paquete va en volúmenes con nombre: un
+      # `pnpm install` dentro del contenedor sobrescribiría los shims de Windows
+      # del host y rompería `pnpm exec` en el host.
       - hardhat_root_modules:/workspace/node_modules
       - hardhat_api_modules:/workspace/apps/api/node_modules
       - hardhat_web_modules:/workspace/apps/web/node_modules

@@ -55,17 +55,13 @@ flowchart TB
 | `HASHER_RECIBOS`      | `ViemHasherRecibosAdapter`                               | api + worker |
 | `CRIPTO`              | `NodeCriptoAdapter` (uuid, código público, sal 32 B)     | api + worker |
 
-## Regla de dependencias (verificada con dependency-cruiser)
+## Regla de dependencias
 
-```
-domain         → TypeScript puro (sin Nest, Prisma, viem, BullMQ)
-application    → domain + sus puertos
-infrastructure → implementa puertos (Nest, Prisma, viem, BullMQ)
-presentation   → casos de uso (nunca adaptadores)
-```
-
-`pnpm depcruise` falla si se viola esta regla; se probó introduciendo una importación de
-`viem` en `domain/` y la regla la detecta.
+`domain` → TypeScript puro · `application` → dominio + puertos · `infrastructure` →
+adaptadores (Nest, Prisma, viem, BullMQ) · `presentation` → casos de uso.
+`pnpm deps:check` la verifica en CI y `pnpm deps:check:negativo` la comprueba de forma
+reproducible: crea un archivo temporal en un `domain/` que importa infraestructura,
+confirma que `deps:check` falla y lo elimina (ADR-002).
 
 ## Hash del recibo
 

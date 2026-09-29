@@ -13,13 +13,8 @@ import {
 } from '@oasis/shared';
 
 /**
- * `packages/shared` es la fuente de verdad de la validación tanto del API
- * (pipes Zod) como de la SPA (RHF + zodResolver). Estos tests comprueban que los
- * esquemas rechazan lo que deben aceptar: son el contrato entre las dos capas.
- *
- * Viven en la SPA porque es el paquete del workspace que ya tiene runner de
- * tests; el paquete en sí no declara dependencias de desarrollo para no
- * duplicar el árbol de herramientas.
+ * Los esquemas compartidos son el contrato entre API y SPA; estos tests viven
+ * en la SPA, el paquete del workspace con runner de tests.
  */
 
 // UUID v4 válido: `z.uuid()` exige la variante RFC 4122 (versión 1-8, variante 8/9/a/b).

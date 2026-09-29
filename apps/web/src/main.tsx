@@ -2,8 +2,8 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 
-import { ErrorBoundary } from './app/error-boundary';
-import { Providers } from './app/providers';
+import { ErrorBoundary } from './app/ErrorBoundary';
+import { Providers } from './app/Providers';
 import { router } from './app/router';
 import { useRestaurarSesion } from './features/auth/hooks';
 import './index.css';

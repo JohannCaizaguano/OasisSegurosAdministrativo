@@ -1,8 +1,14 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { Observable, tap } from 'rxjs';
 
 import { MetricsService } from './metrics.service';
+
+/** Lo mínimo que el interceptor necesita de la petición de Express. */
+interface PeticionConRuta {
+  method: string;
+  route?: { path?: string };
+}
 
 @Injectable()
 export class MetricsInterceptor implements NestInterceptor {
@@ -19,7 +25,7 @@ export class MetricsInterceptor implements NestInterceptor {
     }
 
     const http = context.switchToHttp();
-    const request = http.getRequest<Request & { route?: { path?: string } }>();
+    const request = http.getRequest<PeticionConRuta>();
     const response = http.getResponse<Response>();
     const inicio = process.hrtime.bigint();
 

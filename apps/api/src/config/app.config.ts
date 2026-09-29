@@ -52,6 +52,33 @@ export class AppConfig {
     return this.config.get('PORT', { infer: true });
   }
 
+  get logLevel(): Env['LOG_LEVEL'] {
+    return this.config.get('LOG_LEVEL', { infer: true });
+  }
+
+  get logPretty(): boolean {
+    return this.config.get('LOG_PRETTY', { infer: true });
+  }
+
+  /** Nombre de la aplicación en las series de Prometheus. */
+  get metricsApp(): string {
+    return this.config.get('METRICS_APP', { infer: true });
+  }
+
+  /** Puerto del exporter de métricas del worker (red interna). */
+  get workerMetricsPort(): number {
+    return this.config.get('WORKER_METRICS_PORT', { infer: true });
+  }
+
+  /** Orígenes del SPA en desarrollo, separados por comas en `CORS_ORIGIN`. */
+  get corsOrigins(): string[] {
+    return this.config
+      .get('CORS_ORIGIN', { infer: true })
+      .split(',')
+      .map((origen) => origen.trim())
+      .filter((origen) => origen.length > 0);
+  }
+
   get databaseUrl(): string {
     return this.config.get('DATABASE_URL', { infer: true });
   }

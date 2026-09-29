@@ -33,10 +33,13 @@ export const pagoSchema = z.object({
   metodo: metodoPagoSchema,
   referencia: z.string().nullish(),
   estado: estadoPagoSchema,
+  registradoPorId: z.uuid().nullish(),
   validadoPorId: z.uuid().nullish(),
   validadoEn: z.iso.datetime().nullish(),
   /** Nota de auditoría del operador. Interna: nunca se ancla. */
   nota: z.string().nullish(),
+  /** Motivo obligatorio del rechazo (HU-19). */
+  motivoRechazo: z.string().nullish(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -49,10 +52,8 @@ export const validarPagoResponseSchema = z.object({
 export type ValidarPagoResponse = z.infer<typeof validarPagoResponseSchema>;
 
 /**
- * Cuerpo de `PATCH /pagos/:id/validar`. La nota es de auditoría interna
- * (nunca se ancla) y se exige una confirmación explícita: validar un pago emite
- * un recibo y dispara una transacción en la cadena, así que la SPA pide
- * certeza en lugar de un clic.
+ * Cuerpo de `PATCH /pagos/:id/validar`: exige confirmación explícita; la nota
+ * es interna y nunca se ancla.
  */
 export const validarPagoSchema = z.object({
   confirmado: z.literal(true, {
