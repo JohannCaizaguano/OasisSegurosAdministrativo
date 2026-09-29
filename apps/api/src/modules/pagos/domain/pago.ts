@@ -8,11 +8,16 @@ export interface PropsPago {
   numeroPoliza?: string;
   monto: string;
   fechaPago: string;
+  metodoPagoId: string;
+  /** Código del método de pago (catálogo `MetodoPago`). */
   metodo: MetodoPago;
   referencia: string | null;
   estado: EstadoPago;
+  registradoPorId: string | null;
   validadoPorId: string | null;
   validadoEn: string | null;
+  /** Motivo obligatorio del rechazo (HU-19). */
+  motivoRechazo: string | null;
   /** Nota de auditoría del operador. Interna: nunca se ancla. */
   nota: string | null;
   createdAt: string;
@@ -48,6 +53,10 @@ export class Pago extends Entity<PropsPago> {
     return this.props.metodo;
   }
 
+  get metodoPagoId(): string {
+    return this.props.metodoPagoId;
+  }
+
   get referencia(): string | null {
     return this.props.referencia;
   }
@@ -56,12 +65,20 @@ export class Pago extends Entity<PropsPago> {
     return this.props.estado;
   }
 
+  get registradoPorId(): string | null {
+    return this.props.registradoPorId;
+  }
+
   get validadoPorId(): string | null {
     return this.props.validadoPorId;
   }
 
   get validadoEn(): string | null {
     return this.props.validadoEn;
+  }
+
+  get motivoRechazo(): string | null {
+    return this.props.motivoRechazo;
   }
 
   get nota(): string | null {

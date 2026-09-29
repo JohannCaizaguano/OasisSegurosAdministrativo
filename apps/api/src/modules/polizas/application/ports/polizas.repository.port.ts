@@ -21,16 +21,31 @@ export interface DatosCrearPoliza {
   numero: string;
   clienteId: string;
   aseguradoraId: string;
-  ramo: string;
+  ramoId: string;
   primaTotal: string;
   fechaInicio: string;
   fechaFin: string;
   estado: EstadoPoliza;
 }
 
+/** Entrada de aplicación: el ramo llega como código o nombre del catálogo. */
+export interface ComandoCrearPoliza extends Omit<DatosCrearPoliza, 'ramoId'> {
+  ramo: string;
+}
+
 export type DatosActualizarPoliza = Partial<Omit<DatosCrearPoliza, 'clienteId'>> & {
   clienteId?: string;
 };
+
+export type ComandoActualizarPoliza = Partial<Omit<ComandoCrearPoliza, 'clienteId'>> & {
+  clienteId?: string;
+};
+
+/** Proyección mínima del catálogo de ramos que usa el módulo. */
+export interface RamoResumen {
+  id: string;
+  nombre: string;
+}
 
 export interface PolizasRepositoryPort {
   crear(datos: DatosCrearPoliza): Promise<Poliza>;
@@ -39,4 +54,6 @@ export interface PolizasRepositoryPort {
   actualizar(id: string, datos: DatosActualizarPoliza): Promise<Poliza>;
   eliminar(id: string): Promise<void>;
   existeNumero(numero: string, exceptoId?: string): Promise<boolean>;
+  /** Resuelve un ramo activo por código o por nombre (catálogo `Ramo`). */
+  buscarRamo(valor: string): Promise<RamoResumen | null>;
 }
