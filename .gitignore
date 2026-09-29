@@ -53,4 +53,8 @@ apps/api/src/generated/
 
 # Artefactos de asistentes/agentes de IA (no forman parte del proyecto)
 .agents/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
 skills-lock.json
