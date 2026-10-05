@@ -69,6 +69,11 @@ describe('Flujo de anclaje (e2e)', () => {
     const reciboId = validar.body.recibo.id as string;
     const codigo = validar.body.recibo.codigo as string;
 
+    const auditoriaValidar = await prisma.bitacoraAuditoria.findFirstOrThrow({
+      where: { accion: 'VALIDAR', entidad: 'Pago', entidadId: crear.body.id as string },
+    });
+    expect(auditoriaValidar.entidadId).toBe(crear.body.id);
+
     let detalle: Record<string, unknown> = {};
     const limite = Date.now() + 90_000;
     while (Date.now() < limite) {

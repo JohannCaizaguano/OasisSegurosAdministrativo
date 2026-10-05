@@ -52,3 +52,12 @@ mueve el código a la capa que corresponde.
 - `.spec.ts` junto al código; nombres de `describe`/`it` en español.
 - Los casos de uso se prueban con **puertos simulados** (sin base de datos ni red).
 - Los e2e viven en `apps/api/test/` (Supertest) y usan los servicios reales.
+
+## Auditoría (HU-45)
+
+- Todo endpoint que crea, modifica, elimina, valida, rechaza, anula, reintenta, importa o inicia
+  sesión declara `@Auditar(accion, entidad)` (`src/common/auditoria/auditar.decorator.ts`), con
+  valores de `ACCIONES_AUDITORIA` y `ENTIDADES_AUDITADAS`.
+- `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara; las
+  exenciones están listadas allí.
+- La bitácora es de solo inserción: no agregues métodos de edición ni de borrado a su puerto.

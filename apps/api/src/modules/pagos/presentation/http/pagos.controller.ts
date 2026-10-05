@@ -15,6 +15,7 @@ import {
 import { Controller, Get, HttpCode, HttpStatus, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles, UsuarioActual, type UsuarioAutenticado } from '../../../../common/auth/decorators';
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import { TOKENS_TRANSVERSALES } from '../../../../shared-kernel/tokens';
@@ -42,6 +43,7 @@ export class PagosController {
   ) {}
 
   @Post()
+  @Auditar('CREAR', 'Pago')
   @ApiOperation({ summary: 'Registra un pago' })
   async crear(
     @ZodBody(crearPagoSchema) datos: CrearPagoInput,
@@ -87,6 +89,7 @@ export class PagosController {
   }
 
   @Patch(':id/validar')
+  @Auditar('VALIDAR', 'Pago')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Valida el pago y emite el recibo (dispara el anclaje)' })
   async validar(
@@ -112,6 +115,7 @@ export class PagosController {
   }
 
   @Patch(':id/rechazar')
+  @Auditar('RECHAZAR', 'Pago')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rechaza un pago registrado' })
   async rechazar(

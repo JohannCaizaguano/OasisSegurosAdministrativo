@@ -78,12 +78,18 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @oasis/contracts build
-      - uses: crytic/slither-action@v0.4.2
-        with:
-          target: packages/contracts
-          slither-config: packages/contracts/slither.config.json
-          fail-on: medium
+      - name: Instalar Slither y solc
+        run: |
+          pipx install slither-analyzer==0.11.6
+          pipx install solc-select
+          solc-select install 0.8.28
+          solc-select use 0.8.28
+      # Se analiza el archivo del contrato y no el proyecto Hardhat: crytic-compile no
+      # resuelve los tests Foundry que Hardhat 3 compila junto al contrato.
+      - name: Analizar RegistroRecibos.sol
+        run: >-
+          slither packages/contracts/contracts/RegistroRecibos.sol
+          --config-file packages/contracts/slither.config.json
 
   api:
     name: API (unitarias y e2e)
@@ -135,6 +141,10 @@ jobs:
           done
           pnpm dev:chain
           pnpm --filter @oasis/api run build
+      - name: Script del hash de prueba contra el nodo local
+        run: |
+          CONTRACT_ADDRESS=$(grep '^CONTRACT_ADDRESS=' apps/api/.env | cut -d= -f2) \
+            pnpm --filter @oasis/contracts exec hardhat run scripts/registrar-prueba.ts --network localhost
       - name: Pruebas e2e
         working-directory: apps/api
         run: pnpm run test:e2e

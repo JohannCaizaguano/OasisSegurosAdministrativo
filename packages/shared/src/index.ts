@@ -1,5 +1,6 @@
 export * from './constants/estados';
 export * from './constants/roles';
+export * from './constants/auditoria';
 export * from './types';
 export * from './schemas/common.schema';
 export * from './schemas/auth.schema';
@@ -8,4 +9,5 @@ export * from './schemas/aseguradora.schema';
 export * from './schemas/poliza.schema';
 export * from './schemas/pago.schema';
 export * from './schemas/recibo.schema';
+export * from './schemas/auditoria.schema';
 export * from './abi';

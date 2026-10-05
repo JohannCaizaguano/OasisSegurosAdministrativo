@@ -32,15 +32,15 @@ bytecode desplegado y verificado en Amoy es el optimizado.
 
 | Función | Mínimo | Media | Máximo | Llamadas |
 | --- | ---: | ---: | ---: | ---: |
-| `anular(bytes32,bytes32)` | 36.061 | 36.067 | 36.073 | 4 |
-| `DEFAULT_ADMIN_ROLE()` | 373 | 10.905 | 21.437 | 2 |
-| `grantRole(bytes32,address)` | 51.826 | 52.022 | 52.042 | 11 |
+| `anular(bytes32,bytes32)` | 36.061 | 36.067 | 36.073 | 6 |
+| `DEFAULT_ADMIN_ROLE()` | 373 | 10.905 | 21.437 | 6 |
+| `grantRole(bytes32,address)` | 51.826 | 52.025 | 52.042 | 13 |
 | `hasRole(bytes32,address)` | 3.187 | 13.964 | 24.747 | 4 |
-| `pause()` | 50.149 | 50.149 | 50.149 | 3 |
-| `REGISTRADOR_ROLE()` | 413 | 17.966 | 21.477 | 12 |
-| `registrar(bytes32,bytes32)` | 78.411 | 78.417 | 78.423 | 12 |
+| `pause()` | 50.149 | 50.149 | 50.149 | 7 |
+| `REGISTRADOR_ROLE()` | 413 | 16.211 | 21.477 | 16 |
+| `registrar(bytes32,bytes32)` | 78.411 | 78.417 | 78.423 | 14 |
 | `unpause()` | 28.267 | 28.267 | 28.267 | 2 |
-| `verificar(bytes32)` | 8.654 | 18.243 | 30.230 | 9 |
+| `verificar(bytes32)` | 8.654 | 18.461 | 30.230 | 11 |
 
 Notas:
 
