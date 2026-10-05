@@ -23,3 +23,12 @@ export function acortarHash(hash: string | null | undefined): string {
   }
   return `${hash.slice(0, 10)}…${hash.slice(-8)}`;
 }
+
+/** Fecha y hora en la zona de Ecuador (UTC−5), sin importar la zona del navegador. */
+export function formatearFechaHoraEcuador(iso: string): string {
+  return new Intl.DateTimeFormat('es-EC', {
+    dateStyle: 'medium',
+    timeStyle: 'medium',
+    timeZone: 'America/Guayaquil',
+  }).format(new Date(iso));
+}

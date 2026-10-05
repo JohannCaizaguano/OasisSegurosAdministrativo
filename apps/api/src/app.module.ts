@@ -19,6 +19,7 @@ import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { QueueModule } from './infrastructure/queue/queue.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 import { AseguradorasModule } from './modules/aseguradoras/aseguradoras.module';
+import { AuditoriaModule } from './modules/auditoria/auditoria.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClientesModule } from './modules/clientes/clientes.module';
 import { PagosModule } from './modules/pagos/pagos.module';
@@ -89,6 +90,7 @@ export function opcionesLogger() {
     PolizasModule,
     PagosModule,
     RecibosModule,
+    AuditoriaModule,
   ],
   providers: [
     // El orden importa: Throttler primero para que el límite aplique también a

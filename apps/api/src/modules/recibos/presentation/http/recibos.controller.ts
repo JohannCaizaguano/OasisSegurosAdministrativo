@@ -3,6 +3,7 @@ import { idUuidParamSchema, listarRecibosQuerySchema } from '@oasis/shared';
 import { Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles } from '../../../../common/auth/decorators';
 import { ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import { AnularReciboUseCase } from '../../application/use-cases/anular-recibo.use-case';
@@ -61,6 +62,7 @@ export class RecibosController {
   }
 
   @Post(':id/reintentar')
+  @Auditar('REINTENTAR', 'Recibo')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Reintenta el anclaje de un recibo FALLIDO (ADMIN)' })
@@ -69,6 +71,7 @@ export class RecibosController {
   }
 
   @Post(':id/anular')
+  @Auditar('ANULAR', 'Recibo')
   @HttpCode(HttpStatus.OK)
   @Roles('ADMIN')
   @ApiOperation({ summary: 'Anula un recibo (ADMIN)' })

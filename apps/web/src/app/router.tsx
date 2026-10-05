@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet, Link } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/AppLayout';
+import { BitacoraPage } from '@/features/auditoria/pages/BitacoraPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ClientesPage } from '@/features/clientes/pages/ClientesPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
@@ -61,6 +62,10 @@ export const router = createBrowserRouter([
               { path: '/clientes', element: <ClientesPage /> },
               { path: '/polizas', element: <PolizasPage /> },
             ],
+          },
+          {
+            element: <RutaProtegida roles={['ADMIN']} />,
+            children: [{ path: '/bitacora', element: <BitacoraPage /> }],
           },
         ],
       },

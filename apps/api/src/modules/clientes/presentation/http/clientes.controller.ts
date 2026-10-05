@@ -8,6 +8,7 @@ import {
 import { Controller, Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles } from '../../../../common/auth/decorators';
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import {
@@ -34,6 +35,7 @@ export class ClientesController {
   ) {}
 
   @Post()
+  @Auditar('CREAR', 'Cliente')
   @ApiOperation({ summary: 'Crea un cliente' })
   async crear(@ZodBody(crearClienteSchema) datos: Parameters<CrearClienteUseCase['ejecutar']>[0]) {
     return this.aRespuesta(await this.crearCliente.ejecutar(datos));
@@ -74,6 +76,7 @@ export class ClientesController {
   }
 
   @Patch(':id')
+  @Auditar('MODIFICAR', 'Cliente')
   @ApiOperation({ summary: 'Actualiza un cliente' })
   async actualizar(
     @ZodParam(idUuidParamSchema) params: ParamsId,
@@ -84,6 +87,7 @@ export class ClientesController {
   }
 
   @Delete(':id')
+  @Auditar('ELIMINAR', 'Cliente')
   @HttpCode(204)
   @ApiOperation({ summary: 'Elimina un cliente sin pólizas asociadas' })
   async eliminar(@ZodParam(idUuidParamSchema) params: ParamsId): Promise<void> {

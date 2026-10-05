@@ -11,8 +11,8 @@ exponga ningún dato personal.
 ## Arquitectura en una mirada
 
 - **Backend** (`apps/api`): NestJS 11 (CommonJS) con **arquitectura hexagonal** por
-  módulo: `auth`, `usuarios`, `clientes`, `aseguradoras`, `polizas`, `pagos` y `recibos`
-  (el "Módulo Blockchain"). La regla de dependencias se verifica con dependency-cruiser.
+  módulo: `auth`, `usuarios`, `clientes`, `aseguradoras`, `polizas`, `pagos`, `recibos`
+  (el "Módulo Blockchain") y `auditoria`. La regla de dependencias se verifica con dependency-cruiser.
 - **Worker**: segundo entrypoint de la misma imagen. Único contenedor con la clave
   operadora (firma custodial); procesa la cola `anclaje-recibos` (concurrencia 1) y hace
   un barrido cada 30 s.
@@ -88,14 +88,15 @@ pnpm dev                       # API, worker y SPA con recarga en caliente
 
 ## Pruebas
 
-| Suite         | Comando                                  | Qué cubre                                                                                                                                                                                   |
-| ------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contratos     | `pnpm --filter @oasis/contracts test`    | 26 casos: Solidity (unit + fuzz, 16) y viem (roles, duplicados, pausa, eventos, 10).                                                                                                        |
-| Contratos     | `pnpm --filter @oasis/contracts reporte` | Verifica el umbral de cobertura y regenera `REPORTE-COBERTURA.md` y `REPORTE-GAS.md`. Falla si las líneas cubiertas bajan del 90 %.                                                         |
-| API unitarias | `pnpm --filter @oasis/api test`          | 34 casos: hash y canonicalización, transiciones del Recibo, login, y el módulo blockchain (outbox, idempotencia del anclaje, verificación pública).                                         |
-| API e2e       | `pnpm --filter @oasis/api test:e2e`      | Flujo completo contra Hardhat local + escenarios de idempotencia con caída simulada del worker.                                                                                             |
-| SPA           | `pnpm --filter @oasis/web test`          | 33 casos: `api-client` (401 → refresh → reintento, deduplicación del refresco, contrato de error), esquemas compartidos de Zod y el diálogo de confirmación de pagos.                       |
-| SPA e2e       | `pnpm --filter @oasis/web test:e2e`      | Playwright: login → validar pago (con confirmación) → ANCLADO → QR → verificación pública sin sesión. El webServer de Playwright levanta Hardhat, despliega, y arranca API + worker + Vite. |
+| Suite         | Comando                                                                                                         | Qué cubre                                                                                                                                                                                                                                                      |
+| ------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contratos     | `pnpm --filter @oasis/contracts test`                                                                           | 30 casos: Solidity (unit + fuzz, 18) y viem (roles, duplicados, pausa, eventos, 12).                                                                                                                                                                           |
+| Contratos     | `pnpm --filter @oasis/contracts reporte`                                                                        | Verifica el umbral de cobertura y regenera `REPORTE-COBERTURA.md` y `REPORTE-GAS.md`. Falla si las líneas cubiertas bajan del 90 %.                                                                                                                            |
+| Contratos     | `slither packages/contracts/contracts/RegistroRecibos.sol --config-file packages/contracts/slither.config.json` | Análisis estático con Slither 0.11.6 (`fail_on: medium`): 0 hallazgos. Job `slither` de CI.                                                                                                                                                                    |
+| API unitarias | `pnpm --filter @oasis/api test`                                                                                 | 76 casos: hash y canonicalización, transiciones del Recibo, login, la bitácora de auditoría (dominio, fechas de Ecuador, casos de uso, interceptor y cobertura de `@Auditar`) y el módulo blockchain (outbox, idempotencia del anclaje, verificación pública). |
+| API e2e       | `pnpm --filter @oasis/api test:e2e`                                                                             | Flujo completo contra Hardhat local, escenarios de idempotencia con caída simulada del worker y bitácora de auditoría (filtros, roles y solo inserción).                                                                                                       |
+| SPA           | `pnpm --filter @oasis/web test`                                                                                 | 36 casos: `api-client` (401 → refresh → reintento, deduplicación del refresco, contrato de error), esquemas compartidos de Zod, el diálogo de confirmación de pagos y la página Bitácora.                                                                      |
+| SPA e2e       | `pnpm --filter @oasis/web test:e2e`                                                                             | Playwright: login → validar pago (con confirmación) → ANCLADO → QR → verificación pública sin sesión. El webServer de Playwright levanta Hardhat, despliega, y arranca API + worker + Vite.                                                                    |
 
 Los e2e (API y Playwright) son de pila completa: necesitan PostgreSQL, Redis, el nodo
 Hardhat con el contrato desplegado y la API compilada (`pnpm -r build`); el job `web` de
