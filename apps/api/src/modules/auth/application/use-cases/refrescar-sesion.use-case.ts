@@ -1,6 +1,6 @@
 import { NoAutorizadoError } from '../../../../shared-kernel/domain-error';
 import type { UsuarioCredenciales } from '../../domain/usuario-credenciales';
-import type { AlmacenRefreshPort } from '../ports/almacen-refresh.port';
+import type { AlmacenSesionesPort } from '../ports/almacen-sesiones.port';
 import type { EmisorTokensPort, TokensEmitidos } from '../ports/emisor-tokens.port';
 import type { UsuarioAuthRepositoryPort } from '../ports/usuario-auth.repository.port';
 
@@ -13,7 +13,7 @@ export class RefrescarSesionUseCase {
   constructor(
     private readonly usuarios: UsuarioAuthRepositoryPort,
     private readonly emisor: EmisorTokensPort,
-    private readonly almacen: AlmacenRefreshPort,
+    private readonly sesiones: AlmacenSesionesPort,
   ) {}
 
   async ejecutar(refreshToken: string): Promise<ResultadoRefresco> {
@@ -22,28 +22,28 @@ export class RefrescarSesionUseCase {
       throw new NoAutorizadoError('Sesión expirada o inválida');
     }
 
-    const vigente = await this.almacen.consumir(payload.sub, payload.jti);
-    if (!vigente) {
-      // El jti no existe: token reutilizado o revocado. Se cierran todas las
-      // sesiones del usuario como medida defensiva.
-      await this.almacen.revocarTodos(payload.sub);
-      throw new NoAutorizadoError('Sesión revocada, vuelva a iniciar sesión');
-    }
-
     const usuario = await this.usuarios.buscarPorId(payload.sub);
     if (!usuario || !usuario.puedeIniciarSesion()) {
+      await this.sesiones.cerrar(payload.sub, payload.sid);
       throw new NoAutorizadoError('Usuario no disponible');
     }
 
-    const tokens = await this.emisor.emitir({
-      sub: usuario.id,
-      email: usuario.email,
-      rol: usuario.rol,
-      clienteId: usuario.clienteId,
-    });
-
-    await this.almacen.guardar(usuario.id, tokens.refreshJti);
-
+    const tokens = await this.emisor.emitir(
+      { sub: usuario.id, email: usuario.email, rol: usuario.rol, clienteId: usuario.clienteId },
+      { sid: payload.sid, expiraEn: payload.expiraEn },
+    );
+    const rotacion = await this.sesiones.rotar(
+      payload.sub,
+      payload.sid,
+      payload.jti,
+      tokens.refreshJti,
+    );
+    if (rotacion === 'REUTILIZADA') {
+      throw new NoAutorizadoError('Sesión revocada, vuelva a iniciar sesión');
+    }
+    if (rotacion === 'EXPIRADA') {
+      throw new NoAutorizadoError('Sesión expirada, vuelva a iniciar sesión');
+    }
     return { usuario, tokens };
   }
 }

@@ -8,7 +8,7 @@
 La blockchain es pública, permanente e inmutable. Publicar nombres, cédulas, correos,
 montos o números de póliza violaría la privacidad del asegurado (y el principio de
 minimización de la LOPDP), además de crear un registro imposible de rectificar. A la vez,
-un verificador externo debe poder comprobar que un recibo no fue alterado.
+el cliente, el personal o un auditor deben poder comprobar que un recibo no fue alterado.
 
 ## Decisión
 

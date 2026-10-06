@@ -69,7 +69,12 @@ export class AuditoriaInterceptor implements NestInterceptor {
         usuarioId,
         accion: metadato.accion,
         entidad: metadato.entidad,
-        entidadId: peticion.params?.id ?? leerId(respuesta) ?? leerId(respuesta, 'usuario') ?? null,
+        entidadId:
+          peticion.params?.id ??
+          leerId(respuesta) ??
+          leerId(respuesta, 'usuario') ??
+          // Sin id explícito, quien actúa sobre Usuario es el propio usuario (login, cambio de contraseña).
+          (metadato.entidad === 'Usuario' ? usuarioId : null),
         ip: peticion.ip ?? null,
         detalle: construirDetalle(metadato.accion, {
           metodo: peticion.method,

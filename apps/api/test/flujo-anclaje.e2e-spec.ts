@@ -45,7 +45,7 @@ describe('Flujo de anclaje (e2e)', () => {
     await app?.close();
   });
 
-  it('ancla el recibo y lo verifica públicamente', async () => {
+  it('ancla el recibo y lo verifica con la sesión del operador', async () => {
     const crear = await request(app.getHttpServer())
       .post('/api/v1/pagos')
       .set('Authorization', `Bearer ${token}`)
@@ -94,7 +94,8 @@ describe('Flujo de anclaje (e2e)', () => {
     expect(detalle.ancladoEn).toBeTruthy();
 
     const verificacion = await request(app.getHttpServer())
-      .get(`/api/v1/public/recibos/${codigo}/verificacion`)
+      .get(`/api/v1/recibos/${codigo}/verificacion`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     expect(verificacion.body.estado).toBe('VALIDO');
@@ -103,14 +104,15 @@ describe('Flujo de anclaje (e2e)', () => {
     expect(verificacion.body.explorerUrl).toContain(detalle.txHash as string);
   });
 
-  it('no expone datos personales en la verificación pública', async () => {
+  it('la verificación no expone datos personales', async () => {
     const recibo = await prisma.recibo.findFirstOrThrow({
       where: { estado: 'ANCLADO' },
       orderBy: { creadoEn: 'desc' },
     });
 
     const verificacion = await request(app.getHttpServer())
-      .get(`/api/v1/public/recibos/${recibo.codigo}/verificacion`)
+      .get(`/api/v1/recibos/${recibo.codigo}/verificacion`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
     const texto = JSON.stringify(verificacion.body);

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { verificacionApi } from './api';
 
-/** Consulta pública (sin sesión) del estado de un recibo en la cadena. */
+/** Verificación del recibo en la cadena (exige sesión, ADR-015). */
 export function useVerificacion(codigo?: string) {
   return useQuery({
     queryKey: ['verificacion', codigo],

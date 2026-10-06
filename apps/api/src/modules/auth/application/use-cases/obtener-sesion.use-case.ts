@@ -1,4 +1,4 @@
-﻿import type { UsuarioSesion } from '@oasis/shared';
+import type { UsuarioSesion } from '@oasis/shared';
 
 import { NoEncontradoError } from '../../../../shared-kernel/domain-error';
 import type { UsuarioAuthRepositoryPort } from '../ports/usuario-auth.repository.port';

@@ -1,13 +1,16 @@
 # AGENTS.md — SRPP Oasis Seguros
 
 Guía para agentes de IA que trabajen en este repositorio. Léela completa antes de
-cambiar código.
+cambiar código. Lee también `CLAUDE.md` (mapa técnico) y `apps/api/src/modules/README.md`
+(reglas de los módulos del API).
 
 ## Proyecto
 
 Sistema de Registro de Pagos de Primas (SRPP) del bróker **Oasis Seguros** (Quito,
 Ecuador): clientes, pólizas, cuotas y pagos; cada pago validado emite un recibo digital
-cuyo hash con sal se ancla en Polygon PoS (Amoy) y se puede verificar públicamente.
+cuyo hash con sal se ancla en Polygon PoS (Amoy). Solo el personal y los clientes de Oasis
+usan el sistema, con inicio de sesión: el cliente verifica sus recibos y paga sus cuotas en
+línea con PayPhone (ADR-014 y ADR-015). Las aseguradoras son datos, no usuarias.
 Es el proyecto de titulación de Ingeniería de Software de la ESPOCH: el código, la
 documentación y las decisiones deben ser trazables y estar justificados.
 
@@ -121,7 +124,14 @@ convenciones que la skill ya define.
 - **Commits**: Conventional Commits con scopes `api`, `web`, `contracts`, `shared`,
   `infra`, `ci`, `docs`, `deps`, `repo`; descripción en español. **Pocos commits**: agrupa
   el trabajo completo de una tarea o sesión en un solo commit, aunque toque varios
-  paquetes; no hagas micro-commits.
+  paquetes; no hagas micro-commits. Commitlint también admite `docker` y `release`, con
+  encabezados de hasta 100 caracteres, y el hook `pre-commit` corre Prettier y ESLint con
+  `--fix` mediante lint-staged.
+- **Acceso y auditoría**: todo handler declara `@Roles(...)` o `@Public()`, y toda mutación
+  `@Auditar(accion, entidad)`; las rutas públicas y las exenciones están en
+  `apps/api/src/modules/README.md`.
+- **SPA**: una página nueva se registra en `router.tsx` con sus roles y se enlaza desde el menú
+  lateral de `AppLayout`; las páginas de la cuenta del usuario, desde su menú en el encabezado.
 - **Hexagonal**: cada módulo usa `domain/ application/{ports,use-cases}/
 infrastructure/ presentation/http/`; puertos como interfaz + token `Symbol`; sin
   `process.env` fuera de `config/`; errores de dominio tipados (`shared-kernel/`).
@@ -163,5 +173,6 @@ en el informe, no se implementa.
 ## Decisiones
 
 Toda decisión no trivial se registra como ADR corto en `docs/adr/` (IDs de la tabla
-11-1 de la arquitectura; índice en `docs/adr/README.md`). Los informes de sprint viven
-en `docs/sprints/`.
+11-1 de la arquitectura; un ADR nuevo toma el número siguiente y el informe del sprint
+pide al autor agregarlo a la tabla; índice en `docs/adr/README.md`). Los informes de sprint
+viven en `docs/sprints/`.

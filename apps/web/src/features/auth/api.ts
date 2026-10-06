@@ -1,4 +1,9 @@
-import type { LoginInput, LoginResponse, UsuarioSesion } from '@oasis/shared';
+import type {
+  CambiarContrasenaInput,
+  LoginInput,
+  LoginResponse,
+  UsuarioSesion,
+} from '@oasis/shared';
 
 import { api } from '@/lib/api-client';
 
@@ -7,4 +12,6 @@ export const authApi = {
   logout: () => api.post<void>('/auth/logout'),
   me: () => api.get<UsuarioSesion>('/auth/me'),
   refrescar: () => api.post<LoginResponse>('/auth/refresh'),
+  cambiarContrasena: (datos: CambiarContrasenaInput) =>
+    api.post<void>('/auth/cambiar-contrasena', datos),
 };

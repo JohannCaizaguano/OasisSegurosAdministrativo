@@ -7,8 +7,8 @@
 ## Contexto
 
 El SRPP lo desarrolla una sola persona (25 horas por semana) y se evalúa como trabajo de
-titulación. La operación es de escala pequeña (personal administrativo, asegurados y
-verificadores externos) sobre **un VPS de 4 vCPU y 8 GB**; los escenarios de calidad
+titulación. La operación es de escala pequeña (personal administrativo y asegurados,
+todos con inicio de sesión) sobre **un VPS de 4 vCPU y 8 GB**; los escenarios de calidad
 (EC-01…EC-09) se miden con 20 y 50 usuarios concurrentes. La arquitectura (secciones 2.1,
 3 y 5-1) exige monolito modular, contenedores con Docker Compose en servidor propio y
 bajo costo de operación (RNF-22).

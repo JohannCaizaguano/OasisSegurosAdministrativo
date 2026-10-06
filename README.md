@@ -2,11 +2,10 @@
 
 Monorepo del sistema administrativo del bróker de seguros **Oasis Seguros (Ecuador)**.
 Un OPERADOR valida un pago, el sistema emite un recibo y su hash se ancla en
-**Polygon PoS (testnet Amoy)** mediante el contrato `RegistroRecibos`. Cualquier persona
-puede verificar un recibo desde una página pública (código o QR), sin login y sin que se
-exponga ningún dato personal.
-
-> Trabajo de Titulación de Ingeniería de Software. Estado: **F0–F6 completadas**.
+**Polygon PoS (testnet Amoy)** mediante el contrato `RegistroRecibos`. Solo el personal de
+Oasis Seguros y sus clientes usan el sistema, siempre con inicio de sesión: el cliente verifica
+sus recibos (código o QR) y paga sus cuotas en línea con PayPhone desde su portal (ADR-014 y
+ADR-015). En la cadena no se expone ningún dato personal.
 
 ## Arquitectura en una mirada
 
@@ -27,7 +26,7 @@ exponga ningún dato personal.
 - **Medición**: `/metrics` (prom-client) solo en la red interna y stack opcional
   Prometheus + Grafana + cAdvisor + node-exporter.
 - Documentación: `docs/referencia` (fuentes de verdad), `docs/arquitectura` (C4 +
-  secuencia en Mermaid), `docs/adr` (12 ADR), `docs/sprints` y `docs/despliegue.md`.
+  secuencia en Mermaid), `docs/adr` (15 ADR), `docs/sprints` y `docs/despliegue.md`.
 
 ## Estructura
 
@@ -88,15 +87,15 @@ pnpm dev                       # API, worker y SPA con recarga en caliente
 
 ## Pruebas
 
-| Suite         | Comando                                                                                                         | Qué cubre                                                                                                                                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contratos     | `pnpm --filter @oasis/contracts test`                                                                           | 30 casos: Solidity (unit + fuzz, 18) y viem (roles, duplicados, pausa, eventos, 12).                                                                                                                                                                           |
-| Contratos     | `pnpm --filter @oasis/contracts reporte`                                                                        | Verifica el umbral de cobertura y regenera `REPORTE-COBERTURA.md` y `REPORTE-GAS.md`. Falla si las líneas cubiertas bajan del 90 %.                                                                                                                            |
-| Contratos     | `slither packages/contracts/contracts/RegistroRecibos.sol --config-file packages/contracts/slither.config.json` | Análisis estático con Slither 0.11.6 (`fail_on: medium`): 0 hallazgos. Job `slither` de CI.                                                                                                                                                                    |
-| API unitarias | `pnpm --filter @oasis/api test`                                                                                 | 76 casos: hash y canonicalización, transiciones del Recibo, login, la bitácora de auditoría (dominio, fechas de Ecuador, casos de uso, interceptor y cobertura de `@Auditar`) y el módulo blockchain (outbox, idempotencia del anclaje, verificación pública). |
-| API e2e       | `pnpm --filter @oasis/api test:e2e`                                                                             | Flujo completo contra Hardhat local, escenarios de idempotencia con caída simulada del worker y bitácora de auditoría (filtros, roles y solo inserción).                                                                                                       |
-| SPA           | `pnpm --filter @oasis/web test`                                                                                 | 36 casos: `api-client` (401 → refresh → reintento, deduplicación del refresco, contrato de error), esquemas compartidos de Zod, el diálogo de confirmación de pagos y la página Bitácora.                                                                      |
-| SPA e2e       | `pnpm --filter @oasis/web test:e2e`                                                                             | Playwright: login → validar pago (con confirmación) → ANCLADO → QR → verificación pública sin sesión. El webServer de Playwright levanta Hardhat, despliega, y arranca API + worker + Vite.                                                                    |
+| Suite         | Comando                                                                                                         | Qué cubre                                                                                                                                                                                                                                                                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contratos     | `pnpm --filter @oasis/contracts test`                                                                           | 30 casos: Solidity (unit + fuzz, 18) y viem (roles, duplicados, pausa, eventos, 12).                                                                                                                                                                                                                                               |
+| Contratos     | `pnpm --filter @oasis/contracts reporte`                                                                        | Verifica el umbral de cobertura y regenera `REPORTE-COBERTURA.md` y `REPORTE-GAS.md`. Falla si las líneas cubiertas bajan del 90 %.                                                                                                                                                                                                |
+| Contratos     | `slither packages/contracts/contracts/RegistroRecibos.sol --config-file packages/contracts/slither.config.json` | Análisis estático con Slither 0.11.6 (`fail_on: medium`): 0 hallazgos. Job `slither` de CI.                                                                                                                                                                                                                                        |
+| API unitarias | `pnpm --filter @oasis/api test`                                                                                 | 104 casos: hash y canonicalización, transiciones del Recibo, sesiones (login, refresco, cierre, estrategia JWT y fallo cerrado del adaptador), cambio de contraseña, acceso por rol (guard y descubrimiento/cobertura de rutas), la bitácora de auditoría y el módulo blockchain (outbox, idempotencia del anclaje, verificación). |
+| API e2e       | `pnpm --filter @oasis/api test:e2e`                                                                             | Autenticación (sesiones por familia, renovación, revocación y cambio de contraseña), acceso por rol (matriz 401/403 y aislamiento de datos del CLIENTE), flujo de anclaje contra Hardhat local, idempotencia con caída simulada del worker y bitácora de auditoría.                                                                |
+| SPA           | `pnpm --filter @oasis/web test`                                                                                 | 56 casos: `api-client` (401 → refresh → reintento, Web Locks, motivo `expirada`, contrato de error), esquemas compartidos de Zod, el diálogo de confirmación de pagos, la página Bitácora, el menú por rol, la página de contraseña, el aviso de inactividad y el login.                                                           |
+| SPA e2e       | `pnpm --filter @oasis/web test:e2e`                                                                             | Playwright (Chromium): login → validar pago (con confirmación) → ANCLADO → QR → verificación con sesión; "atrás" tras cerrar sesión e inactividad a los 29/30 minutos con reloj falso. El webServer de Playwright levanta Hardhat, despliega y arranca API + worker + Vite.                                                        |
 
 Los e2e (API y Playwright) son de pila completa: necesitan PostgreSQL, Redis, el nodo
 Hardhat con el contrato desplegado y la API compilada (`pnpm -r build`); el job `web` de
@@ -136,20 +135,3 @@ Las plantillas comentadas son la referencia: `.env.example` (API y worker) y
 (host `postgres` dentro de Docker), secretos JWT de ≥ 32 caracteres, `CHAIN_ID`
 (31337 local | 80002 Amoy | 137 Polygon), límites `THROTTLE_*` por IP/min y `DOMAIN`
 (Caddy/TLS). En producción el seed se niega a usar las contraseñas por defecto.
-
-## Notas de fidelidad a la documentación oficial
-
-Desviaciones del stack respecto al enunciado. Las del Sprint 1 (TypeScript 6, Prisma 7,
-Corepack, NestJS 11) están en `docs/sprints/sprint-01.md` §7.
-
-1. **pnpm 12**: reemplazó `onlyBuiltDependencies` por `allowBuilds`; se declaran ambas
-   claves y `pnpm deploy` usa `--legacy` en el Dockerfile del API.
-2. **Hardhat 3**: los tests de Solidity requieren `forge-std`; el `typecheck` de contratos
-   compila primero para generar los tipos de viem.
-3. **prom-client**: la última estable está marcada como deprecada en favor de
-   `@prometheus-io/client` (aún inmadura); se mantiene prom-client con un `MetricsModule`
-   propio, porque el worker no es una aplicación HTTP.
-4. **Imagen `oasis-api-migrator`**: el runtime no incluye el CLI de Prisma; el target
-   `migrator` del mismo Dockerfile lo aporta para la tarea `migrate`.
-5. **Confirmación al validar un pago**: validar dispara una transacción irreversible, así
-   que el API exige `confirmado: true` y la SPA pide confirmación con nota de auditoría.

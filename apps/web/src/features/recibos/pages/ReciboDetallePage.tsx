@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatearFecha } from '@/lib/format';
 
 import { useRecibo } from '../hooks';
-import { TarjetaVerificacionPublica } from '../components/TarjetaVerificacionPublica';
+import { TarjetaVerificacion } from '../components/TarjetaVerificacion';
 
 export function ReciboDetallePage() {
   const { id } = useParams<{ id: string }>();
@@ -124,7 +124,7 @@ export function ReciboDetallePage() {
           </CardContent>
         </Card>
 
-        <TarjetaVerificacionPublica codigo={recibo.codigo} hashRecibo={recibo.hashRecibo} />
+        <TarjetaVerificacion codigo={recibo.codigo} hashRecibo={recibo.hashRecibo} />
       </div>
     </div>
   );

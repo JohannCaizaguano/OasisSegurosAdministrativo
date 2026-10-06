@@ -6,7 +6,6 @@ export const LIMITE_POR_DEFECTO = {
   global: 100,
   login: 5,
   refresh: 20,
-  verificacionPublica: 20,
 };
 
 /**

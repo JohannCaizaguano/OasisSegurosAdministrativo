@@ -1,13 +1,16 @@
+import type { Rol } from '@oasis/shared';
 import {
   FileText,
   LayoutDashboard,
   Menu,
   Receipt,
+  ScanSearch,
   ScrollText,
   ShieldCheck,
   Users,
+  type LucideIcon,
 } from 'lucide-react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,20 +22,40 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { AvisoInactividad } from '@/features/auth/components/AvisoInactividad';
 import { useLogout } from '@/features/auth/hooks';
 import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 
-const ENLACES = [
+interface Enlace {
+  a: string;
+  texto: string;
+  icono: LucideIcon;
+  roles: Rol[];
+  /** Prefijo que este enlace cede a otro más específico (p. ej. /recibos a /recibos/verificar). */
+  excluye?: string;
+}
+
+const ENLACES: Enlace[] = [
   { a: '/', texto: 'Inicio', icono: LayoutDashboard, roles: ['ADMIN', 'OPERADOR', 'CLIENTE'] },
   { a: '/pagos', texto: 'Pagos', icono: FileText, roles: ['ADMIN', 'OPERADOR'] },
-  { a: '/recibos', texto: 'Recibos', icono: Receipt, roles: ['ADMIN', 'OPERADOR'] },
+  {
+    a: '/recibos',
+    texto: 'Recibos',
+    icono: Receipt,
+    roles: ['ADMIN', 'OPERADOR'],
+    excluye: '/recibos/verificar',
+  },
+  {
+    a: '/recibos/verificar',
+    texto: 'Verificar recibo',
+    icono: ScanSearch,
+    roles: ['ADMIN', 'OPERADOR'],
+  },
   { a: '/clientes', texto: 'Clientes', icono: Users, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/polizas', texto: 'Pólizas', icono: ShieldCheck, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/bitacora', texto: 'Bitácora', icono: ScrollText, roles: ['ADMIN'] },
 ];
-
-type Enlace = (typeof ENLACES)[number];
 
 function claseEnlace(activo: boolean): string {
   return cn(
@@ -52,37 +75,31 @@ function Marca() {
   );
 }
 
-function Navegacion({ enlaces, navegar }: { enlaces: Enlace[]; navegar: () => void }) {
+function Navegacion({ enlaces }: { enlaces: Enlace[] }) {
+  const { pathname } = useLocation();
+
   return (
-    <>
-      <nav className="flex flex-1 flex-col gap-1" aria-label="Navegación principal">
-        {enlaces.map(({ a, texto, icono: Icono }) => (
-          <NavLink
-            key={a}
-            to={a}
-            end={a === '/'}
-            onClick={navegar}
-            className={({ isActive }) => claseEnlace(isActive)}
-          >
-            <Icono className="size-4" aria-hidden="true" />
-            {texto}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="border-t p-3">
-        <Button variant="ghost" className="w-full justify-start gap-2" onClick={navegar}>
-          <Receipt className="size-4" aria-hidden="true" />
-          Verificación pública
-        </Button>
-      </div>
-    </>
+    <nav className="flex flex-1 flex-col gap-1" aria-label="Navegación principal">
+      {enlaces.map(({ a, texto, icono: Icono, excluye }) => (
+        <NavLink
+          key={a}
+          to={a}
+          end={a === '/'}
+          className={({ isActive }) =>
+            claseEnlace(isActive && !(excluye && pathname.startsWith(excluye)))
+          }
+        >
+          <Icono className="size-4" aria-hidden="true" />
+          {texto}
+        </NavLink>
+      ))}
+    </nav>
   );
 }
 
 export function AppLayout() {
   const usuario = useAuthStore((estado) => estado.usuario);
   const logout = useLogout();
-  const navegar = useNavigate();
 
   const enlaces = ENLACES.filter((enlace) => usuario && enlace.roles.includes(usuario.rol));
 
@@ -93,7 +110,7 @@ export function AppLayout() {
           <Marca />
         </div>
         <div className="flex flex-1 flex-col">
-          <Navegacion enlaces={enlaces} navegar={() => navegar('/verificar')} />
+          <Navegacion enlaces={enlaces} />
         </div>
       </aside>
 
@@ -113,7 +130,7 @@ export function AppLayout() {
             </SheetTrigger>
             <SheetContent className="pt-12">
               <SheetTitle className="sr-only">Navegación principal</SheetTitle>
-              <Navegacion enlaces={enlaces} navegar={() => undefined} />
+              <Navegacion enlaces={enlaces} />
             </SheetContent>
           </Sheet>
 
@@ -135,11 +152,16 @@ export function AppLayout() {
                   <span className="mt-0.5 block font-normal">{usuario?.rol}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/cuenta/contrasena" data-testid="enlace-cambiar-contrasena">
+                    Cambiar contraseña
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   data-testid="boton-logout"
                   onSelect={() => {
                     // `useLogout` limpia el estado; el guard de ruta redirige solo.
-                    logout.mutate();
+                    logout.mutate(null);
                   }}
                 >
                   Cerrar sesión
@@ -152,6 +174,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      <AvisoInactividad />
     </div>
   );
 }

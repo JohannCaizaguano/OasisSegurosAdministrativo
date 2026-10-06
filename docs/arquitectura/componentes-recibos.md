@@ -7,7 +7,7 @@ las dependencias externas entran por puertos implementados con adaptadores.
 flowchart TB
   subgraph presentation["presentation (HTTP)"]
     ctrl["RecibosController<br/>(JWT + roles)"]
-    pub["VerificacionPublicaController<br/>(público, throttling estricto)"]
+    pub["VerificacionRecibosController<br/>(JWT + roles; el CLIENTE solo<br/>verifica sus recibos)"]
   end
 
   subgraph application["application (casos de uso + puertos)"]
@@ -43,17 +43,20 @@ flowchart TB
   guard -. inyecta con tokens Symbol .-> puertos
 ```
 
+> **Estado (ADR-015):** la verificación exige sesión (`GET /api/v1/recibos/:codigo/verificacion`),
+> por ahora solo para el personal; HU-28 (S8) la abre al CLIENTE para sus recibos.
+
 ## Puertos e implementaciones
 
-| Puerto (token Symbol) | Adaptador                                                | Entorno      |
-| --------------------- | -------------------------------------------------------- | ------------ |
-| `RECIBOS_REPOSITORY`  | `PrismaRecibosRepository`                                | api + worker |
-| `REGISTRO_RECIBOS`    | `ViemRegistroRecibosAdapter` (sin wallet = solo lectura) | api          |
-| `REGISTRO_RECIBOS`    | mismo adaptador + `WALLET_CLIENT` global                 | worker       |
-| `COLA_ANCLAJE`        | `BullMqColaAnclajeAdapter`                               | api          |
-| `CONFIG_CADENA`       | `ConfiguracionCadenaAdapter`                             | api + worker |
-| `HASHER_RECIBOS`      | `ViemHasherRecibosAdapter`                               | api + worker |
-| `CRIPTO`              | `NodeCriptoAdapter` (uuid, código público, sal 32 B)     | api + worker |
+| Puerto (token Symbol) | Adaptador                                                    | Entorno      |
+| --------------------- | ------------------------------------------------------------ | ------------ |
+| `RECIBOS_REPOSITORY`  | `PrismaRecibosRepository`                                    | api + worker |
+| `REGISTRO_RECIBOS`    | `ViemRegistroRecibosAdapter` (sin wallet = solo lectura)     | api          |
+| `REGISTRO_RECIBOS`    | mismo adaptador + `WALLET_CLIENT` global                     | worker       |
+| `COLA_ANCLAJE`        | `BullMqColaAnclajeAdapter`                                   | api          |
+| `CONFIG_CADENA`       | `ConfiguracionCadenaAdapter`                                 | api + worker |
+| `HASHER_RECIBOS`      | `ViemHasherRecibosAdapter`                                   | api + worker |
+| `CRIPTO`              | `NodeCriptoAdapter` (uuid, código de verificación, sal 32 B) | api + worker |
 
 ## Regla de dependencias
 

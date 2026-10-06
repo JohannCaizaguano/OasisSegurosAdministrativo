@@ -21,8 +21,8 @@ explorador público (amoy.polygonscan.com) y verificación de contratos vía Eth
 - **Ethereum mainnet**: costos desproporcionados para un TFG.
 - **Redes no-EVM (Solana, Stellar)**: otro ecosistema de herramientas y auditoría; más
   riesgo y menos reutilización de conocimiento.
-- **Blockchain privada/permissioned**: contradice la verificación pública por terceros
-  sin confiar en el bróker.
+- **Blockchain privada/permissioned**: impide comprobar cada anclaje en un explorador
+  independiente sin confiar en el bróker.
 - **Anchoring por lotes (Merkle)**: más eficiente, pero complica la verificación por
   recibo individual; evolución posible a futuro.
 

@@ -255,4 +255,27 @@ describe('AuditoriaInterceptor', () => {
     expect(resultado).toEqual({ data: [] });
     expect(registros).toHaveLength(0);
   });
+
+  it('sin id explícito, una acción sobre Usuario apunta al propio usuario', async () => {
+    const { auditor, registros } = interceptor();
+    const peticion: PeticionFalsa = {
+      method: 'POST',
+      path: '/api/v1/auth/cambiar-contrasena',
+      route: { path: '/api/v1/auth/cambiar-contrasena' },
+      id: 'req-8',
+      params: {},
+      body: { actual: 'Actual.123', nueva: 'Nueva.Clave1' },
+      user: { id: USUARIO_ID },
+    };
+
+    await lastValueFrom(
+      auditor.intercept(
+        contexto(peticion, handlerCon('MODIFICAR', 'Usuario')),
+        manejador(undefined),
+      ),
+    );
+
+    expect(registros[0].entidadId).toBe(USUARIO_ID);
+    expect(registros[0].detalle.campos).toEqual(['actual', 'nueva']);
+  });
 });

@@ -1,10 +1,10 @@
-import type { AlmacenRefreshPort } from '../ports/almacen-refresh.port';
+import type { AlmacenSesionesPort } from '../ports/almacen-sesiones.port';
 import type { EmisorTokensPort } from '../ports/emisor-tokens.port';
 
 export class CerrarSesionUseCase {
   constructor(
     private readonly emisor: EmisorTokensPort,
-    private readonly almacen: AlmacenRefreshPort,
+    private readonly sesiones: AlmacenSesionesPort,
   ) {}
 
   async ejecutar(refreshToken: string | undefined): Promise<void> {
@@ -13,7 +13,8 @@ export class CerrarSesionUseCase {
     }
     const payload = await this.emisor.verificarRefresh(refreshToken);
     if (payload) {
-      await this.almacen.revocar(payload.sub, payload.jti);
+      // Por `sid`: cierra la sesión aunque otra pestaña ya haya rotado el jti.
+      await this.sesiones.cerrar(payload.sub, payload.sid);
     }
   }
 }

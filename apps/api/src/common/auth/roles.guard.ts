@@ -3,29 +3,23 @@ import { Reflector } from '@nestjs/core';
 import type { Rol } from '@oasis/shared';
 
 import { ProhibidoError } from '../../shared-kernel/domain-error';
-import { ROLES_KEY, type UsuarioAutenticado } from './decorators';
+import { IS_PUBLIC_KEY, ROLES_KEY, type UsuarioAutenticado } from './decorators';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const rolesRequeridos = this.reflector.getAllAndOverride<Rol[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-
-    if (!rolesRequeridos || rolesRequeridos.length === 0) {
+    const destino = [context.getHandler(), context.getClass()];
+    if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, destino)) {
       return true;
     }
-
-    const request = context.switchToHttp().getRequest<{ user?: UsuarioAutenticado }>();
-    const usuario = request.user;
-
-    if (!usuario || !rolesRequeridos.includes(usuario.rol)) {
+    const rolesRequeridos = this.reflector.getAllAndOverride<Rol[]>(ROLES_KEY, destino);
+    const usuario = context.switchToHttp().getRequest<{ user?: UsuarioAutenticado }>().user;
+    // Sin @Roles se niega: una ruta nueva nunca queda abierta a cualquier autenticado (HU-03).
+    if (!rolesRequeridos?.length || !usuario || !rolesRequeridos.includes(usuario.rol)) {
       throw new ProhibidoError('No tiene permisos para realizar esta acción');
     }
-
     return true;
   }
 }

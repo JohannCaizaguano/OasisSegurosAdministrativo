@@ -1,7 +1,7 @@
-// Escenario k6: verificación pública (sin autenticación). El endpoint está
-// limitado a 20/min; la cadencia se calcula desde el límite vigente.
+// Escenario k6: verificación de recibos con sesión (ADR-015). Hasta S8 rige el límite global por
+// IP; la cadencia se calcula desde él.
 //
-// Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/verificacion-publica.js
+// Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/verificacion-recibo.js
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
@@ -9,7 +9,7 @@ import { iniciarSesion, limite } from './lib.js';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
 
-const LIMITE = limite('verificacionPublica');
+const LIMITE = limite('global');
 const ITERACIONES_POR_MINUTO = Math.max(1, Math.floor(LIMITE * 0.8));
 const VUS = Math.min(10, ITERACIONES_POR_MINUTO);
 const ESPERA_SEGUNDOS = Math.round((60 * VUS) / ITERACIONES_POR_MINUTO);
@@ -18,7 +18,7 @@ const ESTADOS_VALIDOS = ['VALIDO', 'ANULADO', 'NO_ANCLADO', 'NO_ENCONTRADO', 'HA
 
 export const options = {
   scenarios: {
-    verificacion_publica: { executor: 'constant-vus', vus: VUS, duration: '45s' },
+    verificacion_recibo: { executor: 'constant-vus', vus: VUS, duration: '45s' },
   },
   thresholds: {
     http_req_failed: ['rate<0.01'],
@@ -28,23 +28,22 @@ export const options = {
 };
 
 export function setup() {
-  // El login es solo para obtener códigos de recibo reales; la petición que se
-  // mide después es totalmente anónima.
   const sesion = iniciarSesion(BASE_URL);
   const listado = http.get(`${BASE_URL}/api/v1/recibos?page=1&pageSize=10`, {
-    headers: { Authorization: `Bearer ${sesion.token}` },
+    headers: sesion.cabeceras,
   });
   const codigos = (listado.json('data') || []).map((r) => r.codigo);
   if (codigos.length === 0) {
     throw new Error('No hay recibos para verificar; ejecuta el flujo completo antes.');
   }
-  return { codigos };
+  return { codigos, cabeceras: sesion.cabeceras };
 }
 
 export default function (datos) {
   const codigo = datos.codigos[__ITER % datos.codigos.length];
-  // Sin cabeceras de autenticación a propósito: es el recorrido de un tercero.
-  const respuesta = http.get(`${BASE_URL}/api/v1/public/recibos/${codigo}/verificacion`);
+  const respuesta = http.get(`${BASE_URL}/api/v1/recibos/${codigo}/verificacion`, {
+    headers: datos.cabeceras,
+  });
 
   check(respuesta, {
     'verificación 200': (r) => r.status === 200,

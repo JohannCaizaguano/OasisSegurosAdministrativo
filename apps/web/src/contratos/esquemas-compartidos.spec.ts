@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   apiErrorSchema,
+  cambiarContrasenaSchema,
   crearClienteSchema,
   crearPagoSchema,
   loginSchema,
@@ -138,6 +139,28 @@ describe('loginSchema', () => {
     expect(loginSchema.safeParse({ email: 'a@b.com', password: 'secreto1' }).success).toBe(true);
     expect(loginSchema.safeParse({ email: 'a@b.com', password: '' }).success).toBe(false);
     expect(loginSchema.safeParse({ email: 'nope', password: 'secreto1' }).success).toBe(false);
+  });
+});
+
+describe('cambiarContrasenaSchema', () => {
+  const valido = { actual: 'Secreta.123', nueva: 'Nueva.Clave1' };
+
+  it('rechaza una nueva de 7 caracteres, una de 129 y una igual a la actual', () => {
+    expect(cambiarContrasenaSchema.safeParse({ ...valido, nueva: '1234567' }).success).toBe(false);
+    expect(cambiarContrasenaSchema.safeParse({ ...valido, nueva: 'x'.repeat(129) }).success).toBe(
+      false,
+    );
+    expect(cambiarContrasenaSchema.safeParse({ ...valido, nueva: valido.actual }).success).toBe(
+      false,
+    );
+  });
+
+  it('rechaza una contraseña actual vacía', () => {
+    expect(cambiarContrasenaSchema.safeParse({ ...valido, actual: '' }).success).toBe(false);
+  });
+
+  it('acepta un cambio válido', () => {
+    expect(cambiarContrasenaSchema.safeParse(valido).success).toBe(true);
   });
 });
 

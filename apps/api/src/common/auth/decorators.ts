@@ -16,6 +16,7 @@ export interface UsuarioAutenticado {
   email: string;
   rol: Rol;
   clienteId?: string | null;
+  sid: string;
 }
 
 /** Inyecta el usuario autenticado (resultado de la estrategia JWT). */
