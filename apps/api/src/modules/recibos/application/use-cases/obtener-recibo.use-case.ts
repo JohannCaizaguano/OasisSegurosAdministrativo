@@ -1,4 +1,4 @@
-﻿import { NoEncontradoError } from '../../../../shared-kernel/domain-error';
+import { NoEncontradoError } from '../../../../shared-kernel/domain-error';
 import type { Recibo } from '../../domain/recibo';
 import type { RecibosRepositoryPort } from '../ports/recibos.repository.port';
 

@@ -3,16 +3,22 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request, Response } from 'express';
 import type { LoginInput, LoginResponse, UsuarioSesion } from '@oasis/shared';
-import { loginSchema } from '@oasis/shared';
+import { loginSchema, ROLES } from '@oasis/shared';
+import type { CambiarContrasenaInput } from '@oasis/shared';
+import { cambiarContrasenaSchema } from '@oasis/shared';
 
 import { NoAutorizadoError } from '../../../../shared-kernel/domain-error';
-import { duracionASegundos } from '../../../../shared-kernel/duracion';
-import { AppConfig } from '../../../../config/app.config';
 import { limitesThrottle } from '../../../../config/throttle';
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
-import { Public, UsuarioActual, type UsuarioAutenticado } from '../../../../common/auth/decorators';
+import {
+  Public,
+  Roles,
+  UsuarioActual,
+  type UsuarioAutenticado,
+} from '../../../../common/auth/decorators';
 import { ZodValidationPipe } from '../../../../common/pipes/zod-validation.pipe';
 import { CerrarSesionUseCase } from '../../application/use-cases/cerrar-sesion.use-case';
+import { CambiarContrasenaUseCase } from '../../application/use-cases/cambiar-contrasena.use-case';
 import { LoginUseCase } from '../../application/use-cases/login.use-case';
 import { ObtenerSesionUseCase } from '../../application/use-cases/obtener-sesion.use-case';
 import { RefrescarSesionUseCase } from '../../application/use-cases/refrescar-sesion.use-case';
@@ -29,7 +35,7 @@ export class AuthController {
     private readonly refrescar: RefrescarSesionUseCase,
     private readonly cerrar: CerrarSesionUseCase,
     private readonly sesion: ObtenerSesionUseCase,
-    private readonly config: AppConfig,
+    private readonly cambiar: CambiarContrasenaUseCase,
   ) {}
 
   @Public()
@@ -44,7 +50,7 @@ export class AuthController {
     @Res({ passthrough: true }) respuesta: Response,
   ): Promise<LoginResponse> {
     const { usuario, tokens } = await this.login.ejecutar(input.email, input.password);
-    this.escribirCookie(peticion, respuesta, tokens.refreshToken);
+    this.escribirCookie(peticion, respuesta, tokens.refreshToken, tokens.familia.expiraEn);
     return { accessToken: tokens.accessToken, usuario: this.aSesion(usuario) };
   }
 
@@ -62,7 +68,7 @@ export class AuthController {
       throw new NoAutorizadoError('No hay sesión activa');
     }
     const { usuario, tokens } = await this.refrescar.ejecutar(token);
-    this.escribirCookie(peticion, respuesta, tokens.refreshToken);
+    this.escribirCookie(peticion, respuesta, tokens.refreshToken, tokens.familia.expiraEn);
     return { accessToken: tokens.accessToken, usuario: this.aSesion(usuario) };
   }
 
@@ -80,10 +86,24 @@ export class AuthController {
     this.limpiarCookie(peticion, respuesta);
   }
 
+  @Roles(...ROLES)
   @Get('me')
   @ApiOperation({ summary: 'Devuelve el usuario autenticado' })
   async obtenerSesion(@UsuarioActual() usuario: UsuarioAutenticado): Promise<UsuarioSesion> {
     return this.sesion.ejecutar(usuario.id);
+  }
+
+  @Roles(...ROLES)
+  @Throttle({ default: { limit: limitesThrottle().login, ttl: 60_000 } })
+  @Post('cambiar-contrasena')
+  @Auditar('MODIFICAR', 'Usuario')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Cambia la contraseña y cierra las demás sesiones del usuario' })
+  async cambiarContrasena(
+    @UsuarioActual() usuario: UsuarioAutenticado,
+    @Body(new ZodValidationPipe(cambiarContrasenaSchema)) input: CambiarContrasenaInput,
+  ): Promise<void> {
+    await this.cambiar.ejecutar(usuario.id, usuario.sid, input.actual, input.nueva);
   }
 
   private aSesion(usuario: UsuarioCredenciales): UsuarioSesion {
@@ -100,13 +120,18 @@ export class AuthController {
    * `secure` se deriva del protocolo real de la petición (`trust proxy`), no de
    * NODE_ENV: en local por HTTP sigue funcionando.
    */
-  private escribirCookie(peticion: Request, respuesta: Response, token: string): void {
+  private escribirCookie(
+    peticion: Request,
+    respuesta: Response,
+    token: string,
+    expiraEn: number,
+  ): void {
     respuesta.cookie(REFRESH_COOKIE, token, {
       httpOnly: true,
       secure: peticion.secure,
       sameSite: 'strict',
       path: RUTA_COOKIE,
-      maxAge: duracionASegundos(this.config.auth.refreshTtl) * 1_000,
+      maxAge: Math.max(0, expiraEn * 1_000 - Date.now()),
     });
   }
 

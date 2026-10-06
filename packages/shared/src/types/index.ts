@@ -6,7 +6,7 @@ export type { Cliente } from '../schemas/cliente.schema';
 export type { Pago } from '../schemas/pago.schema';
 export type { Poliza } from '../schemas/poliza.schema';
 export type { ReciboDetalle, ReciboResumen } from '../schemas/recibo.schema';
-export type { VerificacionPublica } from '../schemas/recibo.schema';
+export type { VerificacionRecibo } from '../schemas/recibo.schema';
 export type { ApiError, PaginacionMeta, RespuestaPaginada } from '../schemas/common.schema';
 
 // --- Cuerpos de entrada de los endpoints -------------------------------------
@@ -18,6 +18,7 @@ export type { ActualizarClienteInput, CrearClienteInput } from '../schemas/clien
 export type { ActualizarPolizaInput, CrearPolizaInput } from '../schemas/poliza.schema';
 export type { CrearPagoInput, RechazarPagoInput, ValidarPagoInput } from '../schemas/pago.schema';
 export type { LoginInput, LoginResponse, UsuarioSesion } from '../schemas/auth.schema';
+export type { CambiarContrasenaInput } from '../schemas/auth.schema';
 
 // --- Consultas de listado ----------------------------------------------------
 export type { ListarAseguradorasQuery } from '../schemas/aseguradora.schema';

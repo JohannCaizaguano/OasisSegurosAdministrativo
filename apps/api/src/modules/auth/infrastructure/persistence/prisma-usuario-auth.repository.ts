@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { UsuarioCredenciales } from '../../domain/usuario-credenciales';
@@ -36,6 +36,10 @@ export class PrismaUsuarioAuthRepository implements UsuarioAuthRepositoryPort {
       include: { cliente: true },
     });
     return fila ? this.mapear(fila) : null;
+  }
+
+  async actualizarPasswordHash(id: string, passwordHash: string): Promise<void> {
+    await this.prisma.usuario.update({ where: { id }, data: { passwordHash } });
   }
 
   private mapear(fila: FilaUsuario): UsuarioCredenciales {

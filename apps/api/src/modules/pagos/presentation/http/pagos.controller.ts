@@ -20,9 +20,9 @@ import { Roles, UsuarioActual, type UsuarioAutenticado } from '../../../../commo
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import { TOKENS_TRANSVERSALES } from '../../../../shared-kernel/tokens';
 import type { ClockPort } from '../../../../shared-kernel/clock.port';
-import { ProhibidoError } from '../../../../shared-kernel/domain-error';
 import { Inject } from '@nestjs/common';
 import type { Pago } from '../../domain/pago';
+import { ListarPagosDeClienteUseCase } from '../../application/use-cases/listar-pagos-de-cliente.use-case';
 import {
   CrearPagoUseCase,
   ListarPagosUseCase,
@@ -153,7 +153,7 @@ export class PagosController {
 @Controller('mis-pagos')
 @Roles('CLIENTE')
 export class MisPagosController {
-  constructor(private readonly listarPagos: ListarPagosUseCase) {}
+  constructor(private readonly listarPagos: ListarPagosDeClienteUseCase) {}
 
   @Get()
   @ApiOperation({ summary: 'Lista los pagos del cliente autenticado' })
@@ -162,11 +162,7 @@ export class MisPagosController {
     @ZodQuery(listarPagosQuerySchema)
     query: { page: number; pageSize: number; estado?: Pago['estado'] },
   ) {
-    if (!usuario.clienteId) {
-      throw new ProhibidoError('El usuario no está asociado a un cliente');
-    }
-    const pagina = await this.listarPagos.ejecutar({
-      clienteId: usuario.clienteId,
+    const pagina = await this.listarPagos.ejecutar(usuario.clienteId, {
       pagina: query.page,
       porPagina: query.pageSize,
       estado: query.estado,

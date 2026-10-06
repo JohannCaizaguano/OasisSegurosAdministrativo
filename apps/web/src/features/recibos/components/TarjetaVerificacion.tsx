@@ -5,34 +5,34 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { acortarHash } from '@/lib/format';
 
-/** Tarjeta con el QR y el enlace a la verificación pública del recibo. */
-export function TarjetaVerificacionPublica({
+/** Tarjeta con el QR y el enlace a la verificación del recibo (exige sesión, ADR-015). */
+export function TarjetaVerificacion({
   codigo,
   hashRecibo,
 }: {
   codigo: string;
   hashRecibo: string;
 }) {
-  const urlPublica = `${window.location.origin}/verificar/${codigo}`;
+  const urlVerificacion = `${window.location.origin}/recibos/verificar/${codigo}`;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Verificación pública</CardTitle>
+        <CardTitle className="text-base">Verificación del recibo</CardTitle>
         <CardDescription>
-          Cualquier persona puede comprobar este recibo sin iniciar sesión.
+          Quien escanee el QR debe iniciar sesión para ver el resultado.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid justify-items-center gap-4">
         <div className="rounded-xl bg-white p-3" data-testid="qr-recibo">
-          <QRCodeSVG value={urlPublica} size={180} title={`Verificación de ${codigo}`} />
+          <QRCodeSVG value={urlVerificacion} size={180} title={`Verificación de ${codigo}`} />
         </div>
         <p className="break-all text-center font-mono text-xs text-[var(--muted-foreground)]">
-          {urlPublica}
+          {urlVerificacion}
         </p>
         <Button asChild className="w-full">
-          <Link to={`/verificar/${codigo}`} data-testid="enlace-verificacion">
-            Abrir verificación pública
+          <Link to={`/recibos/verificar/${codigo}`} data-testid="enlace-verificacion">
+            Abrir verificación
           </Link>
         </Button>
         <p className="text-center text-xs text-[var(--muted-foreground)]">

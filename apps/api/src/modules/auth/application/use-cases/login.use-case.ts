@@ -1,6 +1,6 @@
 import { NoAutorizadoError } from '../../../../shared-kernel/domain-error';
 import type { UsuarioCredenciales } from '../../domain/usuario-credenciales';
-import type { AlmacenRefreshPort } from '../ports/almacen-refresh.port';
+import type { AlmacenSesionesPort } from '../ports/almacen-sesiones.port';
 import type { EmisorTokensPort, TokensEmitidos } from '../ports/emisor-tokens.port';
 import type { HasherPort } from '../ports/hasher.port';
 import type { UsuarioAuthRepositoryPort } from '../ports/usuario-auth.repository.port';
@@ -15,7 +15,7 @@ export class LoginUseCase {
     private readonly usuarios: UsuarioAuthRepositoryPort,
     private readonly hasher: HasherPort,
     private readonly emisor: EmisorTokensPort,
-    private readonly almacen: AlmacenRefreshPort,
+    private readonly sesiones: AlmacenSesionesPort,
   ) {}
 
   async ejecutar(email: string, password: string): Promise<ResultadoLogin> {
@@ -39,7 +39,7 @@ export class LoginUseCase {
       clienteId: usuario.clienteId,
     });
 
-    await this.almacen.guardar(usuario.id, tokens.refreshJti);
+    await this.sesiones.abrir(usuario.id, tokens.familia.sid, tokens.refreshJti);
 
     return { usuario, tokens };
   }

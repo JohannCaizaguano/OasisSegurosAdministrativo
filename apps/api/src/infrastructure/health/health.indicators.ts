@@ -2,33 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { HealthIndicatorService } from '@nestjs/terminus';
 import type Redis from 'ioredis';
 
+import { conTiempoLimite } from '../../shared-kernel/tiempo-limite';
 import { PrismaService } from '../prisma/prisma.service';
 import { REDIS_CLIENT } from '../redis/redis.module';
-
-/**
- * Tiempo máximo que un chequeo espera a su dependencia. Con Redis es
- * imprescindible: BullMQ usa `maxRetriesPerRequest: null` y un `ping` con el
- * servidor caído se queda encolado.
- */
-const TIEMPO_LIMITE_MS = 2_000;
-
-function conTiempoLimite<T>(promesa: Promise<T>, descripcion: string): Promise<T> {
-  return new Promise<T>((resolver, rechazar) => {
-    const temporizador = setTimeout(
-      () => rechazar(new Error(`${descripcion} no respondió en ${TIEMPO_LIMITE_MS} ms`)),
-      TIEMPO_LIMITE_MS,
-    );
-    promesa
-      .then((valor) => {
-        clearTimeout(temporizador);
-        resolver(valor);
-      })
-      .catch((error: unknown) => {
-        clearTimeout(temporizador);
-        rechazar(error instanceof Error ? error : new Error(String(error)));
-      });
-  });
-}
 
 @Injectable()
 export class PrismaHealthIndicator {

@@ -58,6 +58,17 @@ mueve el código a la capa que corresponde.
 - Todo endpoint que crea, modifica, elimina, valida, rechaza, anula, reintenta, importa o inicia
   sesión declara `@Auditar(accion, entidad)` (`src/common/auditoria/auditar.decorator.ts`), con
   valores de `ACCIONES_AUDITORIA` y `ENTIDADES_AUDITADAS`.
-- `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara; las
-  exenciones están listadas allí.
+- `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara;
+  descubre los controladores con `test/rutas-declaradas.ts` y las exenciones siguen listadas allí.
 - La bitácora es de solo inserción: no agregues métodos de edición ni de borrado a su puerto.
+
+## Acceso (HU-03, ADR-015)
+
+- Todo handler declara `@Roles(...)` (en el handler o en la clase) o `@Public()`. `RolesGuard`
+  responde 403 si no hay roles: una ruta nueva nunca queda abierta a cualquier autenticado.
+- Solo son públicas `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /health` y
+  `GET /metrics`; la recuperación de contraseña se sumará con HU-31. `roles-cobertura.spec.ts` falla
+  si cambia esa lista o si una ruta queda sin roles, y `acceso-por-rol.e2e-spec.ts` comprueba 401
+  sin token y 403 para cada rol no permitido.
+- Los datos del CLIENTE se filtran en un caso de uso con su `clienteId` (RN-07), no solo en el
+  controlador.

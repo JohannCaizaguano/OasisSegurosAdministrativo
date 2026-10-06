@@ -1,6 +1,6 @@
 # Historias de usuario y Product Backlog — SRPP (Oasis Seguros)
 
-> Fuente de verdad del alcance funcional. Versión 1.0 (07/09/2026). Los IDs de requisitos (RF-xx, RNF-xx) y reglas de negocio (RN-xx) provienen de la ERS del proyecto; aquí solo se citan por su ID.
+> Fuente de verdad del alcance funcional. Versión 1.1 (06/10/2026): usuarios limitados al personal de Oasis Seguros y a sus clientes con inicio de sesión (HU-28 sin acceso público) y pago en línea con PayPhone (HU-48 y HU-49). Los IDs de requisitos (RF-xx, RNF-xx) y reglas de negocio (RN-xx) provienen de la ERS del proyecto; aquí solo se citan por su ID.
 
 Sistema de Registro de Pagos de Primas (SRPP) — Scrum con sprints semanales
 
@@ -16,11 +16,11 @@ Documento elaborado en el marco del proyecto técnico de titulación de la Carre
 
 ## 1. INTRODUCCIÓN
 
-El Product Backlog del SRPP contiene 59 elementos: 47 historias de usuario y 12 historias técnicas, con un total de 372 horas estimadas.
+El Product Backlog del SRPP contiene 61 elementos: 49 historias de usuario y 12 historias técnicas, con un total de 385 horas estimadas.
 
 - **Periodo:** 18 sprints semanales, del 7 de septiembre de 2026 al 8 de enero de 2027.
 - **Capacidad:** 25 horas por semana y 15 horas en las semanas con feriado (420 horas en total).
-- **Reserva:** 48 horas libres, con el Sprint 17 dedicado a correcciones y reserva.
+- **Reserva:** 35 horas libres, con el Sprint 17 dedicado a correcciones y reserva.
 
 La columna Requisitos del Product Backlog indica los requisitos de la ERS que implementa cada historia.
 
@@ -83,13 +83,13 @@ Las historias se agrupan en 9 épicas.
 | EP-01 | Acceso y seguridad | Autenticación, roles y cuentas | 9 | 38 |
 | EP-02 | Gestión de clientes | Registro y consulta de clientes | 5 | 27 |
 | EP-03 | Pólizas, cuotas y cartera | Pólizas, plan de cuotas, vencimientos y catálogos | 11 | 48 |
-| EP-04 | Gestión de pagos | Registro, validación y consulta de pagos | 7 | 38 |
+| EP-04 | Gestión de pagos | Registro, validación, consulta y pago en línea de primas | 9 | 51 |
 | EP-05 | Recibos y blockchain | Emisión, anclaje, anulación y estado de recibos | 9 | 67 |
-| EP-06 | Portal del cliente y verificación | Autoservicio del cliente y verificación pública | 4 | 27 |
+| EP-06 | Portal del cliente y verificación | Autoservicio del cliente y verificación de recibos con sesión | 4 | 27 |
 | EP-07 | Plataforma e infraestructura | Monorepo, bases técnicas, contenedores y despliegue | 7 | 68 |
 | EP-08 | Evaluación y entrega | Pruebas de aceptación, rendimiento, capacitación y entrega | 4 | 42 |
 | EP-09 | Reportes y auditoría | Reportes de conciliación, cartera vencida y bitácora | 3 | 17 |
-|  | Total |  | 59 | 372 |
+|  | Total |  | 61 | 385 |
 
 ## 4. PRODUCT BACKLOG
 
@@ -127,7 +127,7 @@ Product Backlog ordenado por sprint.
 | HU-42 | Monitorear el saldo de la cuenta operadora | EP-05 | MEDIA | 3 | HU-23 | RF-47 | S7 |
 | HU-24 | Ver estado de anclaje del recibo | EP-05 | ALTA | 4 | HU-23 | RF-29 | S8 |
 | HU-25 | Recibo imprimible con código QR | EP-05 | ALTA | 6 | HU-22 | RF-30 | S8 |
-| HU-28 | Verificar recibo públicamente | EP-06 | ALTA | 10 | HU-23 | RF-33, RF-34 | S8 |
+| HU-28 | Verificar autenticidad del recibo | EP-06 | ALTA | 10 | HU-23 | RF-33, RF-34 | S8 |
 | HU-36 | Aplicar pagos a cuotas | EP-03 | ALTA | 5 | HU-35, HU-18 | RF-41 | S8 |
 | HU-20 | Listar pagos | EP-04 | ALTA | 6 | HU-16 | RF-21 | S9 |
 | HU-26 | Reintentar recibo fallido | EP-05 | MEDIA | 3 | HU-23 | RF-31 | S9 |
@@ -142,12 +142,11 @@ Product Backlog ordenado por sprint.
 | HU-29 | Consultar mis pólizas y pagos | EP-06 | ALTA | 8 | HU-05, HU-24 | RF-22 | S11 |
 | HU-39 | Notificar al cliente la validación o el rechazo del pago | EP-04 | MEDIA | 3 | HT-12, HU-18, HU-19 | RF-44 | S11 |
 | HT-05 | Contenerización con Docker | EP-07 | ALTA | 12 | HU-23 | RNF-11, RNF-22 | S12 |
-| HU-21 | Exportar pagos a CSV | EP-04 | BAJA | 3 | HU-20 | RF-23 | S12 |
-| HU-30 | Panel de indicadores | EP-06 | BAJA | 6 | HU-20, HU-24 | RF-35 | S12 |
-| HU-31 | Recuperar contraseña por correo | EP-01 | MEDIA | 4 | HT-12 | RF-36, RNF-29 | S12 |
+| HU-48 | Pagar cuota en línea | EP-04 | MEDIA | 10 | HU-29, HU-36 | RF-53, RF-54 | S12 |
+| HU-49 | Consultar transacciones de pago en línea | EP-04 | MEDIA | 3 | HU-48 | RF-55 | S12 |
 | HT-06 | Despliegue en VPS con CI/CD | EP-07 | ALTA | 12 | HT-05 | RNF-10, RNF-16 | S13 |
 | HU-34 | Importar clientes y pólizas desde archivo | EP-02 | MEDIA | 8 | HU-12 | RF-39, RNF-28 | S13 |
-| HU-40 | Recordatorio de vencimiento de cuota | EP-03 | BAJA | 3 | HT-12, HU-37 | RF-45 | S13 |
+| HU-31 | Recuperar contraseña por correo | EP-01 | MEDIA | 4 | HT-12 | RF-36, RNF-29 | S13 |
 | HT-07 | Instrumentación y monitoreo | EP-08 | ALTA | 6 | HT-06 | RNF-05, RNF-06 | S14 |
 | HT-08 | Endurecimiento de seguridad | EP-07 | ALTA | 6 | HT-06 | RNF-09 a RNF-13 | S14 |
 | HU-43 | Reporte de conciliación por aseguradora | EP-09 | MEDIA | 6 | HU-20 | RF-48 | S14 |
@@ -158,6 +157,9 @@ Product Backlog ordenado por sprint.
 | HU-47 | Actualizar datos de contacto | EP-06 | BAJA | 3 | HU-29 | RF-52 | S15 |
 | HT-10 | Evaluación de la eficiencia de desempeño | EP-08 | ALTA | 14 | HT-07 | RNF-01 a RNF-08 | S16 |
 | HT-11 | Capacitación y entrega del sistema | EP-08 | ALTA | 10 | HT-09 | — | S18 |
+| HU-21 | Exportar pagos a CSV | EP-04 | BAJA | 3 | HU-20 | RF-23 | S18 |
+| HU-30 | Panel de indicadores | EP-06 | BAJA | 6 | HU-20, HU-24 | RF-35 | S18 |
+| HU-40 | Recordatorio de vencimiento de cuota | EP-03 | BAJA | 3 | HT-12, HU-37 | RF-45 | S18 |
 
 ## 5. HISTORIAS DE USUARIO
 
@@ -340,6 +342,7 @@ Historias agrupadas por épica.
   - Se registra nombre y RUC de 13 dígitos
   - Un RUC duplicado se rechaza
   - Las aseguradoras se pueden listar y editar
+  - Las aseguradoras son datos de referencia de las pólizas; no tienen cuenta ni acceso al sistema
 
 #### HU-12 — Registrar póliza
 
@@ -536,6 +539,33 @@ Historias agrupadas por épica.
   - Al rechazar un pago se envía un correo con el motivo
   - El envío no retrasa la respuesta al operador
 
+#### HU-48 — Pagar cuota en línea
+
+- **Descripción:** Como cliente, quiero pagar mis cuotas en línea con tarjeta desde el portal, para no tener que hacer una transferencia y enviar el comprobante.
+- **Estimación:** 10 horas
+- **Prioridad:** MEDIA
+- **Depende de:** HU-29, HU-36
+- **Criterios de aceptación:**
+  - El cliente elige una o varias cuotas pendientes o vencidas de sus pólizas vigentes (RN-01, RN-07)
+  - El monto no supera el saldo pendiente de la póliza (RN-02)
+  - El cobro se realiza en la Cajita de Pagos de PayPhone; el SRPP no recibe datos de la tarjeta (RN-21)
+  - El backend confirma la transacción con PayPhone y, si es aprobada, registra el pago VALIDADO, lo aplica a las cuotas y emite el recibo
+  - Una transacción cancelada o rechazada no registra pago y el cliente ve el resultado
+  - Confirmar dos veces la misma transacción no duplica el pago ni el recibo (RN-20)
+  - Las pruebas se realizan en el entorno de pruebas de PayPhone
+
+#### HU-49 — Consultar transacciones de pago en línea
+
+- **Descripción:** Como operador, quiero consultar las transacciones de pago en línea, para conciliar los cobros de la pasarela con los pagos registrados.
+- **Estimación:** 3 horas
+- **Prioridad:** MEDIA
+- **Depende de:** HU-48
+- **Criterios de aceptación:**
+  - Se listan las transacciones con cliente, póliza, monto, estado y fecha
+  - Se filtra por estado y rango de fechas
+  - Cada transacción aprobada enlaza a su pago y a su recibo
+  - Las transacciones PENDIENTE con más de 10 minutos se consultan de nuevo en la pasarela
+
 ### EP-05 Recibos y blockchain
 
 #### HT-02 — Contrato inteligente RegistroRecibos
@@ -560,7 +590,7 @@ Historias agrupadas por épica.
 - **Depende de:** HU-18, HT-02
 - **Criterios de aceptación:**
   - El pago pasa a VALIDADO y el recibo se crea en PENDIENTE_ANCLAJE dentro de la misma transacción de base de datos
-  - El código público es aleatorio y tiene al menos 10 caracteres (RN-12)
+  - El código de verificación es aleatorio y tiene al menos 10 caracteres (RN-12)
   - El hash es keccak256(sal ‖ JSON canónico) con sal aleatoria de 32 bytes
   - Ningún dato personal se envía a la blockchain (RN-06)
   - Cada pago validado tiene exactamente un recibo (RN-04)
@@ -581,7 +611,7 @@ Historias agrupadas por épica.
 
 #### HU-24 — Ver estado de anclaje del recibo
 
-- **Descripción:** Como operador, quiero ver el estado de anclaje de cada recibo, para saber si ya es verificable por terceros.
+- **Descripción:** Como operador, quiero ver el estado de anclaje de cada recibo, para saber si ya es verificable en la blockchain.
 - **Estimación:** 4 horas
 - **Prioridad:** ALTA
 - **Depende de:** HU-23
@@ -599,7 +629,7 @@ Historias agrupadas por épica.
 - **Depende de:** HU-22
 - **Criterios de aceptación:**
   - El recibo muestra póliza, monto, fecha, código y estado de anclaje
-  - El QR apunta a la página /verificar/:codigo
+  - El QR apunta a la ruta /recibos/verificar/:codigo, que exige iniciar sesión
   - El formato se puede imprimir o guardar como PDF desde el navegador
   - No se muestran la sal ni datos internos
 
@@ -624,7 +654,7 @@ Historias agrupadas por épica.
   - Solo el ADMIN puede anular y solo recibos ANCLADOS
   - El motivo es obligatorio y su hash se registra con anular() en el contrato
   - El recibo pasa a ANULADO y no se elimina (RN-05)
-  - La verificación pública muestra el resultado Anulado
+  - La verificación del recibo muestra el resultado Anulado
 
 #### HU-41 — Descargar recibo en PDF
 
@@ -650,19 +680,19 @@ Historias agrupadas por épica.
 
 ### EP-06 Portal del cliente y verificación
 
-#### HU-28 — Verificar recibo públicamente
+#### HU-28 — Verificar autenticidad del recibo
 
-- **Descripción:** Como aseguradora o cliente, quiero verificar un recibo con su código o QR sin crear una cuenta, para comprobar que el pago es auténtico.
+- **Descripción:** Como cliente o miembro del personal de Oasis Seguros, quiero verificar un recibo con su código o QR desde mi sesión, para comprobar que el pago es auténtico.
 - **Estimación:** 10 horas
 - **Prioridad:** ALTA
 - **Depende de:** HU-23
 - **Criterios de aceptación:**
-  - La página es pública y no requiere inicio de sesión
+  - La verificación exige una sesión activa; si se escanea el QR sin sesión, se solicita iniciar sesión y luego se muestra el resultado
   - El sistema recalcula el hash y lo compara con el registrado en el contrato
   - Los resultados posibles son Auténtico, No coincide, En proceso, Anulado y No encontrado
   - Se muestra el enlace a la transacción en el explorador
-  - No se muestran datos personales
-  - Se limitan las consultas a 30 por minuto por IP
+  - El cliente solo puede verificar sus propios recibos; el recibo de otro cliente se informa como No encontrado (RN-07)
+  - Se limitan las consultas a 30 por minuto por usuario
 
 #### HU-29 — Consultar mis pólizas y pagos
 
@@ -773,7 +803,7 @@ Historias agrupadas por épica.
 - **Depende de:** HT-06
 - **Criterios de aceptación:**
   - Helmet y Caddy aplican cabeceras de seguridad
-  - Se verifican los límites de tasa en inicio de sesión y verificación pública
+  - Se verifican los límites de tasa en inicio de sesión y verificación de recibos
   - Ningún secreto está versionado en el repositorio
   - Las validaciones, rechazos y anulaciones registran usuario y fecha
 
@@ -821,7 +851,7 @@ Historias agrupadas por épica.
 - **Prioridad:** ALTA
 - **Depende de:** HT-07
 - **Criterios de aceptación:**
-  - Los escenarios k6 cubren inicio de sesión, listado de pagos, validación de pago y verificación pública con 20 y 50 usuarios virtuales
+  - Los escenarios k6 cubren inicio de sesión, listado de pagos, validación de pago y verificación de recibos con 20 y 50 usuarios virtuales
   - Se obtienen PTb-1-G, PTb-3-G, PTb-5-G, PRu-1-G, PRu-2-G y PCa-2-G
   - La latencia de anclaje y el gas medio se calculan a partir de los recibos
   - Los resultados se exportan y se contrastan con los umbrales definidos
@@ -887,7 +917,7 @@ Historias agrupadas por épica.
 | S1 | 07/09/2026 11/09/2026 | Monorepo, integración continua y backend base | HT-01, HT-03 | 22 / 25 |
 | S2 | 14/09/2026 18/09/2026 | Contrato inteligente RegistroRecibos en Amoy y bitácora de auditoría | HT-02, HU-45 | 24 / 25 |
 | S3 | 21/09/2026 25/09/2026 | Inicio de sesión, control de acceso y cierre por inactividad | HU-01, HU-02, HU-03, HU-06, HU-32 | 22 / 25 |
-| S4 | 28/09/2026 02/10/2026 | Aplicación web base; usuarios del personal, clientes y aseguradoras | HT-04, HU-04, HU-07, HU-11 | 25 / 25 |
+| S4 | 28/09/2026 02/10/2026 | Aplicación web base; usuarios del personal, clientes y catálogo de aseguradoras | HT-04, HU-04, HU-07, HU-11 | 25 / 25 |
 | S5 | 05/10/2026 09/10/2026 | Gestión de clientes y registro de pólizas | HU-08, HU-09, HU-12, HU-13, HU-14 | 24 / 25 |
 | S6 | 12/10/2026 16/10/2026 | Plan de cuotas; registro, validación y rechazo de pagos | HU-16, HU-18, HU-19, HU-35, HU-37 | 25 / 25 |
 | S7 | 19/10/2026 23/10/2026 | Emisión y anclaje de recibos en Polygon | HU-22, HU-23, HU-42 | 23 / 25 |
@@ -895,10 +925,10 @@ Historias agrupadas por épica.
 | S9 | 02/11/2026 06/11/2026 | Listado de pagos y seguimiento de cuotas (semana con feriados) | HU-20, HU-26, HU-38 | 13 / 15 |
 | S10 | 09/11/2026 13/11/2026 | Reporte de pagos por el cliente y cuentas de cliente | HU-05, HU-10, HU-15, HU-17, HU-33 | 25 / 25 |
 | S11 | 16/11/2026 20/11/2026 | Portal del cliente, correos y anulación de recibos | HT-12, HU-27, HU-29, HU-39 | 25 / 25 |
-| S12 | 23/11/2026 27/11/2026 | Recuperación de contraseña, contenerización, exportación y panel | HT-05, HU-21, HU-30, HU-31 | 25 / 25 |
-| S13 | 30/11/2026 04/12/2026 | Despliegue en el servidor, importación de datos y recordatorios | HT-06, HU-34, HU-40 | 23 / 25 |
+| S12 | 23/11/2026 27/11/2026 | Contenerización y pago en línea con PayPhone | HT-05, HU-48, HU-49 | 25 / 25 |
+| S13 | 30/11/2026 04/12/2026 | Despliegue en el servidor, importación de datos y recuperación de contraseña | HT-06, HU-34, HU-31 | 24 / 25 |
 | S14 | 07/12/2026 11/12/2026 | Monitoreo, seguridad y reportes | HT-07, HT-08, HU-43, HU-44 | 23 / 25 |
 | S15 | 14/12/2026 18/12/2026 | Pruebas de aceptación, recibo PDF, catálogos y datos de contacto | HT-09, HU-41, HU-46, HU-47 | 24 / 25 |
 | S16 | 21/12/2026 25/12/2026 | Pruebas de rendimiento (semana con feriado) | HT-10 | 14 / 15 |
 | S17 | 28/12/2026 01/01/2027 | Reserva y correcciones (semana con feriado) | Reserva | 0 / 15 |
-| S18 | 04/01/2027 08/01/2027 | Capacitación, entrega y cierre del proyecto | HT-11 | 10 / 25 |
+| S18 | 04/01/2027 08/01/2027 | Capacitación, entrega y cierre del proyecto; historias de prioridad BAJA si el tiempo lo permite | HT-11, HU-21, HU-30, HU-40 | 22 / 25 |

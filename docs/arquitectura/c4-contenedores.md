@@ -19,16 +19,19 @@ flowchart TB
     end
     chain["Polygon Amoy<br/>RegistroRecibos"]
   end
+  payphone["PayPhone<br/>[pasarela de pagos]"]
 
   spa -- "HTTPS /api/*" --> api
   spa -- "/ (SPA)" --> spa
   api -- "SQL (Prisma + adapter-pg)" --> pg
-  api -- "BullMQ / refresh tokens" --> redis
+  api -- "BullMQ / sesiones por familia con inactividad" --> redis
   api -- "encola jobId=reciboId" --> redis
   worker -- "consume cola anclaje-recibos" --> redis
   worker -- "SQL" --> pg
   worker -- "viem: registra/anula (firma custodial)" --> chain
   api -- "eth_call de solo lectura" --> chain
+  api -- "HTTPS: confirma transacciones (token)" --> payphone
+  spa -- "Cajita de Pagos (JS)" --> payphone
   migrate -- "migraciones" --> pg
 ```
 
@@ -41,7 +44,7 @@ flowchart TB
 | `worker`   | Procesa la cola `anclaje-recibos` (concurrencia 1, 5 intentos, backoff) y el barrido cada 30 s. | 1      | Único contenedor con `OPERATOR_PRIVATE_KEY`.      |
 | `migrate`  | Aplica migraciones y termina (`service_completed_successfully`).                                | —      | Arranca antes que api/worker.                     |
 | `postgres` | Datos de negocio (Decimal(12,2), UUID, índices).                                                | 1      | Sin puertos publicados.                           |
-| `redis`    | BullMQ (Transactional Outbox) + refresh tokens (rotación).                                      | 1      | `appendonly yes`.                                 |
+| `redis`    | BullMQ (Transactional Outbox) + sesiones por familia con inactividad (ADR-016).                 | 1      | `appendonly yes`.                                 |
 
 ## Comunicación
 
@@ -51,4 +54,7 @@ flowchart TB
   la cola BullMQ (`jobId = reciboId`).
 - **worker → cadena**: `simulateContract` + `writeContract` con `maxFeePerGas` acotado;
   `nonceManager` y concurrencia 1 evitan colisiones de nonce.
-- **api → cadena**: solo `eth_call` (lectura) para la verificación pública.
+- **api → cadena**: solo `eth_call` (lectura) para la verificación de recibos, que exige sesión
+  (ADR-015).
+- **api → PayPhone**: confirma cada transacción de pago en línea con el token de la tienda; el
+  SRPP no recibe datos de tarjeta (ADR-014).

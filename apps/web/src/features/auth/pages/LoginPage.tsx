@@ -1,7 +1,6 @@
 import { loginSchema, type LoginInput } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -14,27 +13,18 @@ import { useAuthStore } from '@/lib/auth-store';
 import { useLogin } from '../hooks';
 
 export function LoginPage() {
-  const autenticado = useAuthStore((estado) => estado.autenticado);
+  const motivoCierre = useAuthStore((estado) => estado.motivoCierre);
   const login = useLogin();
-  const navegar = useNavigate();
-  const ubicacion = useLocation();
-  const destino =
-    (ubicacion.state as { desde?: { pathname?: string } } | null)?.desde?.pathname ?? '/';
 
   const formulario = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: '', password: '' },
   });
 
-  if (autenticado) {
-    return <Navigate to="/" replace />;
-  }
-
   const enviar = formulario.handleSubmit((datos) => {
     login.mutate(datos, {
       onSuccess: () => {
         toast.success('Bienvenido a Oasis Seguros');
-        navegar(destino, { replace: true });
       },
       onError: (error) => {
         const mensaje = error instanceof ApiError ? error.message : 'No fue posible iniciar sesión';
@@ -53,6 +43,17 @@ export function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {motivoCierre && (
+            <p
+              role="status"
+              data-testid="aviso-cierre"
+              className="mb-4 rounded-md border border-[var(--border)] bg-[var(--muted)] px-3 py-2 text-sm"
+            >
+              {motivoCierre === 'inactividad'
+                ? 'Su sesión se cerró por inactividad.'
+                : 'Su sesión se cerró. Inicie sesión de nuevo.'}
+            </p>
+          )}
           <form className="grid gap-4" onSubmit={enviar} data-testid="formulario-login">
             <div className="grid gap-2">
               <Label htmlFor="email">Correo electrónico</Label>
@@ -92,12 +93,6 @@ export function LoginPage() {
               {login.isPending ? 'Ingresando…' : 'Ingresar'}
             </Button>
           </form>
-          <p className="mt-4 text-center text-xs text-[var(--muted-foreground)]">
-            ¿Necesita verificar un recibo?{' '}
-            <a className="underline" href="/verificar">
-              Ir a la página pública
-            </a>
-          </p>
         </CardContent>
       </Card>
     </div>

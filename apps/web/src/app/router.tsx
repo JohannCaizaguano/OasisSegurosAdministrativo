@@ -1,7 +1,8 @@
-import { createBrowserRouter, Navigate, Outlet, Link } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { BitacoraPage } from '@/features/auditoria/pages/BitacoraPage';
+import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ClientesPage } from '@/features/clientes/pages/ClientesPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
@@ -17,7 +18,10 @@ import { RutaProtegida } from './Guards';
 /** Redirige al inicio a los usuarios ya autenticados que visitan /login. */
 function SoloInvitados() {
   const autenticado = useAuthStore((estado) => estado.autenticado);
-  return autenticado ? <Navigate to="/" replace /> : <Outlet />;
+  const ubicacion = useLocation();
+  // Vuelve a la página que pidió sesión (D19): desde aquí pasan tanto el login como la restauración.
+  const desde = (ubicacion.state as { desde?: { pathname?: string } } | null)?.desde?.pathname;
+  return autenticado ? <Navigate to={desde ?? '/'} replace /> : <Outlet />;
 }
 
 function NoEncontrado() {
@@ -31,9 +35,6 @@ function NoEncontrado() {
         <Link className="underline" to="/">
           Ir al inicio
         </Link>
-        <Link className="underline" to="/verificar">
-          Verificar un recibo
-        </Link>
       </div>
     </div>
   );
@@ -44,8 +45,6 @@ export const router = createBrowserRouter([
     element: <SoloInvitados />,
     children: [{ path: '/login', element: <LoginPage /> }],
   },
-  { path: '/verificar', element: <VerificacionPage /> },
-  { path: '/verificar/:codigo', element: <VerificacionPage /> },
   {
     element: <RutaProtegida />,
     children: [
@@ -58,6 +57,8 @@ export const router = createBrowserRouter([
             children: [
               { path: '/pagos', element: <PagosPage /> },
               { path: '/recibos', element: <RecibosPage /> },
+              { path: '/recibos/verificar', element: <VerificacionPage /> },
+              { path: '/recibos/verificar/:codigo', element: <VerificacionPage /> },
               { path: '/recibos/:id', element: <ReciboDetallePage /> },
               { path: '/clientes', element: <ClientesPage /> },
               { path: '/polizas', element: <PolizasPage /> },
@@ -67,6 +68,7 @@ export const router = createBrowserRouter([
             element: <RutaProtegida roles={['ADMIN']} />,
             children: [{ path: '/bitacora', element: <BitacoraPage /> }],
           },
+          { path: '/cuenta/contrasena', element: <CambiarContrasenaPage /> },
         ],
       },
     ],

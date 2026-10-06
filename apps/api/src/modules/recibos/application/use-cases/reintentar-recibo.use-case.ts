@@ -1,4 +1,4 @@
-﻿import { NoEncontradoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
+import { NoEncontradoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
 import type { Recibo } from '../../domain/recibo';
 import type { ColaAnclajePort } from '../ports/cola-anclaje.port';
 import type { RecibosRepositoryPort } from '../ports/recibos.repository.port';

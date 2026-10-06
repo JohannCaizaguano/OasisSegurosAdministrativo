@@ -6,6 +6,7 @@ import { COLA_ANCLAJE, type ColaAnclajePort } from '../recibos/application/ports
 import { EmitirReciboUseCase } from '../recibos/application/use-cases/emitir-recibo.use-case';
 import { RecibosModule } from '../recibos/recibos.module';
 import { PAGOS_REPOSITORY } from './application/ports/pagos.repository.port';
+import { ListarPagosDeClienteUseCase } from './application/use-cases/listar-pagos-de-cliente.use-case';
 import {
   CrearPagoUseCase,
   ListarPagosUseCase,
@@ -29,6 +30,11 @@ import { MisPagosController, PagosController } from './presentation/http/pagos.c
       provide: ListarPagosUseCase,
       inject: [PAGOS_REPOSITORY],
       useFactory: (repo: PrismaPagosRepository) => new ListarPagosUseCase(repo),
+    },
+    {
+      provide: ListarPagosDeClienteUseCase,
+      inject: [PAGOS_REPOSITORY],
+      useFactory: (repo: PrismaPagosRepository) => new ListarPagosDeClienteUseCase(repo),
     },
     {
       provide: RechazarPagoUseCase,
