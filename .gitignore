@@ -18,7 +18,9 @@ test-results/
 packages/contracts/artifacts/
 packages/contracts/cache/
 packages/contracts/typechain-types/
-packages/contracts/ignition/deployments/
+# Despliegues de Ignition: solo se versiona Amoy (evidencia y `ignition verify`).
+packages/contracts/ignition/deployments/*
+!packages/contracts/ignition/deployments/chain-80002/
 
 # Entorno y secretos (NUNCA versionar)
 .env
@@ -52,9 +54,14 @@ apps/api/prisma/client/
 apps/api/src/generated/
 
 # Artefactos de asistentes/agentes de IA (no forman parte del proyecto)
+.claude/
 .agents/
 .codex/
+.superpowers/
 .github/agents/
 .github/hooks/
 .github/skills/
 skills-lock.json
+
+# Originales en Word: su contenido está en docs/referencia/
+docs/*.docx
