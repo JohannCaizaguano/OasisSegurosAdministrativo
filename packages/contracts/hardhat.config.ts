@@ -31,6 +31,13 @@ export default defineConfig({
       url: configVariable('AMOY_RPC_URL'),
       accounts: [configVariable('DEPLOYER_PRIVATE_KEY')],
     },
+    amoyOperador: {
+      type: 'http',
+      chainId: 80002,
+      url: configVariable('AMOY_RPC_URL'),
+      // Cuenta operadora (REGISTRADOR_ROLE, ADR-006): solo para scripts que firman como el worker.
+      accounts: [configVariable('OPERATOR_PRIVATE_KEY')],
+    },
   },
   verify: {
     etherscan: {

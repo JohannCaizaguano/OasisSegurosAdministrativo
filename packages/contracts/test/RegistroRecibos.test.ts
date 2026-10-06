@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { network } from 'hardhat';
-import { parseEventLogs } from 'viem';
+import { getAddress, parseEventLogs } from 'viem';
 
 const { viem } = await network.create();
 
@@ -59,10 +59,13 @@ describe('RegistroRecibos', () => {
   });
 
   it('revierte si la cuenta no tiene REGISTRADOR_ROLE', async () => {
-    const { registro, intruso } = await desplegar();
+    const { registro, intruso, rolRegistrador } = await desplegar();
 
-    await assert.rejects(
+    await viem.assertions.revertWithCustomErrorWithArgs(
       registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: intruso.account }),
+      registro,
+      'AccessControlUnauthorizedAccount',
+      [getAddress(intruso.account.address), rolRegistrador],
     );
   });
 
@@ -71,19 +74,26 @@ describe('RegistroRecibos', () => {
 
     await registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: registrador.account });
 
-    await assert.rejects(
+    await viem.assertions.revertWithCustomErrorWithArgs(
       registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: registrador.account }),
+      registro,
+      'ReciboYaRegistrado',
+      [ID_RECIBO],
     );
   });
 
   it('revierte al registrar hash cero o id cero', async () => {
     const { registro, registrador } = await desplegar();
 
-    await assert.rejects(
+    await viem.assertions.revertWithCustomError(
       registro.write.registrar([CERO, HASH_RECIBO], { account: registrador.account }),
+      registro,
+      'IdReciboInvalido',
     );
-    await assert.rejects(
+    await viem.assertions.revertWithCustomError(
       registro.write.registrar([ID_RECIBO, CERO], { account: registrador.account }),
+      registro,
+      'HashReciboInvalido',
     );
   });
 
@@ -91,8 +101,10 @@ describe('RegistroRecibos', () => {
     const { registro, admin, registrador } = await desplegar();
 
     await registro.write.pause({ account: admin.account });
-    await assert.rejects(
+    await viem.assertions.revertWithCustomError(
       registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: registrador.account }),
+      registro,
+      'EnforcedPause',
     );
 
     await registro.write.unpause({ account: admin.account });
@@ -104,7 +116,24 @@ describe('RegistroRecibos', () => {
 
   it('solo el admin puede pausar', async () => {
     const { registro, registrador } = await desplegar();
-    await assert.rejects(registro.write.pause({ account: registrador.account }));
+    await viem.assertions.revertWithCustomErrorWithArgs(
+      registro.write.pause({ account: registrador.account }),
+      registro,
+      'AccessControlUnauthorizedAccount',
+      [getAddress(registrador.account.address), await registro.read.DEFAULT_ADMIN_ROLE()],
+    );
+  });
+
+  it('solo el admin puede reanudar', async () => {
+    const { registro, admin, registrador } = await desplegar();
+    await registro.write.pause({ account: admin.account });
+
+    await viem.assertions.revertWithCustomErrorWithArgs(
+      registro.write.unpause({ account: registrador.account }),
+      registro,
+      'AccessControlUnauthorizedAccount',
+      [getAddress(registrador.account.address), await registro.read.DEFAULT_ADMIN_ROLE()],
+    );
   });
 
   it('anula un recibo existente y emite ReciboAnulado', async () => {
@@ -132,16 +161,34 @@ describe('RegistroRecibos', () => {
   it('revierte al anular un recibo inexistente o ya anulado', async () => {
     const { registro, registrador } = await desplegar();
 
-    await assert.rejects(
+    await viem.assertions.revertWithCustomErrorWithArgs(
       registro.write.anular([ID_RECIBO, MOTIVO], { account: registrador.account }),
+      registro,
+      'ReciboNoRegistrado',
+      [ID_RECIBO],
     );
 
     await registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: registrador.account });
     await registro.write.anular([ID_RECIBO, MOTIVO], { account: registrador.account });
 
-    await assert.rejects(
+    await viem.assertions.revertWithCustomErrorWithArgs(
       registro.write.anular([ID_RECIBO, MOTIVO], { account: registrador.account }),
+      registro,
+      'ReciboYaAnulado',
+      [ID_RECIBO],
     );
+  });
+
+  it('con el contrato pausado se puede anular un recibo existente', async () => {
+    const { registro, admin, registrador } = await desplegar();
+
+    await registro.write.registrar([ID_RECIBO, HASH_RECIBO], { account: registrador.account });
+    await registro.write.pause({ account: admin.account });
+    await registro.write.anular([ID_RECIBO, MOTIVO], { account: registrador.account });
+
+    const [existe, , , anulado] = await registro.read.verificar([ID_RECIBO]);
+    assert.equal(existe, true);
+    assert.equal(anulado, true);
   });
 
   it('verificar devuelve existe=false para un id desconocido', async () => {

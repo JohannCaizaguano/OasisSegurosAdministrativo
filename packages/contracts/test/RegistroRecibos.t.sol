@@ -2,6 +2,7 @@
 pragma solidity ^0.8.28;
 
 import {Test} from "forge-std/Test.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {RegistroRecibos} from "../contracts/RegistroRecibos.sol";
 
@@ -52,8 +53,13 @@ contract RegistroRecibosTest is Test {
     }
 
     function test_Registrar_Revert_SinRol() public {
+        bytes32 rolRegistrador = registro.REGISTRADOR_ROLE();
         vm.prank(intruso);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, intruso, rolRegistrador
+            )
+        );
         registro.registrar(ID_RECIBO, HASH_RECIBO);
     }
 
@@ -136,9 +142,30 @@ contract RegistroRecibosTest is Test {
         vm.prank(registrador);
         registro.registrar(ID_RECIBO, HASH_RECIBO);
 
+        bytes32 rolRegistrador = registro.REGISTRADOR_ROLE();
         vm.prank(intruso);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, intruso, rolRegistrador
+            )
+        );
         registro.anular(ID_RECIBO, MOTIVO);
+    }
+
+    /// La pausa solo detiene registros nuevos (arquitectura §5.4): anular sigue disponible.
+    function test_Anular_PermitidoMientrasPausado() public {
+        vm.prank(registrador);
+        registro.registrar(ID_RECIBO, HASH_RECIBO);
+
+        vm.prank(admin);
+        registro.pause();
+
+        vm.prank(registrador);
+        registro.anular(ID_RECIBO, MOTIVO);
+
+        (bool existe,,, bool anulado) = registro.verificar(ID_RECIBO);
+        assertTrue(existe);
+        assertTrue(anulado);
     }
 
     function test_Pause_Revert_RegistrarMientrasPausado() public {
@@ -164,9 +191,28 @@ contract RegistroRecibosTest is Test {
         assertFalse(anulado);
     }
 
-    function test_Pause_Revert_SinAdmin() public {
+    function test_Unpause_Revert_SinAdmin() public {
+        vm.prank(admin);
+        registro.pause();
+
+        bytes32 rolAdmin = registro.DEFAULT_ADMIN_ROLE();
         vm.prank(registrador);
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, registrador, rolAdmin
+            )
+        );
+        registro.unpause();
+    }
+
+    function test_Pause_Revert_SinAdmin() public {
+        bytes32 rolAdmin = registro.DEFAULT_ADMIN_ROLE();
+        vm.prank(registrador);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, registrador, rolAdmin
+            )
+        );
         registro.pause();
     }
 

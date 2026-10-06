@@ -9,6 +9,7 @@ import { NoAutorizadoError } from '../../../../shared-kernel/domain-error';
 import { duracionASegundos } from '../../../../shared-kernel/duracion';
 import { AppConfig } from '../../../../config/app.config';
 import { limitesThrottle } from '../../../../config/throttle';
+import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Public, UsuarioActual, type UsuarioAutenticado } from '../../../../common/auth/decorators';
 import { ZodValidationPipe } from '../../../../common/pipes/zod-validation.pipe';
 import { CerrarSesionUseCase } from '../../application/use-cases/cerrar-sesion.use-case';
@@ -34,6 +35,7 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: limitesThrottle().login, ttl: 60_000 } })
   @Post('login')
+  @Auditar('INICIAR_SESION', 'Usuario')
   @HttpCode(200)
   @ApiOperation({ summary: 'Inicia sesión y entrega un access token + cookie de refresh' })
   async iniciarSesion(

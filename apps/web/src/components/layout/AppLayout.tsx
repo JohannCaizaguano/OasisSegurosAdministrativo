@@ -1,4 +1,12 @@
-import { FileText, LayoutDashboard, Menu, Receipt, ShieldCheck, Users } from 'lucide-react';
+import {
+  FileText,
+  LayoutDashboard,
+  Menu,
+  Receipt,
+  ScrollText,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +29,7 @@ const ENLACES = [
   { a: '/recibos', texto: 'Recibos', icono: Receipt, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/clientes', texto: 'Clientes', icono: Users, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/polizas', texto: 'Pólizas', icono: ShieldCheck, roles: ['ADMIN', 'OPERADOR'] },
+  { a: '/bitacora', texto: 'Bitácora', icono: ScrollText, roles: ['ADMIN'] },
 ];
 
 type Enlace = (typeof ENLACES)[number];

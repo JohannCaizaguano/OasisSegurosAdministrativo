@@ -8,6 +8,7 @@ import {
 import { Controller, Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles } from '../../../../common/auth/decorators';
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import {
@@ -32,6 +33,7 @@ export class AseguradorasController {
   ) {}
 
   @Post()
+  @Auditar('CREAR', 'Aseguradora')
   @ApiOperation({ summary: 'Crea una aseguradora' })
   async crear(@ZodBody(crearAseguradoraSchema) datos: { nombre: string; ruc: string }) {
     return this.aRespuesta(await this.crearAseguradora.ejecutar(datos));
@@ -65,6 +67,7 @@ export class AseguradorasController {
   }
 
   @Patch(':id')
+  @Auditar('MODIFICAR', 'Aseguradora')
   @ApiOperation({ summary: 'Actualiza una aseguradora' })
   async actualizar(
     @ZodParam(idUuidParamSchema) params: { id: string },
@@ -74,6 +77,7 @@ export class AseguradorasController {
   }
 
   @Delete(':id')
+  @Auditar('ELIMINAR', 'Aseguradora')
   @HttpCode(204)
   @ApiOperation({ summary: 'Elimina una aseguradora sin pólizas' })
   async eliminar(@ZodParam(idUuidParamSchema) params: { id: string }): Promise<void> {

@@ -18,6 +18,7 @@
     "deploy:local": "hardhat compile --build-profile production && hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network localhost",
     "deploy:amoy": "hardhat compile --build-profile production && hardhat ignition deploy ignition/modules/RegistroRecibos.ts --network amoy --parameters ignition/parameters/amoy.json",
     "grant-registrador": "hardhat run scripts/grant-registrador.ts",
+    "registrar-prueba": "hardhat run scripts/registrar-prueba.ts",
     "reporte": "hardhat test --coverage --gas-stats && node scripts/reporte.ts",
     "build:production": "hardhat compile --build-profile production"
   },

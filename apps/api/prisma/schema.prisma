@@ -92,7 +92,8 @@ model TokenRecuperacion {
 }
 
 /// Bitácora de auditoría (HU-45): solo inserciones; la aplicación no la
-/// modifica ni la elimina (RN-17).
+/// modifica ni la elimina (RN-17). Un trigger de PostgreSQL rechaza UPDATE,
+/// DELETE y TRUNCATE (migración `bitacora_solo_insercion`).
 model BitacoraAuditoria {
   id        String   @id @default(uuid()) @db.Uuid
   usuarioId String   @db.Uuid

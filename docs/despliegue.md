@@ -51,7 +51,7 @@ REDIS_PORT=6379
 JWT_ACCESS_SECRET=<openssl rand -hex 32>
 JWT_REFRESH_SECRET=<openssl rand -hex 32>
 CHAIN_ID=80002
-RPC_URL=https://rpc-amoy.polygon.technology
+RPC_URL=https://polygon-amoy-bor-rpc.publicnode.com
 RPC_URL_FALLBACK=<proveedor alternativo opcional>
 CONTRACT_ADDRESS=<se completa tras el despliegue del contrato>
 MAX_FEE_PER_GAS_GWEI=50
@@ -90,43 +90,68 @@ docker compose -f compose.prod.yaml run --rm migrate \
 
 ## 4. Despliegue del contrato en Amoy
 
-En la laptop del responsable (nunca en el VPS):
+En la laptop del responsable (nunca en el VPS). Todos los comandos se ejecutan desde la raíz
+del repositorio:
 
 ```bash
-cd packages/contracts
+# 1. Guardar las claves cifradas con hardhat-keystore (nada en texto plano).
+#    La API key V2 de etherscan.io es gratuita y sirve para todas las chains soportadas.
+pnpm --filter @oasis/contracts exec hardhat keystore set DEPLOYER_PRIVATE_KEY
+pnpm --filter @oasis/contracts exec hardhat keystore set OPERATOR_PRIVATE_KEY
+pnpm --filter @oasis/contracts exec hardhat keystore set AMOY_RPC_URL
+pnpm --filter @oasis/contracts exec hardhat keystore set ETHERSCAN_API_KEY
 
-# 1. Guardar la clave del desplegador cifrada con hardhat-keystore (nada en texto plano)
-pnpm hardhat keystore set DEPLOYER_PRIVATE_KEY
-pnpm hardhat keystore set AMOY_RPC_URL          # https://rpc-amoy.polygon.technology
-pnpm hardhat keystore set ETHERSCAN_API_KEY
+# 2. Comprobar a qué cuenta corresponde cada clave y su saldo (no revela las claves):
+pnpm --filter @oasis/contracts exec hardhat run scripts/cuentas.ts --network amoy
+pnpm --filter @oasis/contracts exec hardhat run scripts/cuentas.ts --network amoyOperador
 
-# 2. Fondear la cuenta desplegadora desde el faucet de Amoy
-#    (https://faucet.polygon.technology)
+# 3. Fondear las cuentas desde el faucet de Amoy: ≈ 0,06 POL en la admin (despliegue) y
+#    0,01 POL en la operadora. El faucet de Alchemy exige saldo en mainnet; QuickNode y
+#    ETHGlobal no lo exigen.
 
-# 3. Desplegar con Ignition
-pnpm hardhat ignition deploy ignition/modules/RegistroRecibos.ts \
-  --network amoy --parameters ignition/parameters/amoy.json
+# 4. Desplegar con Ignition
+pnpm --filter @oasis/contracts deploy:amoy
 
-# 4. Verificar el contrato
-pnpm hardhat verify --network amoy <DIRECCION_CONTRATO> <DIRECCION_ADMIN>
+# 5. Verificar el contrato en PolygonScan. `--network amoy` es obligatorio: sin él, Hardhat
+#    intenta verificar contra la red local 31337. El error HHE80027 de Blockscout es
+#    esperado: Amoy no tiene Blockscout configurado; PolygonScan y Sourcify sí verifican.
+pnpm --filter @oasis/contracts exec hardhat ignition verify chain-80002 --network amoy
 
-# 5. Otorgar REGISTRADOR_ROLE a la cuenta operadora
+# 6. Otorgar REGISTRADOR_ROLE a la cuenta operadora
 CONTRACT_ADDRESS=<direccion> OPERATOR_ADDRESS=<cuenta_operadora> \
-  pnpm hardhat run scripts/grant-registrador.ts --network amoy
+  pnpm --filter @oasis/contracts exec hardhat run scripts/grant-registrador.ts --network amoy
+
+# 7. Registrar el hash de prueba (firma como la cuenta operadora, ADR-006)
+CONTRACT_ADDRESS=<direccion> \
+  pnpm --filter @oasis/contracts exec hardhat run scripts/registrar-prueba.ts --network amoyOperador
 ```
 
-Anote en esta tabla:
+> **WSL:** si `pnpm` es el binario de Windows, las variables exportadas en la shell de WSL no
+> llegan al proceso. Antes de los pasos 6 y 7 ejecute
+> `export WSLENV="$WSLENV:CONTRACT_ADDRESS:OPERATOR_ADDRESS"`; las variables en línea se
+> propagan igual. Los demás pasos no lo necesitan: leen las claves del keystore.
 
-| Elemento                            | Valor                                              |
-| ----------------------------------- | -------------------------------------------------- |
-| Dirección del contrato              | _(completar)_                                      |
-| Bloque de despliegue                | _(completar)_                                      |
-| Cuenta admin (DEFAULT_ADMIN_ROLE)   | _(completar)_                                      |
-| Cuenta operadora (REGISTRADOR_ROLE) | _(completar)_                                      |
-| Enlace al explorador                | https://amoy.polygonscan.com/address/_(completar)_ |
+Tabla del despliegue (Amoy, 05/10/2026):
 
-Copie `CONTRACT_ADDRESS` al `.env` del VPS y `OPERATOR_PRIVATE_KEY` a `.env.worker`
-(ambos `chmod 600`) y ejecute `docker compose -f compose.prod.yaml up -d`.
+| Elemento                                             | Valor                                                                                                                                                                                                                                                                                     |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dirección del contrato                               | `0x8B35226ee6A233dFe76F91940A7Ae2a4cA69F60b`                                                                                                                                                                                                                                              |
+| Transacción y bloque del despliegue                  | `0x9d8f6508df047d6f357d79a7684032f43c04ff7dad7075e94190b368d990d7c6` · bloque 49 418 753                                                                                                                                                                                                  |
+| Gas del despliegue                                   | 566 793 (≈ 0,01814 POL)                                                                                                                                                                                                                                                                   |
+| Cuenta admin (`DEFAULT_ADMIN_ROLE`)                  | `0xf0992d47ac1fe44067b5ccf367024d8f6957e897`                                                                                                                                                                                                                                              |
+| Cuenta operadora (`REGISTRADOR_ROLE`)                | `0x07132217d5c7b412673bc997ba11bf0adf1044ac`                                                                                                                                                                                                                                              |
+| Transacción de `grantRole`                           | `0xa24269adef57eedcc2b2c0304536daae7afb605a48b7481a5256dfcd60edeb0b` · bloque 49 419 132 · gas 61 557                                                                                                                                                                                     |
+| Hash de prueba (id, hash, transacción, bloque y gas) | id `0x5d9af3a7c29ff8fe131f8b148d3dbbc9ba4622b8d645b4baf1768b9dd25dc713` · hash `0xb7edceb7d880d50fec76179abb819eb6ab73ddbf1dd3b305b3d6d0a2204c6553` · tx `0xeec28204772749f55fedcea46ae7e41851192a0ccf964cc713e3dc6dd800e0fb` · bloque 49 419 171 · gas 84 242 (0,002688372831655118 POL) |
+| Código verificado                                    | `https://amoy.polygonscan.com/address/0x8B35226ee6A233dFe76F91940A7Ae2a4cA69F60b#code` · también en [Sourcify](https://sourcify.dev/server/repo-ui/80002/0x8B35226ee6A233dFe76F91940A7Ae2a4cA69F60b)                                                                                      |
+
+El gas real de `registrar` en Amoy (84 242) queda por debajo del límite de RNF-07
+(100 000), igual que la media local del reporte (78 417). El despliegue costó ≈ 0,0181 POL,
+`grantRole` ≈ 0,0025 POL y el registro de prueba 0,002688372831655118 POL (≈ 0,003), como
+presupuestó el sprint.
+
+`CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S13): el primero
+al `.env` y la segunda a `.env.worker` (ambos `chmod 600`), y luego
+`docker compose -f compose.prod.yaml up -d`.
 
 ## 5. Backups
 
