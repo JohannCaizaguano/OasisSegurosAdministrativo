@@ -8,14 +8,10 @@ interface FilaUsuario {
   id: string;
   email: string;
   passwordHash: string;
+  nombre: string;
   rol: 'ADMIN' | 'OPERADOR' | 'CLIENTE';
   activo: boolean;
   clienteId: string | null;
-  cliente: {
-    nombres: string | null;
-    apellidos: string | null;
-    razonSocial: string | null;
-  } | null;
 }
 
 @Injectable()
@@ -23,18 +19,12 @@ export class PrismaUsuarioAuthRepository implements UsuarioAuthRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async buscarPorEmail(email: string): Promise<UsuarioCredenciales | null> {
-    const fila = await this.prisma.usuario.findUnique({
-      where: { email },
-      include: { cliente: true },
-    });
+    const fila = await this.prisma.usuario.findUnique({ where: { email } });
     return fila ? this.mapear(fila) : null;
   }
 
   async buscarPorId(id: string): Promise<UsuarioCredenciales | null> {
-    const fila = await this.prisma.usuario.findUnique({
-      where: { id },
-      include: { cliente: true },
-    });
+    const fila = await this.prisma.usuario.findUnique({ where: { id } });
     return fila ? this.mapear(fila) : null;
   }
 
@@ -50,18 +40,7 @@ export class PrismaUsuarioAuthRepository implements UsuarioAuthRepositoryPort {
       rol: fila.rol,
       activo: fila.activo,
       clienteId: fila.clienteId,
-      nombre: this.nombreVisible(fila),
+      nombre: fila.nombre,
     });
-  }
-
-  private nombreVisible(fila: FilaUsuario): string {
-    if (!fila.cliente) {
-      return fila.email;
-    }
-    if (fila.cliente.razonSocial) {
-      return fila.cliente.razonSocial;
-    }
-    const nombre = [fila.cliente.nombres, fila.cliente.apellidos].filter(Boolean).join(' ');
-    return nombre.length > 0 ? nombre : fila.email;
   }
 }

@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/AppLayout';
+import { AseguradorasPage } from '@/features/aseguradoras/pages/AseguradorasPage';
 import { BitacoraPage } from '@/features/auditoria/pages/BitacoraPage';
 import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
@@ -10,6 +11,7 @@ import { PagosPage } from '@/features/pagos/pages/PagosPage';
 import { PolizasPage } from '@/features/polizas/pages/PolizasPage';
 import { ReciboDetallePage } from '@/features/recibos/pages/ReciboDetallePage';
 import { RecibosPage } from '@/features/recibos/pages/RecibosPage';
+import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { VerificacionPage } from '@/features/verificacion/pages/VerificacionPage';
 import { useAuthStore } from '@/lib/auth-store';
 
@@ -62,11 +64,15 @@ export const router = createBrowserRouter([
               { path: '/recibos/:id', element: <ReciboDetallePage /> },
               { path: '/clientes', element: <ClientesPage /> },
               { path: '/polizas', element: <PolizasPage /> },
+              { path: '/aseguradoras', element: <AseguradorasPage /> },
             ],
           },
           {
             element: <RutaProtegida roles={['ADMIN']} />,
-            children: [{ path: '/bitacora', element: <BitacoraPage /> }],
+            children: [
+              { path: '/bitacora', element: <BitacoraPage /> },
+              { path: '/usuarios', element: <UsuariosPage /> },
+            ],
           },
           { path: '/cuenta/contrasena', element: <CambiarContrasenaPage /> },
         ],

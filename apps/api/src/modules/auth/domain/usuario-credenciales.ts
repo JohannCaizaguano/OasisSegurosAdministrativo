@@ -13,8 +13,8 @@ export interface PropsUsuarioCredenciales {
 }
 
 /**
- * Vista de Usuario que necesita el módulo de autenticación. El campo `nombre`
- * se deriva: para CLIENTE, del cliente asociado; para staff, del correo.
+ * Vista de Usuario que necesita el módulo de autenticación. `nombre` es la
+ * columna `Usuario.nombre`, que ya trae el nombre visible de cada cuenta.
  */
 export class UsuarioCredenciales extends Entity<PropsUsuarioCredenciales> {
   private constructor(props: PropsUsuarioCredenciales) {

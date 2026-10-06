@@ -4,7 +4,6 @@ import { CLIENTES_REPOSITORY } from './application/ports/clientes.repository.por
 import {
   ActualizarClienteUseCase,
   CrearClienteUseCase,
-  EliminarClienteUseCase,
   ListarClientesUseCase,
   ObtenerClienteUseCase,
 } from './application/use-cases/clientes.use-cases';
@@ -34,11 +33,6 @@ import { ClientesController } from './presentation/http/clientes.controller';
       provide: ActualizarClienteUseCase,
       inject: [CLIENTES_REPOSITORY],
       useFactory: (repo: PrismaClientesRepository) => new ActualizarClienteUseCase(repo),
-    },
-    {
-      provide: EliminarClienteUseCase,
-      inject: [CLIENTES_REPOSITORY],
-      useFactory: (repo: PrismaClientesRepository) => new EliminarClienteUseCase(repo),
     },
   ],
   exports: [CLIENTES_REPOSITORY],

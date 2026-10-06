@@ -36,3 +36,11 @@ export class ListarBitacoraUseCase {
     });
   }
 }
+
+export class ListarUsuariosBitacoraUseCase {
+  constructor(private readonly bitacora: BitacoraRepositoryPort) {}
+
+  ejecutar() {
+    return this.bitacora.listarUsuarios();
+  }
+}

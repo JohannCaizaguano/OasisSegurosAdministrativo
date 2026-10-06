@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-prisma';
 import { ConflictoError } from '../../../../shared-kernel/domain-error';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Cliente } from '../../domain/cliente';
@@ -29,18 +30,25 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
   async crear(datos: DatosCrearCliente): Promise<Cliente> {
-    const fila = await this.prisma.cliente.create({
-      data: {
-        tipoIdentificacion: datos.tipoIdentificacion,
-        identificacion: datos.identificacion,
-        nombres: datos.nombres,
-        apellidos: datos.apellidos,
-        razonSocial: datos.razonSocial,
-        email: datos.email,
-        telefono: datos.telefono,
-      },
-    });
-    return this.mapear(fila);
+    try {
+      const fila = await this.prisma.cliente.create({
+        data: {
+          tipoIdentificacion: datos.tipoIdentificacion,
+          identificacion: datos.identificacion,
+          nombres: datos.nombres,
+          apellidos: datos.apellidos,
+          razonSocial: datos.razonSocial,
+          email: datos.email,
+          telefono: datos.telefono,
+        },
+      });
+      return this.mapear(fila);
+    } catch (error: unknown) {
+      if (esConflictoUnico(error)) {
+        throw this.conflictoIdentificacion();
+      }
+      throw error;
+    }
   }
 
   async listar(filtros: FiltrosClientes): Promise<PaginaClientes> {
@@ -78,16 +86,12 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
   }
 
   async actualizar(id: string, datos: DatosActualizarCliente): Promise<Cliente> {
-    const fila = await this.prisma.cliente.update({ where: { id }, data: datos });
-    return this.mapear(fila);
-  }
-
-  async eliminar(id: string): Promise<void> {
     try {
-      await this.prisma.cliente.delete({ where: { id } });
-    } catch (error) {
-      if ((error as { code?: string }).code === 'P2003') {
-        throw new ConflictoError('El cliente tiene pólizas u otros registros asociados');
+      const fila = await this.prisma.cliente.update({ where: { id }, data: datos });
+      return this.mapear(fila);
+    } catch (error: unknown) {
+      if (esConflictoUnico(error)) {
+        throw this.conflictoIdentificacion();
       }
       throw error;
     }
@@ -96,6 +100,13 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
   async existeIdentificacion(identificacion: string, exceptoId?: string): Promise<boolean> {
     const fila = await this.prisma.cliente.findUnique({ where: { identificacion } });
     return fila !== null && fila.id !== exceptoId;
+  }
+
+  private conflictoIdentificacion(): ConflictoError {
+    return new ConflictoError('Ya existe un cliente con esa identificación', {
+      campo: 'identificacion',
+      motivo: 'IDENTIFICACION_DUPLICADA',
+    });
   }
 
   private mapear(fila: FilaCliente): Cliente {

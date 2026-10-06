@@ -21,6 +21,7 @@ function crearDependencias(tokenValido = true) {
     tocar: jest.fn(),
     cerrar: jest.fn(),
     cerrarDemas: jest.fn(),
+    cerrarTodas: jest.fn(),
   };
   return { emisor, almacen };
 }

@@ -50,6 +50,7 @@ function crearDependencias(
     tocar: jest.fn(),
     cerrar: jest.fn(),
     cerrarDemas: jest.fn(),
+    cerrarTodas: jest.fn(),
   };
   return { usuarios, emisor, almacen };
 }

@@ -21,6 +21,7 @@ class BitacoraEspia implements BitacoraRepositoryPort {
   readonly registros: NuevoRegistroAuditoria[] = [];
   readonly consultas: FiltrosBitacora[] = [];
   resultado: PaginaBitacora = { items: [], total: 0 };
+  usuarios: Array<{ id: string; email: string }> = [];
 
   async registrar(registro: NuevoRegistroAuditoria): Promise<void> {
     this.registros.push(registro);
@@ -29,6 +30,10 @@ class BitacoraEspia implements BitacoraRepositoryPort {
   async listar(filtros: FiltrosBitacora): Promise<PaginaBitacora> {
     this.consultas.push(filtros);
     return this.resultado;
+  }
+
+  async listarUsuarios(): Promise<Array<{ id: string; email: string }>> {
+    return this.usuarios;
   }
 }
 

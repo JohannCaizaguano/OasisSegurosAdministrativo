@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-prisma';
 import { ConflictoError } from '../../../../shared-kernel/domain-error';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Aseguradora } from '../../domain/aseguradora';
@@ -16,8 +17,15 @@ export class PrismaAseguradorasRepository implements AseguradorasRepositoryPort 
   constructor(private readonly prisma: PrismaService) {}
 
   async crear(datos: DatosCrearAseguradora): Promise<Aseguradora> {
-    const fila = await this.prisma.aseguradora.create({ data: datos });
-    return this.mapear(fila);
+    try {
+      const fila = await this.prisma.aseguradora.create({ data: datos });
+      return this.mapear(fila);
+    } catch (error: unknown) {
+      if (esConflictoUnico(error)) {
+        throw this.conflictoRuc();
+      }
+      throw error;
+    }
   }
 
   async listar(filtros: FiltrosAseguradoras): Promise<PaginaAseguradoras> {
@@ -49,16 +57,12 @@ export class PrismaAseguradorasRepository implements AseguradorasRepositoryPort 
   }
 
   async actualizar(id: string, datos: DatosActualizarAseguradora): Promise<Aseguradora> {
-    const fila = await this.prisma.aseguradora.update({ where: { id }, data: datos });
-    return this.mapear(fila);
-  }
-
-  async eliminar(id: string): Promise<void> {
     try {
-      await this.prisma.aseguradora.delete({ where: { id } });
-    } catch (error) {
-      if ((error as { code?: string }).code === 'P2003') {
-        throw new ConflictoError('La aseguradora tiene pólizas asociadas');
+      const fila = await this.prisma.aseguradora.update({ where: { id }, data: datos });
+      return this.mapear(fila);
+    } catch (error: unknown) {
+      if (esConflictoUnico(error)) {
+        throw this.conflictoRuc();
       }
       throw error;
     }
@@ -67,6 +71,13 @@ export class PrismaAseguradorasRepository implements AseguradorasRepositoryPort 
   async existeRuc(ruc: string, exceptoId?: string): Promise<boolean> {
     const fila = await this.prisma.aseguradora.findUnique({ where: { ruc } });
     return fila !== null && fila.id !== exceptoId;
+  }
+
+  private conflictoRuc(): ConflictoError {
+    return new ConflictoError('Ya existe una aseguradora con ese RUC', {
+      campo: 'ruc',
+      motivo: 'RUC_DUPLICADO',
+    });
   }
 
   private mapear(fila: {

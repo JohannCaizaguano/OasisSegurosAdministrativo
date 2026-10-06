@@ -69,3 +69,63 @@ describe('RedisAlmacenSesionesAdapter — fallo cerrado (D9)', () => {
     );
   });
 });
+
+describe('RedisAlmacenSesionesAdapter — cerrarTodas (D8)', () => {
+  const logger = { setContext: jest.fn(), error: jest.fn() };
+
+  function crearRedisConSesiones(llaves: string[]) {
+    const del = jest.fn().mockResolvedValue(llaves.length);
+    const scanStream = jest.fn(() => ({
+      [Symbol.asyncIterator]: () => {
+        let pendiente = true;
+        return {
+          next: () => {
+            if (pendiente) {
+              pendiente = false;
+              return Promise.resolve({ done: false as const, value: llaves });
+            }
+            return Promise.resolve({ done: true as const, value: undefined });
+          },
+        };
+      },
+    }));
+    return { redis: { del, scanStream } as unknown as Redis, del, scanStream };
+  }
+
+  it('cierra todas las sesiones del usuario y no toca las de otros', async () => {
+    const usuarioId = 'usuario-1';
+    const llaves = [`sesion:${usuarioId}:sid-1`, `sesion:${usuarioId}:sid-2`];
+    const { redis, del, scanStream } = crearRedisConSesiones(llaves);
+    const adaptador = new RedisAlmacenSesionesAdapter(redis, logger as unknown as PinoLogger);
+
+    await adaptador.cerrarTodas(usuarioId);
+
+    expect(scanStream).toHaveBeenCalledWith({ match: `sesion:${usuarioId}:*`, count: 100 });
+    expect(del).toHaveBeenCalledWith(...llaves);
+  });
+
+  it('no falla si el usuario no tiene sesiones', async () => {
+    const { redis, del } = crearRedisConSesiones([]);
+    const adaptador = new RedisAlmacenSesionesAdapter(redis, logger as unknown as PinoLogger);
+
+    await expect(adaptador.cerrarTodas('usuario-1')).resolves.toBeUndefined();
+    expect(del).not.toHaveBeenCalled();
+  });
+
+  it('cerrarTodas falla cerrado si Redis no responde', async () => {
+    jest.useFakeTimers();
+    try {
+      const operacion = new RedisAlmacenSesionesAdapter(
+        crearRedisColgado(),
+        logger as unknown as PinoLogger,
+      ).cerrarTodas('usuario-1');
+      const expectativa = expect(operacion).rejects.toMatchObject({
+        codigo: 'DEPENDENCIA_EXTERNA',
+      });
+      jest.advanceTimersByTime(2_000);
+      await expectativa;
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+});

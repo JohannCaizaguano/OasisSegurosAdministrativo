@@ -67,6 +67,7 @@ async function main() {
     create: {
       email: ADMIN_EMAIL,
       passwordHash: await hash(claveDeSeed('SEED_ADMIN_PASSWORD')),
+      nombre: 'Administrador Oasis',
       rol: 'ADMIN',
     },
   });
@@ -99,6 +100,7 @@ async function main() {
     create: {
       email: 'cliente@oasis.com',
       passwordHash: await hash(claveDeSeed('SEED_CLIENTE_PASSWORD')),
+      nombre: 'María Fernanda Cabrera Rosero',
       rol: 'CLIENTE',
       clienteId: cliente.id,
     },
@@ -110,6 +112,7 @@ async function main() {
     create: {
       email: 'operador@oasis.com',
       passwordHash: await hash(claveDeSeed('SEED_OPERADOR_PASSWORD')),
+      nombre: 'Operador Oasis',
       rol: 'OPERADOR',
     },
   });

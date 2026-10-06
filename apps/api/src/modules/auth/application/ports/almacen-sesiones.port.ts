@@ -19,4 +19,6 @@ export interface AlmacenSesionesPort {
   tocar(usuarioId: string, sid: string): Promise<boolean>;
   cerrar(usuarioId: string, sid: string): Promise<void>;
   cerrarDemas(usuarioId: string, sidVigente: string): Promise<void>;
+  /** Cierra todas las sesiones del usuario (desactivar, cambiar rol o restablecer contraseña, D8). */
+  cerrarTodas(usuarioId: string): Promise<void>;
 }

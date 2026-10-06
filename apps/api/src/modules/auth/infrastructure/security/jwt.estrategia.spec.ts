@@ -20,6 +20,7 @@ function crearAlmacen(vive: boolean): AlmacenSesionesPort {
     tocar: jest.fn().mockResolvedValue(vive),
     cerrar: jest.fn(),
     cerrarDemas: jest.fn(),
+    cerrarTodas: jest.fn(),
   };
 }
 

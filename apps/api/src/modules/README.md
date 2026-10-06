@@ -61,6 +61,9 @@ mueve el código a la capa que corresponde.
 - `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara;
   descubre los controladores con `test/rutas-declaradas.ts` y las exenciones siguen listadas allí.
 - La bitácora es de solo inserción: no agregues métodos de edición ni de borrado a su puerto.
+- El filtro de usuarios de la bitácora se alimenta de `GET /bitacora/usuarios` (ADMIN), que lista
+  los usuarios con actividad (incluidas las cuentas CLIENTE); `GET /usuarios` queda solo para el
+  personal (D6).
 
 ## Acceso (HU-03, ADR-015)
 
@@ -72,3 +75,6 @@ mueve el código a la capa que corresponde.
   sin token y 403 para cada rol no permitido.
 - Los datos del CLIENTE se filtran en un caso de uso con su `clienteId` (RN-07), no solo en el
   controlador.
+- `GET/POST/PATCH /usuarios*` es solo ADMIN; desactivar, cambiar el rol y restablecer la contraseña
+  cierran todas las sesiones con `cerrarTodas` (HU-04, D8). `aseguradoras` declara `@Roles` por
+  handler: lectura para ADMIN y OPERADOR, escritura solo para ADMIN (D14).

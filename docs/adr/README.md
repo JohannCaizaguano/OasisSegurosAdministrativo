@@ -22,3 +22,4 @@ y no se reutilizan.
 | ADR-014 | Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend | S12     | `ADR-014-pago-en-linea-payphone.md`         |
 | ADR-015 | Acceso solo con inicio de sesión; sin página pública de verificación          | S3 y S8 | `ADR-015-acceso-solo-autenticado.md`        |
 | ADR-016 | Sesiones por familia de rotación con cierre por inactividad en Redis          | S3      | `ADR-016-sesiones-redis.md`                 |
+| ADR-017 | Validación de identificaciones ecuatorianas (RN-11)                           | S4      | `ADR-017-validacion-identificaciones.md`    |

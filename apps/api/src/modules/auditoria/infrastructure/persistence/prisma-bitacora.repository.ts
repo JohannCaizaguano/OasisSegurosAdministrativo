@@ -5,6 +5,7 @@ import type {
   BitacoraRepositoryPort,
   FiltrosBitacora,
   PaginaBitacora,
+  UsuarioBitacora,
 } from '../../application/ports/bitacora.repository.port';
 import type { NuevoRegistroAuditoria } from '../../domain/registro-auditoria';
 
@@ -60,6 +61,15 @@ export class PrismaBitacoraRepository implements BitacoraRepositoryPort {
       })),
       total,
     };
+  }
+
+  async listarUsuarios(): Promise<UsuarioBitacora[]> {
+    // EXISTS sobre la bitácora: `distinct` de Prisma filtraría en memoria toda la tabla.
+    return this.prisma.usuario.findMany({
+      where: { bitacora: { some: {} } },
+      select: { id: true, email: true },
+      orderBy: { email: 'asc' },
+    });
   }
 }
 

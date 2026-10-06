@@ -1,17 +1,18 @@
-import type { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
+import { cedulaValida } from './identificaciones';
 
 /**
  * E2E de la bitácora de auditoría (HU-45): requiere PostgreSQL con la migración
  * `bitacora_solo_insercion` aplicada y el seed cargado.
  */
 describe('Bitácora de auditoría (e2e)', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let prisma: PrismaService;
   let tokenAdmin: string;
   let tokenOperador: string;
@@ -33,6 +34,7 @@ describe('Bitácora de auditoría (e2e)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleRef.createNestApplication({ logger: false });
+    app.set('trust proxy', 1);
     app.use(cookieParser());
     app.setGlobalPrefix('api/v1', { exclude: ['metrics'] });
     await app.init();
@@ -66,15 +68,15 @@ describe('Bitácora de auditoría (e2e)', () => {
     expect(fila.detalle).toMatchObject({ metodo: 'POST', ruta: '/api/v1/auth/login' });
   });
 
-  it('registra creación, modificación y eliminación de un cliente sin guardar sus datos', async () => {
+  it('registra creación y modificación de un cliente sin guardar sus datos', async () => {
     const email = `bitacora.${sufijo}@example.com`;
 
     const crear = await request(app.getHttpServer())
       .post('/api/v1/clientes')
       .set('Authorization', `Bearer ${tokenAdmin}`)
       .send({
-        tipoIdentificacion: 'PASAPORTE',
-        identificacion: `E2E${sufijo}`,
+        tipoIdentificacion: 'CEDULA',
+        identificacion: cedulaValida(sufijo),
         nombres: 'Prueba',
         apellidos: 'Bitácora',
         email,
@@ -89,23 +91,37 @@ describe('Bitácora de auditoría (e2e)', () => {
       .send({ telefono: '0991234567' })
       .expect(200);
 
-    await request(app.getHttpServer())
-      .delete(`/api/v1/clientes/${clienteId}`)
-      .set('Authorization', `Bearer ${tokenAdmin}`)
-      .expect(204);
-
     const filas = await prisma.bitacoraAuditoria.findMany({
       where: { entidad: 'Cliente', entidadId: clienteId },
       orderBy: { creadoEn: 'asc' },
     });
 
-    expect(filas.map((fila) => fila.accion)).toEqual(['CREAR', 'MODIFICAR', 'ELIMINAR']);
+    expect(filas.map((fila) => fila.accion)).toEqual(['CREAR', 'MODIFICAR']);
     const modificacion = filas.find((fila) => fila.accion === 'MODIFICAR');
     expect(modificacion?.detalle).toMatchObject({ campos: ['telefono'] });
 
     const detalles = JSON.stringify(filas.map((fila) => fila.detalle));
     expect(detalles).not.toContain(email);
     expect(detalles).not.toContain('0991234567');
+  });
+
+  it('lista los usuarios de la bitácora, incluidas las cuentas CLIENTE', async () => {
+    await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .set('X-Forwarded-For', '10.6.0.41')
+      .send({ email: 'cliente@oasis.com', password: 'Cliente.Oasis1' })
+      .expect(200);
+
+    const respuesta = await request(app.getHttpServer())
+      .get('/api/v1/bitacora/usuarios')
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+
+    const emails = (respuesta.body as Array<{ id: string; email: string }>).map(
+      (usuario) => usuario.email,
+    );
+    expect(emails).toContain('cliente@oasis.com');
+    expect(emails).toContain('operador@oasis.com');
   });
 
   it('registra el rechazo de un pago y no registra un rechazo fallido', async () => {

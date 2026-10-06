@@ -5,7 +5,7 @@ import {
   idUuidParamSchema,
   listarClientesQuerySchema,
 } from '@oasis/shared';
-import { Controller, Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
@@ -14,7 +14,6 @@ import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-valida
 import {
   ActualizarClienteUseCase,
   CrearClienteUseCase,
-  EliminarClienteUseCase,
   ListarClientesUseCase,
   ObtenerClienteUseCase,
 } from '../../application/use-cases/clientes.use-cases';
@@ -31,7 +30,6 @@ export class ClientesController {
     private readonly listarClientes: ListarClientesUseCase,
     private readonly obtenerCliente: ObtenerClienteUseCase,
     private readonly actualizarCliente: ActualizarClienteUseCase,
-    private readonly eliminarCliente: EliminarClienteUseCase,
   ) {}
 
   @Post()
@@ -84,14 +82,6 @@ export class ClientesController {
     datos: Parameters<ActualizarClienteUseCase['ejecutar']>[1],
   ) {
     return this.aRespuesta(await this.actualizarCliente.ejecutar(params.id, datos));
-  }
-
-  @Delete(':id')
-  @Auditar('ELIMINAR', 'Cliente')
-  @HttpCode(204)
-  @ApiOperation({ summary: 'Elimina un cliente sin pólizas asociadas' })
-  async eliminar(@ZodParam(idUuidParamSchema) params: ParamsId): Promise<void> {
-    await this.eliminarCliente.ejecutar(params.id);
   }
 
   private aRespuesta(cliente: Cliente): ClienteRespuesta {

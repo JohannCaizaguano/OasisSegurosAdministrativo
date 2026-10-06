@@ -44,7 +44,7 @@ export function PanelPersonal() {
         />
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Últimos recibos</CardTitle>
         </CardHeader>

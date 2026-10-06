@@ -4,7 +4,6 @@ import { ASEGURADORAS_REPOSITORY } from './application/ports/aseguradoras.reposi
 import {
   ActualizarAseguradoraUseCase,
   CrearAseguradoraUseCase,
-  EliminarAseguradoraUseCase,
   ListarAseguradorasUseCase,
   ObtenerAseguradoraUseCase,
 } from './application/use-cases/aseguradoras.use-cases';
@@ -34,11 +33,6 @@ import { AseguradorasController } from './presentation/http/aseguradoras.control
       provide: ActualizarAseguradoraUseCase,
       inject: [ASEGURADORAS_REPOSITORY],
       useFactory: (repo: PrismaAseguradorasRepository) => new ActualizarAseguradoraUseCase(repo),
-    },
-    {
-      provide: EliminarAseguradoraUseCase,
-      inject: [ASEGURADORAS_REPOSITORY],
-      useFactory: (repo: PrismaAseguradorasRepository) => new EliminarAseguradoraUseCase(repo),
     },
   ],
   exports: [ASEGURADORAS_REPOSITORY],

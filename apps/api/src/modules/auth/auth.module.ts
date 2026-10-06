@@ -67,6 +67,6 @@ import { AuthController } from './presentation/http/auth.controller';
       ) => new CambiarContrasenaUseCase(usuarios, hasher, sesiones),
     },
   ],
-  exports: [HASHER],
+  exports: [HASHER, ALMACEN_SESIONES],
 })
 export class AuthModule {}
