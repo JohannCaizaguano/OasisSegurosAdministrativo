@@ -20,8 +20,7 @@ bajo costo de operación (RNF-22).
 - Todos los componentes se orquestan con **Docker Compose** en un solo VPS: `web`
   (Caddy), `api`, `worker`, `postgres`, `redis` y la tarea `migrate`; Caddy es el único
   punto de entrada público (ADR-009).
-- Sin Kubernetes, orquestadores administrados ni PaaS: reproducibilidad con la mínima
-  superficie operativa.
+- Sin Kubernetes, orquestadores administrados ni PaaS.
 
 ## Alternativas descartadas
 

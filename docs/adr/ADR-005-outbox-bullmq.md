@@ -6,13 +6,13 @@
 ## Contexto
 
 Validar un pago y emitir su recibo debe ser atómico en la base de datos, pero enviar la
-transacción a Polygon dentro de esa transacción SQL es inviable (la red tarda, falla o el
-proceso muere). Hay que garantizar que **todo recibo emitido termine anclado o marcado
-como FALLIDO**, aun con caídas.
+transacción a Polygon dentro de esa transacción SQL no es viable: la red puede tardar o
+fallar, y el proceso puede morir. Todo recibo emitido debe terminar anclado o marcado como
+FALLIDO, aun con caídas.
 
 ## Decisión
 
-Aplicar **Transactional Outbox** sobre la propia tabla `Recibo` y una cola BullMQ
+Outbox transaccional sobre la propia tabla `Recibo`, con una cola BullMQ
 (`anclaje-recibos`):
 
 1. En una única transacción SQL: `pago = VALIDADO` + `Recibo = PENDIENTE_ANCLAJE`.
@@ -27,14 +27,14 @@ Aplicar **Transactional Outbox** sobre la propia tabla `Recibo` y una cola BullM
 
 - **Enviar la transacción dentro del request HTTP**: acopla la UX del operador a Polygon;
   un timeout deja el estado ambiguo.
-- **Event emitter en memoria**: se pierde ante reinicios; sin garantía de entrega.
+- **Event emitter en memoria**: los eventos se pierden al reiniciar; no garantiza la entrega.
 - **Tabla outbox separada**: el propio `Recibo` ya es el registro del outbox; una tabla
   extra añade join y riesgo de desincronización.
 - **Redis Streams/Kafka sin outbox**: resuelven la cola, no la atomicidad con la BD.
 
 ## Consecuencias
 
-- Positivas: consistencia eventual garantizada; recuperación automática ante caídas;
+- Positivas: consistencia eventual; recuperación automática ante caídas;
   deduplicación por `jobId`; métricas del backlog (`recibos_pendientes_anclaje`).
 - Negativas: el anclaje no es instantáneo (segundos a minutos); requiere Redis persistente
   (`appendonly yes`) y monitoreo de jobs fallidos.

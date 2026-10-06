@@ -9,21 +9,20 @@
 La Definición de Terminado exige que cada historia "funcione en el entorno de desarrollo
 con Docker Compose", pero el Sprint 1 solo compromete HT-01 (monorepo y CI) y HT-03 (base
 del backend: migración, seed y `GET /health` contra PostgreSQL y Redis). La
-contenerización completa (imágenes de producción, compose.prod, Caddy) es **HT-05** (S12)
-y el nodo Hardhat recién se necesita en **HT-02** (S2); adelantarlos duplicaría trabajo de
-HT-05 sin aportar a los criterios de aceptación.
+contenerización completa (imágenes de producción, compose.prod, Caddy) es HT-05 (S12) y el
+nodo Hardhat se necesita desde HT-02 (S2). Adelantarlos duplicaría trabajo de HT-05 sin
+cubrir ningún criterio de aceptación del sprint.
 
 ## Decisión
 
-`compose.dev.yaml` levanta **solo los servicios de datos**:
+`compose.dev.yaml` levanta solo los servicios de datos:
 
 - `postgres:17-alpine` con volumen con nombre y healthcheck.
 - `redis:7-alpine` con `--appendonly yes` (AOF), volumen con nombre y healthcheck.
-- Puertos publicados **únicamente en `127.0.0.1`**.
+- Puertos publicados solo en `127.0.0.1`.
 - La aplicación (API y worker) corre en el host con `pnpm dev` apuntando a esos servicios.
 
-El nodo Hardhat y las imágenes de `api`/`web` se agregan en S2 y S12 sin cambiar la
-decisión de fondo.
+El nodo Hardhat se agrega en S2 y las imágenes de `api` y `web` en S12.
 
 ## Alternativas descartadas
 
@@ -35,5 +34,4 @@ decisión de fondo.
 
 - Positivas: entorno mínimo suficiente para migrar, sembrar y probar `/health`; los
   puertos en loopback no exponen la base ni Redis a la red local.
-- Negativas: el desarrollador necesita `pnpm dev` para la aplicación hasta S12; la deuda
-  es acotada y planificada.
+- Negativas: hasta S12 la aplicación corre en el host con `pnpm dev`.

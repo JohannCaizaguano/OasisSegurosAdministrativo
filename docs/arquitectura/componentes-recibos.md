@@ -6,8 +6,7 @@ las dependencias externas entran por puertos implementados con adaptadores.
 ```mermaid
 flowchart TB
   subgraph presentation["presentation (HTTP)"]
-    ctrl["RecibosController<br/>(JWT + roles)"]
-    pub["VerificacionRecibosController<br/>(JWT + roles; el CLIENTE solo<br/>verifica sus recibos)"]
+    ctrl["RecibosController<br/>(JWT + roles; incluye la verificación)"]
   end
 
   subgraph application["application (casos de uso + puertos)"]
@@ -35,7 +34,6 @@ flowchart TB
   end
 
   ctrl --> application
-  pub --> verificar
   puertos -. implementados por .-> infrastructure
   application --> domain
   proc --> anclar
@@ -43,8 +41,8 @@ flowchart TB
   guard -. inyecta con tokens Symbol .-> puertos
 ```
 
-> **Estado (ADR-015):** la verificación exige sesión (`GET /api/v1/recibos/:codigo/verificacion`),
-> por ahora solo para el personal; HU-28 (S8) la abre al CLIENTE para sus recibos.
+La verificación (`GET /api/v1/recibos/:codigo/verificacion`) exige sesión y hoy es solo del
+personal; HU-28 (S8) la abre al CLIENTE para sus propios recibos (ADR-015).
 
 ## Puertos e implementaciones
 
@@ -62,14 +60,13 @@ flowchart TB
 
 `domain` → TypeScript puro · `application` → dominio + puertos · `infrastructure` →
 adaptadores (Nest, Prisma, viem, BullMQ) · `presentation` → casos de uso.
-`pnpm deps:check` la verifica en CI y `pnpm deps:check:negativo` la comprueba de forma
-reproducible: crea un archivo temporal en un `domain/` que importa infraestructura,
-confirma que `deps:check` falla y lo elimina (ADR-002).
+`pnpm deps:check` la verifica en CI. `pnpm deps:check:negativo` crea un archivo temporal en un
+`domain/` que importa infraestructura, confirma que `deps:check` falla y lo elimina (ADR-002).
 
 ## Hash del recibo
 
 1. `payload = { codigo, pagoId, numeroPoliza, monto, moneda:"USD", fechaPago, emitidoEn }`
 2. `payloadCanonico = canonicalize(payload)` (RFC 8785).
-3. `hashRecibo = keccak256(sal ‖ payloadCanonico)`; la sal (32 bytes) **solo** se guarda
-   en PostgreSQL.
+3. `hashRecibo = keccak256(sal ‖ payloadCanonico)`; la sal (32 bytes) solo se guarda en
+   PostgreSQL.
 4. `idOnchain = keccak256(uuid del recibo)`.

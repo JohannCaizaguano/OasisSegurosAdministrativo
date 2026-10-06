@@ -26,15 +26,13 @@ si `application` importa `infrastructure` o si `presentation` importa un adaptad
 configuración fija `baseDir` y ancla la exclusión a `^(dist|build|src/generated)` para
 que los puntos de entrada de `node_modules` entren al grafo.
 
-`domain` **sí** puede importar los tipos de dominio de `@oasis/shared` (`Rol`,
-`EstadoPago`, `MetodoPago`, `EstadoRecibo`…): son uniones de literales sin dependencias y
-la fuente de verdad compartida con el frontend. La prohibición real es la de los
-frameworks de la capa interna.
+`domain` puede importar los tipos de `@oasis/shared` (`Rol`, `EstadoPago`, `MetodoPago`,
+`EstadoRecibo`…): son uniones de literales sin dependencias que también usa el frontend.
 
 ## Alternativas descartadas
 
 - **NestJS "de fábrica" (services inyectables por clase)**: rápido, pero acopla dominio y
-  aplicación a decoradores y al contenedor; imposible de verificar por reglas estáticas.
+  aplicación a decoradores y al contenedor, y no se puede verificar con reglas estáticas.
 - **Capas técnicas globales** (`controllers/`, `services/`, `entities/`): dificulta el
   aislamiento por módulo y favorece dependencias cruzadas.
 - **Clean Architecture con 4 capas globales**: equivalente, pero el enunciado pide
@@ -43,6 +41,6 @@ frameworks de la capa interna.
 ## Consecuencias
 
 - Positivas: tests de dominio sin infraestructura; dependencias explícitas y auditables;
-  adaptadores intercambiables; la regla es CI-enforced.
+  adaptadores intercambiables; la regla se verifica en CI.
 - Negativas: más archivos y "ceremonia" (interfaces, tokens, factories); la composición
   manual es más verbosa que `@Injectable` por clase.

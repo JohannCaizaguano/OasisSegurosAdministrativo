@@ -11,15 +11,12 @@ quien la posee puede anclar o anular recibos.
 
 ## Decisión
 
-- **Firma custodial del lado del servidor**, aislada en el contenedor `worker`:
-  `OPERATOR_PRIVATE_KEY` solo se monta ahí; el esquema de entorno del API **no incluye**
-  esa variable.
-- El aislamiento es **a nivel de despliegue**: la clave vive en `.env.worker`
-  (`chmod 600`), que `compose.prod.yaml` inyecta exclusivamente en `worker`; el
-  esquema de entorno del API es la segunda barrera.
-- El API solo hace lecturas (`eth_call`) para la verificación pública.
+- Firma custodial en el servidor, aislada en el contenedor `worker`. La clave vive en
+  `.env.worker` (`chmod 600`), que `compose.prod.yaml` inyecta solo en `worker`; además, el
+  esquema de entorno del API no incluye `OPERATOR_PRIVATE_KEY`.
+- El API solo hace lecturas (`eth_call`) para la verificación.
 - El contrato separa `DEFAULT_ADMIN_ROLE` (cuenta del despliegue, guardada con
-  `hardhat-keystore` en la laptop del responsable, **fuera del servidor**) de
+  `hardhat-keystore` en la laptop del responsable, fuera del servidor) de
   `REGISTRADOR_ROLE` (cuenta operadora del worker, permisos mínimos).
 - Concurrencia 1 + `nonceManager` de viem para evitar colisiones de nonce; tope de
   `maxFeePerGas` configurable.
@@ -31,8 +28,8 @@ quien la posee puede anclar o anular recibos.
 - **Wallet por usuario (MetaMask)**: contradice el requisito "nadie tiene wallet cripto".
 - **Clave en el API**: duplica la superficie de ataque; una lectura indebida del proceso
   HTTP expondría la clave.
-- **Custodia externa (KMS/HSM)**: correcto a escala empresarial, innecesario para el TFG
-  y agrega dependencia/costo.
+- **Custodia externa (KMS/HSM)**: adecuada a escala empresarial, pero agrega una
+  dependencia y un costo que este proyecto no necesita.
 - **Multisig N de M**: complica la operación; el contrato actual no lo necesita.
 
 ## Consecuencias

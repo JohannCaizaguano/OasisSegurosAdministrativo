@@ -1,14 +1,14 @@
 # C4 · Nivel 1: Contexto
 
 Oasis Seguros es un bróker de seguros ecuatoriano. El sistema administrativo gestiona
-clientes, pólizas, pagos y **recibos verificables en blockchain**: cuando un operador
-valida un pago, el sistema emite un recibo y ancla su hash en **Polygon PoS (testnet
-Amoy)**. Solo el personal de Oasis Seguros y sus clientes usan el sistema, siempre con inicio
-de sesión; el cliente puede verificar sus recibos y pagar sus cuotas en línea con PayPhone. Las
-aseguradoras no son usuarias: son datos de referencia de las pólizas (ADR-015).
+clientes, pólizas, pagos y recibos verificables en blockchain: cuando un operador valida un
+pago, el sistema emite un recibo y ancla su hash en Polygon PoS (testnet Amoy). Solo el
+personal de Oasis Seguros y sus clientes usan el sistema, siempre con inicio de sesión; el
+cliente verifica sus recibos y paga sus cuotas en línea con PayPhone. Las aseguradoras no son
+usuarias: son datos de referencia de las pólizas (ADR-015).
 
-> **Estado (ADR-015):** la verificación exige sesión (`GET /api/v1/recibos/:codigo/verificacion`),
-> por ahora solo para el personal; HU-28 (S8) la abre al CLIENTE para sus recibos.
+La verificación (`GET /api/v1/recibos/:codigo/verificacion`) hoy es solo del personal; HU-28
+(S8) la abre al CLIENTE para sus propios recibos.
 
 ```mermaid
 flowchart LR

@@ -1,8 +1,8 @@
 # Registro de decisiones de arquitectura (ADR)
 
-Un archivo por decisión, en formato corto: **Contexto · Decisión · Alternativas
-descartadas · Consecuencias · Estado**. Los IDs coinciden con la tabla 11-1 de
-`docs/referencia/ARQUITECTURA.md`; la numeración no se reutiliza.
+Un archivo por decisión, con las secciones Contexto, Decisión, Alternativas descartadas,
+Consecuencias y Estado. Los IDs son los de la tabla 11-1 de `docs/referencia/ARQUITECTURA.md`
+y no se reutilizan.
 
 | ADR     | Decisión                                                                      | Sprint  | Archivo                                     |
 | ------- | ----------------------------------------------------------------------------- | ------- | ------------------------------------------- |
@@ -22,7 +22,3 @@ descartadas · Consecuencias · Estado**. Los IDs coinciden con la tabla 11-1 de
 | ADR-014 | Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend | S12     | `ADR-014-pago-en-linea-payphone.md`         |
 | ADR-015 | Acceso solo con inicio de sesión; sin página pública de verificación          | S3 y S8 | `ADR-015-acceso-solo-autenticado.md`        |
 | ADR-016 | Sesiones por familia de rotación con cierre por inactividad en Redis          | S3      | `ADR-016-sesiones-redis.md`                 |
-
-> Nota: los ADR-003 a ADR-006 y ADR-009 ya existían en el repositorio con numeración
-> local `0001`–`0006`; en el Sprint 1 se renumeraron a los IDs de la arquitectura para
-> que la tesis y el código citen el mismo identificador.

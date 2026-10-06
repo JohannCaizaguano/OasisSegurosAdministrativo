@@ -1,6 +1,6 @@
 # Secuencia: validación del pago y anclaje del recibo
 
-Patrón **oráculo de salida push-based** + **Transactional Outbox**.
+Patrón de oráculo de salida _push-based_ con outbox transaccional (ADR-005).
 
 ```mermaid
 sequenceDiagram
@@ -48,7 +48,7 @@ sequenceDiagram
   actor USR as Cliente o personal (con sesión)
   USR->>SPA: /recibos/verificar/:codigo (sin sesión: inicia sesión primero)
   SPA->>API: GET /api/v1/recibos/:codigo/verificacion (JWT)
-  API->>API: RolesGuard + RN-07 (el CLIENTE solo ve sus recibos)
+  API->>API: RolesGuard (desde S8, RN-07: el CLIENTE solo ve sus recibos)
   API->>DB: leer recibo (payloadCanonico + sal)
   API->>API: recalcular hashRecibo
   API->>CH: verificar(idOnchain)
@@ -64,5 +64,5 @@ sequenceDiagram
 | Worker cae tras guardar `txHash` y antes del receipt    | Al reintentar, `consultarTransaccion(txHash)` confirma y sincroniza `blockNumber`/`gasUsed`.       |
 | Reintento manual (ADMIN) sobre `FALLIDO`                | `POST /api/v1/recibos/:id/reintentar` reencola con el mismo `jobId`.                               |
 
-Evidencia automatizada: `apps/api/test/idempotencia-anclaje.e2e-spec.ts` simula ambos
-puntos de falla y verifica que en la cadena exista **un único** evento `ReciboRegistrado`.
+`apps/api/test/idempotencia-anclaje.e2e-spec.ts` simula las dos caídas del worker de la tabla
+y comprueba que en la cadena haya un solo evento `ReciboRegistrado`.

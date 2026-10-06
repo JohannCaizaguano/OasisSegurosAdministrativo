@@ -5,26 +5,24 @@
 
 ## Contexto
 
-El hash de cada recibo debe anclarse en una blockchain pública, inmutable y accesible en
-Ecuador sin custodia de cripto por parte del bróker. La evaluación es en 2026 y el
-sistema se despliega en un VPS modesto.
+El hash de cada recibo debe anclarse en una blockchain pública e inmutable, accesible desde
+Ecuador, sin que los usuarios tengan que custodiar criptomonedas.
 
 ## Decisión
 
 Usar **Polygon PoS**, testnet **Amoy (chainId 80002)** en desarrollo y evaluación; en
-producción se cambia solo `CHAIN_ID` (137) y la URL del RPC. Razones: EVM compatible
-(Solidity + viem + OpenZeppelin sin fricción), costos bajos y finalidad rápida en PoS,
-explorador público (amoy.polygonscan.com) y verificación de contratos vía Etherscan V2.
+producción solo cambian `CHAIN_ID` (137) y la URL del RPC. Es compatible con EVM (Solidity,
+viem y OpenZeppelin), tiene costos bajos y finalidad rápida, un explorador público
+(amoy.polygonscan.com) y verificación de contratos con Etherscan V2.
 
 ## Alternativas descartadas
 
-- **Ethereum mainnet**: costos desproporcionados para un TFG.
-- **Redes no-EVM (Solana, Stellar)**: otro ecosistema de herramientas y auditoría; más
-  riesgo y menos reutilización de conocimiento.
+- **Ethereum mainnet**: costos desproporcionados para un trabajo de titulación.
+- **Redes no EVM (Solana, Stellar)**: otro ecosistema de herramientas y de auditoría.
 - **Blockchain privada/permissioned**: impide comprobar cada anclaje en un explorador
   independiente sin confiar en el bróker.
 - **Anchoring por lotes (Merkle)**: más eficiente, pero complica la verificación por
-  recibo individual; evolución posible a futuro.
+  recibo individual. Queda como evolución posible.
 
 ## Consecuencias
 

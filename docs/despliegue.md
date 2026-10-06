@@ -24,8 +24,8 @@ El script crea el usuario `deploy`, endurece SSH (sin root, sin contraseña), co
 ## 2. DNS y certificado
 
 1. Cree el registro **A** `oasis.example.com → IP del VPS`.
-2. No hay que configurar TLS: Caddy solicita el certificado automáticamente en el primer
-   arranque (puertos 80/443 abiertos).
+2. Caddy solicita el certificado TLS en el primer arranque; solo necesita los puertos 80 y
+   443 abiertos.
 
 ## 3. Archivos en el VPS
 
@@ -171,8 +171,8 @@ script). Restaure al menos una vez antes de la evaluación.
 
 ## 6. Actualizaciones
 
-Automático (recomendado): cree el tag `vX.Y.Z`; GitHub Actions publica las imágenes,
-despliega por SSH y ejecuta el smoke test. Manual: `infra/scripts/deploy.sh <tag>`.
+Con el tag `vX.Y.Z`, GitHub Actions publica las imágenes, despliega por SSH y ejecuta el
+smoke test. A mano: `infra/scripts/deploy.sh <tag>`.
 
 ## 7. Día de la evaluación
 
@@ -183,9 +183,8 @@ despliega por SSH y ejecuta el smoke test. Manual: `infra/scripts/deploy.sh <tag
 #    NO cree la red a mano: compose.prod.yaml ya declara `oasis_internal`.
 docker compose -f compose.prod.yaml -f compose.monitoring.yaml up -d
 
-# 2. Subir el rate limiter para la medición: los valores por defecto son de
-#    seguridad y harían que los escenarios midieran el limitador. Anote el
-#    valor usado en el informe y restáurelos al terminar (7.4).
+# 2. Subir los límites por IP: con los de producción, los escenarios medirían
+#    el limitador. Anote en el informe los valores usados; 7.4 los restaura.
 sed -i 's/^THROTTLE_.*=.*/# &/' .env
 cat >> .env <<'LIMITES'
 THROTTLE_GLOBAL_LIMIT=600
@@ -211,9 +210,8 @@ k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/validar-pago.js \
   --out json=resultados-validar-pago.json
 ```
 
-Cada escenario calcula su cadencia a partir de los límites vigentes (o de los valores por
-defecto si no se subieron). `validar-pago.js` emite recibos reales: deja la base con
-varios pagos `VALIDADO` y sus recibos `ANCLADO`, lo esperado tras la evaluación.
+Cada escenario calcula su cadencia con los límites vigentes. `validar-pago.js` emite recibos
+reales: al terminar quedan en la base varios pagos `VALIDADO` con sus recibos `ANCLADO`.
 
 ### 7.3 Exportar métricas
 
@@ -235,7 +233,7 @@ Métricas clave (ISO/IEC 25023): latencia p50/p95 y RPS del API, CPU/RAM por con
 ### 7.4 Cerrar
 
 ```bash
-sed -i '/^THROTTLE_/d' .env                    # restaurar límites de seguridad
+sed -i '/^THROTTLE_/d; s/^# \(THROTTLE_\)/\1/' .env   # vuelven los límites de producción
 docker compose -f compose.prod.yaml up -d api
 docker compose -f compose.prod.yaml -f compose.monitoring.yaml down
 ```
