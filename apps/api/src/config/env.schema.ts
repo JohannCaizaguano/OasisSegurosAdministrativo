@@ -67,7 +67,6 @@ export const envSchema = z.object({
   THROTTLE_GLOBAL_LIMIT: z.coerce.number().int().positive().default(100),
   THROTTLE_LOGIN_LIMIT: z.coerce.number().int().positive().default(5),
   THROTTLE_REFRESH_LIMIT: z.coerce.number().int().positive().default(20),
-  THROTTLE_VERIFICACION_PUBLICA_LIMIT: z.coerce.number().int().positive().default(20),
 });
 
 export type Env = z.infer<typeof envSchema>;

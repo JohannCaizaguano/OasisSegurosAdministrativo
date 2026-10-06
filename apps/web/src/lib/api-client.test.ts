@@ -47,6 +47,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  Reflect.deleteProperty(navigator, 'locks');
 });
 
 describe('apiFetch', () => {
@@ -167,9 +168,27 @@ describe('Renovación de sesión', () => {
 
     await expect(apiFetch('/pagos')).rejects.toBeInstanceOf(ApiError);
 
-    expect(estado.cerrarSesionLocal).toHaveBeenCalledOnce();
+    expect(estado.cerrarSesionLocal).toHaveBeenCalledWith('expirada');
     // La caché se vacía para que el siguiente usuario no vea datos del anterior.
     expect(limpiarCache).toHaveBeenCalledOnce();
+  });
+
+  it('serializa el refresco con Web Locks cuando el navegador lo ofrece', async () => {
+    const solicitudes: string[] = [];
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: {
+        request: (nombre: string, tarea: () => Promise<unknown>) => {
+          solicitudes.push(nombre);
+          return tarea();
+        },
+      },
+    });
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(respuestaJson(respuestaLogin('token-2')));
+
+    await expect(refrescarToken()).resolves.toBe('token-2');
+
+    expect(solicitudes).toEqual(['oasis-refresco']);
   });
 
   it('no cierra sesión si otro proceso renovó el token mientras esperábamos', async () => {
@@ -180,6 +199,23 @@ describe('Renovación de sesión', () => {
         // Simula otra pestaña que rotó el refresh token primero.
         estado.accessToken = 'token-de-otra-pestana';
         return respuestaJson(respuestaLogin('token-de-otra-pestana'));
+      })
+      .mockResolvedValueOnce(respuestaJson({ ok: true }));
+
+    await expect(apiFetch<{ ok: boolean }>('/pagos')).resolves.toEqual({ ok: true });
+
+    expect(estado.cerrarSesionLocal).not.toHaveBeenCalled();
+    expect(limpiarCache).not.toHaveBeenCalled();
+  });
+
+  it('un 401 atrasado no cierra la sesión que se abrió mientras se renovaba', async () => {
+    estado.accessToken = 'caducado';
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockImplementationOnce(async () => {
+        // Como zustand, el inicio de sesión reemplaza el estado en lugar de mutarlo.
+        estado = { ...estado, accessToken: 'token-del-nuevo-login' };
+        return new Response(null, { status: 401 });
       })
       .mockResolvedValueOnce(respuestaJson({ ok: true }));
 

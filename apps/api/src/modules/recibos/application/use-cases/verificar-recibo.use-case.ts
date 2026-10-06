@@ -24,9 +24,8 @@ export interface ResultadoVerificacion {
 }
 
 /**
- * Verificación pública: recalcula el hash desde la base de datos, lo compara
- * con el registrado en la cadena y devuelve solo datos opacos (sin información
- * personal).
+ * Verificación de un recibo: recalcula el hash desde la base de datos, lo
+ * compara con el registrado en la cadena y devuelve solo datos opacos.
  */
 export class VerificarReciboUseCase {
   constructor(

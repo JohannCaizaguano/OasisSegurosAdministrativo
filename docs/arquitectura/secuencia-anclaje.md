@@ -45,13 +45,14 @@ sequenceDiagram
     end
   end
 
-  actor PUB as Público
-  PUB->>SPA: /verificar/:codigo (sin login)
-  SPA->>API: GET /api/v1/public/recibos/:codigo/verificacion
+  actor USR as Cliente o personal (con sesión)
+  USR->>SPA: /recibos/verificar/:codigo (sin sesión: inicia sesión primero)
+  SPA->>API: GET /api/v1/recibos/:codigo/verificacion (JWT)
+  API->>API: RolesGuard + RN-07 (el CLIENTE solo ve sus recibos)
   API->>DB: leer recibo (payloadCanonico + sal)
   API->>API: recalcular hashRecibo
   API->>CH: verificar(idOnchain)
-  API-->>SPA: estado + txHash + enlace al explorador (sin datos personales)
+  API-->>SPA: estado + txHash + enlace al explorador
 ```
 
 ## Idempotencia ante caídas

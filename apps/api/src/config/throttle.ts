@@ -4,7 +4,6 @@ type Limites = {
   global: number;
   login: number;
   refresh: number;
-  verificacionPublica: number;
 };
 
 let cache: Limites | null = null;
@@ -23,7 +22,6 @@ export function limitesThrottle(): Limites {
     global: valores.THROTTLE_GLOBAL_LIMIT,
     login: valores.THROTTLE_LOGIN_LIMIT,
     refresh: valores.THROTTLE_REFRESH_LIMIT,
-    verificacionPublica: valores.THROTTLE_VERIFICACION_PUBLICA_LIMIT,
   };
   return cache;
 }

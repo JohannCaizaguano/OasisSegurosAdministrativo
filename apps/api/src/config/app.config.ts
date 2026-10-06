@@ -13,7 +13,6 @@ export interface ConfiguracionThrottle {
   global: number;
   login: number;
   refresh: number;
-  verificacionPublica: number;
 }
 
 export interface ConfiguracionAuth {
@@ -121,7 +120,6 @@ export class AppConfig {
       global: this.config.get('THROTTLE_GLOBAL_LIMIT', { infer: true }),
       login: this.config.get('THROTTLE_LOGIN_LIMIT', { infer: true }),
       refresh: this.config.get('THROTTLE_REFRESH_LIMIT', { infer: true }),
-      verificacionPublica: this.config.get('THROTTLE_VERIFICACION_PUBLICA_LIMIT', { infer: true }),
     };
   }
 }

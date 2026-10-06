@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { RolesGuard } from './common/auth/roles.guard';
+import { sinCache } from './common/middleware/sin-cache.middleware';
 import { AppConfig } from './config/app.config';
 import { AppConfigModule } from './config/config.module';
 import { BlockchainModule } from './infrastructure/blockchain/blockchain.module';
@@ -74,6 +75,7 @@ export function opcionesLogger() {
       inject: [AppConfig],
       useFactory: (config: AppConfig) => ({
         throttlers: [{ name: 'default', ttl: 60_000, limit: config.throttle.global }],
+        errorMessage: 'Demasiadas solicitudes. Espere un minuto e intente de nuevo.',
       }),
     }),
     ClockModule,
@@ -94,7 +96,7 @@ export function opcionesLogger() {
   ],
   providers: [
     // El orden importa: Throttler primero para que el límite aplique también a
-    // las rutas no autenticadas (login, verificación pública).
+    // las rutas no autenticadas (login, refresh y logout).
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
@@ -102,4 +104,8 @@ export function opcionesLogger() {
     { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(sinCache).forRoutes('{*ruta}');
+  }
+}

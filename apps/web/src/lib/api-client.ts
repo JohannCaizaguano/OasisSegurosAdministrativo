@@ -29,7 +29,7 @@ export class ApiError extends Error {
 export type Sesion = {
   accessToken: string | null;
   establecerSesion: (respuesta: LoginResponse) => void;
-  cerrarSesionLocal: () => void;
+  cerrarSesionLocal: (motivo?: 'expirada') => void;
 };
 
 let obtenerStore: (() => Sesion) | null = null;
@@ -49,16 +49,35 @@ export function configurarApiClient(
 
 let refrescoEnCurso: Promise<string | null> | null = null;
 
+let ultimaPeticion = Date.now();
+
+/** Milisegundos desde la última petición al API; el latido de inactividad la usa para no duplicarla. */
+export function msDesdeUltimaPeticion(): number {
+  return Date.now() - ultimaPeticion;
+}
+
+/**
+ * Serializa el refresco entre pestañas: dos rotaciones simultáneas con la misma cookie se tomarían
+ * como reutilización del token y cerrarían la sesión (ADR-016).
+ */
+function enExclusiva<T>(tarea: () => Promise<T>): Promise<T> {
+  return typeof navigator !== 'undefined' && 'locks' in navigator
+    ? navigator.locks.request('oasis-refresco', tarea)
+    : tarea();
+}
+
 /**
  * Rota el refresh token (single-flight: el token es de un solo uso y el API
  * detecta su reutilización). Devuelve el access token nuevo o null.
  */
 export function refrescarToken(): Promise<string | null> {
   if (!refrescoEnCurso) {
-    refrescoEnCurso = fetch(`${BASE}/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-    })
+    refrescoEnCurso = enExclusiva(() =>
+      fetch(`${BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      }),
+    )
       .then(async (respuesta) => {
         if (!respuesta.ok) {
           return null;
@@ -91,6 +110,7 @@ interface OpcionesPeticion extends RequestInit {
 export async function apiFetch<T>(ruta: string, opciones: OpcionesPeticion = {}): Promise<T> {
   const store = obtenerStore?.();
   const { sinReintento = false, headers, ...resto } = opciones;
+  ultimaPeticion = Date.now();
 
   const respuesta = await fetch(`${BASE}${ruta}`, {
     ...resto,
@@ -108,12 +128,12 @@ export async function apiFetch<T>(ruta: string, opciones: OpcionesPeticion = {})
     if (tokenNuevo) {
       return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
     }
-    // Solo se cierra sesión si el token no fue renovado por otro proceso
-    // (p. ej. otra pestaña).
-    if (store?.accessToken !== tokenAnterior) {
+    // `store` es la foto previa a la petición: se relee para saber si el token cambió mientras tanto.
+    const tokenActual = obtenerStore?.().accessToken ?? null;
+    if (tokenActual && tokenActual !== tokenAnterior) {
       return apiFetch<T>(ruta, { ...opciones, sinReintento: true });
     }
-    store?.cerrarSesionLocal();
+    obtenerStore?.().cerrarSesionLocal('expirada');
     limpiarCache?.();
   }
 

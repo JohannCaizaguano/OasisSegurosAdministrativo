@@ -1,4 +1,4 @@
-﻿import { ConflictoError, NoEncontradoError } from '../../../../shared-kernel/domain-error';
+import { ConflictoError, NoEncontradoError } from '../../../../shared-kernel/domain-error';
 import type { Aseguradora } from '../../domain/aseguradora';
 import type {
   AseguradorasRepositoryPort,

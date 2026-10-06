@@ -1,6 +1,7 @@
 export * from './constants/estados';
 export * from './constants/roles';
 export * from './constants/auditoria';
+export * from './constants/sesion';
 export * from './types';
 export * from './schemas/common.schema';
 export * from './schemas/auth.schema';

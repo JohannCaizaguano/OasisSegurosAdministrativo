@@ -1,6 +1,6 @@
 import type { UsuarioCredenciales } from '../../domain/usuario-credenciales';
 import { UsuarioCredenciales as UsuarioCredencialesClase } from '../../domain/usuario-credenciales';
-import type { AlmacenRefreshPort } from '../ports/almacen-refresh.port';
+import type { AlmacenSesionesPort } from '../ports/almacen-sesiones.port';
 import type { EmisorTokensPort } from '../ports/emisor-tokens.port';
 import type { HasherPort } from '../ports/hasher.port';
 import type { UsuarioAuthRepositoryPort } from '../ports/usuario-auth.repository.port';
@@ -22,34 +22,34 @@ function crearDependencias(usuario: UsuarioCredenciales | null, passwordValida =
   const usuarios: UsuarioAuthRepositoryPort = {
     buscarPorEmail: jest.fn().mockResolvedValue(usuario),
     buscarPorId: jest.fn().mockResolvedValue(usuario),
+    actualizarPasswordHash: jest.fn(),
   };
   const hasher: HasherPort = {
     hashear: jest.fn(),
     verificar: jest.fn().mockResolvedValue(passwordValida),
   };
+  const familia = { sid: 'sid-1', expiraEn: 1_800_000_000 };
   const emisor: EmisorTokensPort = {
     emitir: jest.fn().mockResolvedValue({
       accessToken: 'access',
       refreshToken: 'refresh',
       refreshJti: 'jti-1',
+      familia,
     }),
     verificarRefresh: jest.fn(),
   };
-  const guardados: string[] = [];
-  const almacen: AlmacenRefreshPort = {
-    guardar: jest.fn((_usuarioId: string, jti: string) => {
-      guardados.push(jti);
-      return Promise.resolve();
-    }),
-    consumir: jest.fn(),
-    revocar: jest.fn(),
-    revocarTodos: jest.fn(),
+  const almacen: AlmacenSesionesPort = {
+    abrir: jest.fn().mockResolvedValue(undefined),
+    rotar: jest.fn(),
+    tocar: jest.fn(),
+    cerrar: jest.fn(),
+    cerrarDemas: jest.fn(),
   };
-  return { usuarios, hasher, emisor, almacen, guardados };
+  return { usuarios, hasher, emisor, almacen, familia };
 }
 
 describe('LoginUseCase', () => {
-  it('emite tokens y registra el jti cuando las credenciales son válidas', async () => {
+  it('emite tokens y abre la sesión de la familia', async () => {
     const deps = crearDependencias(crearUsuario());
     const caso = new LoginUseCase(deps.usuarios, deps.hasher, deps.emisor, deps.almacen);
 
@@ -57,7 +57,11 @@ describe('LoginUseCase', () => {
 
     expect(resultado.tokens.accessToken).toBe('access');
     expect(deps.usuarios.buscarPorEmail).toHaveBeenCalledWith('admin@oasis.com');
-    expect(deps.guardados).toEqual(['jti-1']);
+    expect(deps.almacen.abrir).toHaveBeenCalledWith(
+      '11111111-1111-1111-1111-111111111111',
+      deps.familia.sid,
+      'jti-1',
+    );
   });
 
   it('rechaza credenciales inválidas con el mismo error', async () => {

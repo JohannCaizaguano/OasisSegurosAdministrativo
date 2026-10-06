@@ -51,10 +51,10 @@ export const codigoReciboSchema = z
   .regex(/^RC-[0-9A-F]{12}$/, 'El código del recibo tiene el formato RC-XXXXXXXXXXXX');
 
 /**
- * Respuesta pública de verificación: solo identificadores opacos, hashes,
- * estado y metadatos de la cadena (nunca datos personales).
+ * Resultado de verificar un recibo: solo identificadores opacos, hashes, estado y
+ * metadatos de la cadena (nunca datos personales).
  */
-export const verificacionPublicaSchema = z.object({
+export const verificacionReciboSchema = z.object({
   codigo: z.string(),
   estado: estadoVerificacionSchema,
   hashRecibo: hex32Schema,
@@ -68,4 +68,4 @@ export const verificacionPublicaSchema = z.object({
   explorerUrl: z.string().nullish(),
   verificadoEn: z.iso.datetime(),
 });
-export type VerificacionPublica = z.infer<typeof verificacionPublicaSchema>;
+export type VerificacionRecibo = z.infer<typeof verificacionReciboSchema>;

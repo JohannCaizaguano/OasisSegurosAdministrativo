@@ -36,9 +36,6 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, Estado> {
           <Button asChild variant="outline" size="sm">
             <Link to="/">Ir al inicio</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
-            <a href="/verificar">Verificar un recibo</a>
-          </Button>
         </div>
       </div>
     );

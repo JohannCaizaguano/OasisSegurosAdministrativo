@@ -191,7 +191,6 @@ cat >> .env <<'LIMITES'
 THROTTLE_GLOBAL_LIMIT=600
 THROTTLE_LOGIN_LIMIT=120
 THROTTLE_REFRESH_LIMIT=120
-THROTTLE_VERIFICACION_PUBLICA_LIMIT=300
 LIMITES
 docker compose -f compose.prod.yaml up -d api
 ```
@@ -207,7 +206,7 @@ export PASSWORD='<la del seed>'
 
 k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/login.js
 k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/listar-pagos.js
-k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/verificacion-publica.js
+k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/verificacion-recibo.js
 k6 run -e BASE_URL -e EMAIL -e PASSWORD infra/k6/validar-pago.js \
   --out json=resultados-validar-pago.json
 ```

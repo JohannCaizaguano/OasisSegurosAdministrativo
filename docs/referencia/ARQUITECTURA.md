@@ -1,4 +1,4 @@
-> Documento de arquitectura del SRPP (arc42 + C4). Versión 1.2 (29/09/2026). Los diagramas originales están en `arquitectura_img/`; los aspectos esenciales del modelo de datos se transcriben en texto en la sección 9.
+> Documento de arquitectura del SRPP (arc42 + C4). Versión 1.3 (06/10/2026). Los diagramas originales están en `arquitectura_img/`; los aspectos esenciales del modelo de datos se transcriben en texto en la sección 9.
 
 **DOCUMENTO DE ARQUITECTURA DE SOFTWARE**
 
@@ -16,11 +16,12 @@ Sistema de Registro de Pagos de Primas (SRPP)
 
 **Control de versiones**
 
-| **Versión** | **Fecha**  | **Descripción**                                                                                       | **Autor**     |
-|-------------|------------|-------------------------------------------------------------------------------------------------------|---------------|
-| 1.0         | 07/09/2026 | Versión inicial                                                                                       | J. Caizaguano |
-| 1.1         | 28/09/2026 | Módulos de cuotas, notificaciones, reportes y auditoría; servicio de correo; modelo de datos ampliado | J. Caizaguano |
-| 1.2         | 29/09/2026 | Actualización de fechas del proyecto (cierre el 08/01/2027)                                           | J. Caizaguano |
+| **Versión** | **Fecha**  | **Descripción**                                                                                                                                                                                                               | **Autor**     |
+|-------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+| 1.0         | 07/09/2026 | Versión inicial                                                                                                                                                                                                               | J. Caizaguano |
+| 1.1         | 28/09/2026 | Módulos de cuotas, notificaciones, reportes y auditoría; servicio de correo; modelo de datos ampliado                                                                                                                         | J. Caizaguano |
+| 1.2         | 29/09/2026 | Actualización de fechas del proyecto (cierre el 08/01/2027)                                                                                                                                                                   | J. Caizaguano |
+| 1.3         | 06/10/2026 | Acceso solo con inicio de sesión para el personal de Oasis Seguros y sus clientes; sin verificación pública ni actor aseguradora. Pago en línea con PayPhone (ADR-014 y ADR-015); tabla 11-1 completada con ADR-010 a ADR-013 | J. Caizaguano |
 
 # 1. INTRODUCCIÓN
 ## 1.1. Propósito
@@ -44,7 +45,7 @@ El documento cubre la aplicación web, el backend, el proceso de anclaje, la bas
 - Planificación del proyecto SRPP.
 
 # 2. VISIÓN GENERAL DEL SISTEMA
-El SRPP es una aplicación web para el registro de pagos de primas de Oasis Seguros. Gestiona clientes, pólizas, planes de cuotas y pagos; cada pago validado genera un recibo digital cuyo hash se registra en un contrato inteligente en Polygon PoS, y cualquier persona puede verificar el recibo con su código o QR.
+El SRPP es una aplicación web para el registro de pagos de primas de Oasis Seguros. Gestiona clientes, pólizas, planes de cuotas y pagos; cada pago validado genera un recibo digital cuyo hash se registra en un contrato inteligente en Polygon PoS, y tanto el cliente como el personal pueden verificar su autenticidad desde su sesión con el código o el QR. El cliente también puede pagar sus cuotas en línea mediante la pasarela PayPhone.
 
 ## 2.1. Principios de la arquitectura
 - **Registro operativo en PostgreSQL:** clientes, pólizas, pagos y recibos se almacenan en la base de datos relacional.
@@ -73,24 +74,25 @@ El SRPP es una aplicación web para el registro de pagos de primas de Oasis Segu
 ## 2.3. Usuarios del sistema
 **Tabla 2-2:** Usuarios y uso del sistema
 
-| **Usuario**                    | **Uso**                                                    |
-|--------------------------------|------------------------------------------------------------|
-| Administrador de Oasis Seguros | Administra usuarios, recibos y la configuración operativa  |
-| Personal administrativo        | Gestiona clientes, pólizas y valida pagos                  |
-| Cliente asegurado              | Consulta pólizas y pagos, reporta pagos y descarga recibos |
-| Aseguradora o tercero          | Verifica recibos desde la página pública                   |
+| **Usuario**                    | **Uso**                                                                                       |
+|--------------------------------|-----------------------------------------------------------------------------------------------|
+| Administrador de Oasis Seguros | Administra usuarios, recibos y la configuración operativa                                     |
+| Personal administrativo        | Gestiona clientes, pólizas y valida pagos; verifica recibos                                   |
+| Cliente asegurado              | Consulta pólizas y pagos, reporta o paga en línea sus cuotas, descarga y verifica sus recibos |
+
+Todos los usuarios acceden al SRPP mediante inicio de sesión. Las aseguradoras no son usuarias del sistema; se registran como datos de referencia de las pólizas. El sitio web institucional de Oasis Seguros, desarrollado como un proyecto independiente, ofrece el botón Iniciar sesión que dirige a la aplicación.
 
 # 3. RESTRICCIONES
 **Tabla 3-1:** Restricciones técnicas y operativas
 
-| **Tipo**        | **Restricción**                                                       |
-|-----------------|-----------------------------------------------------------------------|
-| Tecnología      | NestJS, PostgreSQL con Prisma, React con Vite, Solidity con Hardhat 3 |
-| Red blockchain  | Polygon PoS; red de pruebas Amoy (chain ID 80002)                     |
-| Usuarios        | Sin wallets; acceso con usuario y contraseña                          |
-| Infraestructura | Un VPS de 4 vCPU y 8 GB (OVHcloud VPS-1) con Docker Compose           |
-| Legal           | LOPDP del Ecuador: sin datos personales en la blockchain              |
-| Metodología     | Scrum con sprints semanales                                           |
+| **Tipo**        | **Restricción**                                                                                         |
+|-----------------|---------------------------------------------------------------------------------------------------------|
+| Tecnología      | NestJS, PostgreSQL con Prisma, React con Vite, Solidity con Hardhat 3                                   |
+| Red blockchain  | Polygon PoS; red de pruebas Amoy (chain ID 80002)                                                       |
+| Usuarios        | Sin wallets; acceso exclusivo con usuario y contraseña para el personal de Oasis Seguros y sus clientes |
+| Infraestructura | Un VPS de 4 vCPU y 8 GB (OVHcloud VPS-1) con Docker Compose                                             |
+| Legal           | LOPDP del Ecuador: sin datos personales en la blockchain                                                |
+| Metodología     | Scrum con sprints semanales                                                                             |
 
 # 4. CONTEXTO DEL SISTEMA
 <img src="media/img2.png" style="width:5.6in;height:4.54396in" />
@@ -100,37 +102,40 @@ El SRPP es una aplicación web para el registro de pagos de primas de Oasis Segu
 
 **Tabla 4-1:** Sistemas externos
 
-| **Sistema**               | **Canal**            | **Función**                                                |
-|---------------------------|----------------------|------------------------------------------------------------|
-| Navegador de los usuarios | HTTPS, JSON          | Acceso a la aplicación web y a la verificación pública     |
-| Alchemy                   | JSON-RPC sobre HTTPS | Proveedor de nodo para Polygon PoS                         |
-| Contrato RegistroRecibos  | ABI del contrato     | Registro, anulación y consulta de recibos                  |
-| Servicio de correo        | SMTP con TLS         | Notificaciones, recordatorios y recuperación de contraseña |
-| PolygonScan               | Enlace web           | Consulta pública de las transacciones de anclaje           |
+| **Sistema**                | **Canal**                                           | **Función**                                                                 |
+|----------------------------|-----------------------------------------------------|-----------------------------------------------------------------------------|
+| Navegador de los usuarios  | HTTPS, JSON                                         | Acceso autenticado a la aplicación web, incluida la verificación de recibos |
+| Alchemy                    | JSON-RPC sobre HTTPS                                | Proveedor de nodo para Polygon PoS                                          |
+| Contrato RegistroRecibos   | ABI del contrato                                    | Registro, anulación y consulta de recibos                                   |
+| Servicio de correo         | SMTP con TLS                                        | Notificaciones, recordatorios y recuperación de contraseña                  |
+| PayPhone                   | Cajita de Pagos (JavaScript) y API REST sobre HTTPS | Cobro con tarjeta y confirmación de la transacción de pago en línea         |
+| PolygonScan                | Enlace web                                          | Consulta pública de las transacciones de anclaje                            |
+| Sitio web de Oasis Seguros | Enlace web                                          | Proyecto independiente; su botón Iniciar sesión dirige al SRPP              |
 
 # 5. PATRONES DE ARQUITECTURA Y DISEÑO
 **Tabla 5-1:** Patrones aplicados
 
-| **Nivel**   | **Patrón**                                     | **Aplicación en el SRPP**                                                                     |
-|-------------|------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| Sistema     | Cliente-servidor en tres capas                 | SPA React, API NestJS y PostgreSQL                                                            |
-| Sistema     | Monolito modular                               | Un backend desplegable, dividido en los módulos Auth, Clientes, Pólizas, Pagos y Recibos      |
-| Sistema     | Proxy inverso                                  | Caddy sirve la SPA, enruta /api al backend y gestiona TLS                                     |
-| Backend     | Hexagonal (puertos y adaptadores)              | Estructura interna de cada módulo del API                                                     |
-| Backend     | Inyección de dependencias                      | Los puertos se enlazan con sus adaptadores mediante tokens en el contenedor de NestJS         |
-| Backend     | Repositorio y Mapper                           | Persistencia con Prisma; los mappers convierten filas en entidades de dominio                 |
-| Backend     | Caso de uso                                    | Una clase por operación de negocio en application/use-cases                                   |
-| Integración | Outbox transaccional                           | El recibo PENDIENTE_ANCLAJE se crea en la misma transacción que valida el pago                |
-| Integración | Cola de trabajos y worker                      | BullMQ sobre Redis; colas anclaje-recibos y notificaciones en un proceso worker independiente |
-| Integración | Tareas programadas                             | @nestjs/schedule en el worker: barrido de recibos, vencimiento de cuotas y recordatorios      |
-| Integración | Consumidor idempotente                         | jobId igual al identificador del recibo y verificación previa en el contrato                  |
-| Integración | Reintento con espera exponencial               | Hasta 5 intentos; luego el recibo pasa a FALLIDO                                              |
-| Blockchain  | Oráculo de salida (push)                       | El backend envía el hash del recibo al contrato cuando se valida un pago                      |
-| Blockchain  | Datos fuera de la cadena con hash en la cadena | Contenido y sal en PostgreSQL; identificador y hash en el contrato                            |
-| Contrato    | Control de acceso por roles                    | AccessControl de OpenZeppelin: DEFAULT_ADMIN_ROLE y REGISTRADOR_ROLE                          |
-| Contrato    | Parada de emergencia                           | Pausable de OpenZeppelin                                                                      |
-| Frontend    | Organización por funcionalidad                 | Carpetas src/features por módulo                                                              |
-| Frontend    | Caché de estado del servidor                   | TanStack Query                                                                                |
+| **Nivel**   | **Patrón**                                     | **Aplicación en el SRPP**                                                                                               |
+|-------------|------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| Sistema     | Cliente-servidor en tres capas                 | SPA React, API NestJS y PostgreSQL                                                                                      |
+| Sistema     | Monolito modular                               | Un backend desplegable, dividido en los módulos Auth, Clientes, Pólizas, Pagos y Recibos                                |
+| Sistema     | Proxy inverso                                  | Caddy sirve la SPA, enruta /api al backend y gestiona TLS                                                               |
+| Backend     | Hexagonal (puertos y adaptadores)              | Estructura interna de cada módulo del API                                                                               |
+| Backend     | Inyección de dependencias                      | Los puertos se enlazan con sus adaptadores mediante tokens en el contenedor de NestJS                                   |
+| Backend     | Repositorio y Mapper                           | Persistencia con Prisma; los mappers convierten filas en entidades de dominio                                           |
+| Backend     | Caso de uso                                    | Una clase por operación de negocio en application/use-cases                                                             |
+| Integración | Outbox transaccional                           | El recibo PENDIENTE_ANCLAJE se crea en la misma transacción que valida el pago                                          |
+| Integración | Cola de trabajos y worker                      | BullMQ sobre Redis; colas anclaje-recibos y notificaciones en un proceso worker independiente                           |
+| Integración | Tareas programadas                             | @nestjs/schedule en el worker: barrido de recibos, vencimiento de cuotas y recordatorios                                |
+| Integración | Consumidor idempotente                         | jobId igual al identificador del recibo y verificación previa en el contrato                                            |
+| Integración | Reintento con espera exponencial               | Hasta 5 intentos; luego el recibo pasa a FALLIDO                                                                        |
+| Integración | Adaptador de pasarela de pagos                 | Puerto PasarelaPagosPort con el adaptador PayPhoneAdapter; la confirmación se realiza desde el backend y es idempotente |
+| Blockchain  | Oráculo de salida (push)                       | El backend envía el hash del recibo al contrato cuando se valida un pago                                                |
+| Blockchain  | Datos fuera de la cadena con hash en la cadena | Contenido y sal en PostgreSQL; identificador y hash en el contrato                                                      |
+| Contrato    | Control de acceso por roles                    | AccessControl de OpenZeppelin: DEFAULT_ADMIN_ROLE y REGISTRADOR_ROLE                                                    |
+| Contrato    | Parada de emergencia                           | Pausable de OpenZeppelin                                                                                                |
+| Frontend    | Organización por funcionalidad                 | Carpetas src/features por módulo                                                                                        |
+| Frontend    | Caché de estado del servidor                   | TanStack Query                                                                                                          |
 
 ## 5.1. Arquitectura hexagonal del backend
 <img src="media/img3.png" style="width:6.3in;height:4.14464in" />
@@ -142,9 +147,9 @@ El SRPP es una aplicación web para el registro de pagos de primas de Oasis Segu
 
 - **Aplicación:** casos de uso y puertos (interfaces) que el dominio requiere del exterior.
 
-- **Adaptadores primarios:** controladores REST, controlador público de verificación, procesador de la cola y tarea programada de barrido.
+- **Adaptadores primarios:** controladores REST (incluida la verificación de recibos, que exige sesión), procesador de la cola y tareas programadas.
 
-- **Adaptadores secundarios:** repositorios Prisma (PostgreSQL), adaptador viem (Polygon), adaptador BullMQ (Redis) y almacenamiento de comprobantes.
+- **Adaptadores secundarios:** repositorios Prisma (PostgreSQL), adaptador viem (Polygon), adaptador BullMQ (Redis), adaptador HTTP de PayPhone y almacenamiento de comprobantes.
 
 - **Regla de dependencias:** las dependencias apuntan hacia el dominio; dependency-cruiser la verifica en la integración continua.
 
@@ -183,29 +188,29 @@ El SRPP es una aplicación web para el registro de pagos de primas de Oasis Segu
 
 **Tabla 6-1:** Contenedores
 
-| **Contenedor** | **Tecnología**                                   | **Responsabilidad**                                                         |
-|----------------|--------------------------------------------------|-----------------------------------------------------------------------------|
-| web            | Caddy 2 + build estático de React                | Sirve la SPA, enruta /api al backend, gestiona TLS y cabeceras de seguridad |
-| api            | NestJS 12 sobre Node.js 24                       | Casos de uso, autenticación y reglas de negocio; lectura del contrato       |
-| worker         | Misma imagen que api, punto de entrada worker.ts | Anclaje de recibos, envío de correos y tareas programadas                   |
-| postgres       | PostgreSQL 17                                    | Clientes, pólizas, cuotas, pagos, recibos y bitácora                        |
-| redis          | Redis 7 con AOF                                  | Persistencia de los trabajos de BullMQ                                      |
-| migrate        | Prisma CLI                                       | Aplica las migraciones antes del arranque de api y worker                   |
+| **Contenedor** | **Tecnología**                                   | **Responsabilidad**                                                                  |
+|----------------|--------------------------------------------------|--------------------------------------------------------------------------------------|
+| web            | Caddy 2 + build estático de React                | Sirve la SPA, enruta /api al backend, gestiona TLS y cabeceras de seguridad          |
+| api            | NestJS 12 sobre Node.js 24                       | Casos de uso, autenticación y reglas de negocio; lectura del contrato                |
+| worker         | Misma imagen que api, punto de entrada worker.ts | Anclaje de recibos, envío de correos y tareas programadas                            |
+| postgres       | PostgreSQL 17                                    | Clientes, pólizas, cuotas, pagos, transacciones de pago en línea, recibos y bitácora |
+| redis          | Redis 7 con AOF                                  | Persistencia de los trabajos de BullMQ                                               |
+| migrate        | Prisma CLI                                       | Aplica las migraciones antes del arranque de api y worker                            |
 
 ## 6.1. Módulos del backend
 **Tabla 6-2:** Módulos del backend
 
-| **Módulo**     | **Responsabilidad**                                                                                 | **Librerías de soporte**           |
-|----------------|-----------------------------------------------------------------------------------------------------|------------------------------------|
-| auth           | Inicio y cierre de sesión, renovación de tokens, recuperación de contraseña, cierre por inactividad | @nestjs/jwt, passport, argon2      |
-| usuarios       | Cuentas del personal y de clientes, aceptación de la política de datos                              | Prisma                             |
-| clientes       | Registro, consulta e importación de clientes                                                        | Prisma, exceljs                    |
-| polizas        | Aseguradoras, pólizas, plan de cuotas, vencimientos y catálogos                                     | Prisma, @nestjs/schedule           |
-| pagos          | Registro, validación, rechazo y aplicación de pagos a cuotas; comprobantes                          | Prisma                             |
-| recibos        | Emisión, anclaje, verificación, anulación y PDF de recibos; saldo de la cuenta operadora            | viem, BullMQ, canonicalize, pdfkit |
-| notificaciones | Plantillas y envío de correos                                                                       | Nodemailer, BullMQ                 |
-| reportes       | Conciliación por aseguradora y cartera vencida; exportación CSV y PDF                               | pdfkit                             |
-| auditoria      | Registro y consulta de la bitácora de acciones                                                      | Prisma (solo inserción)            |
+| **Módulo**     | **Responsabilidad**                                                                                    | **Librerías de soporte**           |
+|----------------|--------------------------------------------------------------------------------------------------------|------------------------------------|
+| auth           | Inicio y cierre de sesión, renovación de tokens, recuperación de contraseña, cierre por inactividad    | @nestjs/jwt, passport, argon2      |
+| usuarios       | Cuentas del personal y de clientes, aceptación de la política de datos                                 | Prisma                             |
+| clientes       | Registro, consulta e importación de clientes                                                           | Prisma, exceljs                    |
+| polizas        | Aseguradoras, pólizas, plan de cuotas, vencimientos y catálogos                                        | Prisma, @nestjs/schedule           |
+| pagos          | Registro, validación, rechazo y aplicación de pagos a cuotas; comprobantes; pago en línea con PayPhone | Prisma, cliente HTTP (fetch)       |
+| recibos        | Emisión, anclaje, verificación, anulación y PDF de recibos; saldo de la cuenta operadora               | viem, BullMQ, canonicalize, pdfkit |
+| notificaciones | Plantillas y envío de correos                                                                          | Nodemailer, BullMQ                 |
+| reportes       | Conciliación por aseguradora y cartera vencida; exportación CSV y PDF                                  | pdfkit                             |
+| auditoria      | Registro y consulta de la bitácora de acciones                                                         | Prisma (solo inserción)            |
 
 ## 6.2. Componentes del módulo Blockchain
 <img src="media/img5.png" style="width:6.5in;height:2.22753in" />
@@ -215,17 +220,17 @@ El SRPP es una aplicación web para el registro de pagos de primas de Oasis Segu
 
 **Tabla 6-3:** Componentes del módulo Blockchain
 
-| **Componente**                                   | **Capa**                | **Responsabilidad**                                                |
-|--------------------------------------------------|-------------------------|--------------------------------------------------------------------|
-| RecibosController                                | Presentación            | Consulta de recibos, reintento y anulación (usuarios autenticados) |
-| VerificacionPublicaController                    | Presentación            | Verificación pública por código                                    |
-| AnclajeProcessor                                 | Infraestructura (cola)  | Consume la cola anclaje-recibos y ejecuta AnclarRecibo             |
-| BarridoPendientesTask                            | Infraestructura (tarea) | Reencola recibos pendientes cada 30 segundos                       |
-| EmitirRecibo / AnclarRecibo / VerificarRecibo    | Aplicación              | Casos de uso del ciclo del recibo                                  |
-| Recibo, EstadoRecibo, HashRecibo                 | Dominio                 | Entidad, máquina de estados y objeto de valor del hash             |
-| RegistroRecibosPort → ViemRegistroRecibosAdapter | Puerto → adaptador      | Operaciones sobre el contrato mediante viem                        |
-| RecibosRepositoryPort → PrismaRecibosRepository  | Puerto → adaptador      | Persistencia de recibos                                            |
-| ColaAnclajePort → BullMqColaAnclajeAdapter       | Puerto → adaptador      | Encolado de trabajos de anclaje                                    |
+| **Componente**                                   | **Capa**                | **Responsabilidad**                                                                              |
+|--------------------------------------------------|-------------------------|--------------------------------------------------------------------------------------------------|
+| RecibosController                                | Presentación            | Consulta de recibos, reintento y anulación                                                       |
+| VerificacionRecibosController                    | Presentación            | Verificación por código para usuarios autenticados; el cliente solo verifica sus propios recibos |
+| AnclajeProcessor                                 | Infraestructura (cola)  | Consume la cola anclaje-recibos y ejecuta AnclarRecibo                                           |
+| BarridoPendientesTask                            | Infraestructura (tarea) | Reencola recibos pendientes cada 30 segundos                                                     |
+| EmitirRecibo / AnclarRecibo / VerificarRecibo    | Aplicación              | Casos de uso del ciclo del recibo                                                                |
+| Recibo, EstadoRecibo, HashRecibo                 | Dominio                 | Entidad, máquina de estados y objeto de valor del hash                                           |
+| RegistroRecibosPort → ViemRegistroRecibosAdapter | Puerto → adaptador      | Operaciones sobre el contrato mediante viem                                                      |
+| RecibosRepositoryPort → PrismaRecibosRepository  | Puerto → adaptador      | Persistencia de recibos                                                                          |
+| ColaAnclajePort → BullMqColaAnclajeAdapter       | Puerto → adaptador      | Encolado de trabajos de anclaje                                                                  |
 
 ## 6.3. Estructura del repositorio
 ```text
@@ -265,10 +270,10 @@ oasis-seguros/
 
 - Pasos 5 a 13: anclaje en el worker; cada cambio de estado registra su marca de tiempo (creadoEn, enviadoEn, ancladoEn).
 
-## 7.2. Verificación pública
+## 7.2. Verificación de un recibo
 <img src="media/img7.png" style="width:6.3in;height:3.27268in" />
 
-**Ilustración 7-2:** Secuencia de verificación pública de un recibo  
+**Ilustración 7-2:** Secuencia de verificación de un recibo por un usuario autenticado  
 *(Diagrama: `arquitectura_img/ilustracion-7-2.png`)*
 
 **Tabla 7-1:** Resultados de la verificación
@@ -279,7 +284,7 @@ oasis-seguros/
 | No coincide   | El hash recalculado difiere del registrado                    |
 | En proceso    | El recibo aún no está anclado                                 |
 | Anulado       | El recibo fue anulado en el contrato                          |
-| No encontrado | El código no existe                                           |
+| No encontrado | El código no existe o el recibo pertenece a otro cliente      |
 
 ## 7.3. Estados del recibo
 <img src="media/img8.png" style="width:6.5in;height:1.41401in" />
@@ -310,12 +315,28 @@ oasis-seguros/
 ## 7.5. Tareas programadas
 **Tabla 7-4:** Tareas programadas del worker
 
-| **Tarea**                     | **Frecuencia**   | **Acción**                                                               |
-|-------------------------------|------------------|--------------------------------------------------------------------------|
-| Barrido de recibos pendientes | Cada 30 segundos | Reencola recibos en PENDIENTE_ANCLAJE con más de 60 segundos             |
-| Vencimiento de cuotas         | Diaria, 00:05    | Marca como VENCIDA las cuotas no pagadas con fecha de vencimiento pasada |
-| Recordatorios de vencimiento  | Diaria, 08:00    | Encola un correo por cada cuota que vence en 5 días                      |
-| Saldo de la cuenta operadora  | Cada hora        | Consulta el saldo de POL y registra una alerta si es menor al umbral     |
+| **Tarea**                                 | **Frecuencia**   | **Acción**                                                                                                       |
+|-------------------------------------------|------------------|------------------------------------------------------------------------------------------------------------------|
+| Barrido de recibos pendientes             | Cada 30 segundos | Reencola recibos en PENDIENTE_ANCLAJE con más de 60 segundos                                                     |
+| Vencimiento de cuotas                     | Diaria, 00:05    | Marca como VENCIDA las cuotas no pagadas con fecha de vencimiento pasada                                         |
+| Recordatorios de vencimiento              | Diaria, 08:00    | Encola un correo por cada cuota que vence en 5 días                                                              |
+| Saldo de la cuenta operadora              | Cada hora        | Consulta el saldo de POL y registra una alerta si es menor al umbral                                             |
+| Transacciones de pago en línea pendientes | Cada 5 minutos   | Consulta en la pasarela las transacciones PENDIENTE con más de 10 minutos y las cierra como APROBADO o CANCELADO |
+
+## 7.6. Pago en línea con PayPhone
+El cliente paga sus cuotas desde el portal mediante la Cajita de Pagos de PayPhone. El SRPP nunca recibe los datos de la tarjeta: la pasarela los captura y el backend solo confirma el resultado.
+
+- **Inicio:** el cliente elige las cuotas; el API valida RN-01 y RN-02 y crea una TransaccionPagoLinea en estado PENDIENTE con un clientTransactionId único.
+
+- **Cobro:** la SPA muestra la Cajita de Pagos con el monto en centavos y el clientTransactionId; el cliente ingresa su tarjeta en el componente de PayPhone.
+
+- **Retorno:** PayPhone redirige a la SPA con el identificador de la transacción, que la SPA envía al API.
+
+- **Confirmación:** el API llama al servicio de confirmación de PayPhone con su token; si la respuesta es aprobada, en una sola transacción de base de datos registra el pago VALIDADO, lo aplica a las cuotas y crea el recibo PENDIENTE_ANCLAJE (outbox). Desde ese punto, el anclaje sigue el flujo de la sección 7.1.
+
+- **Idempotencia:** una transacción APROBADO no se vuelve a procesar; una cancelada o rechazada pasa a CANCELADO sin registrar pagos.
+
+- **Entornos:** durante el proyecto se usa el entorno de pruebas de PayPhone; producción solo cambia el token y el identificador de la tienda (RNF-31).
 
 # 8. VISTA DE DESPLIEGUE
 <img src="media/img9.png" style="width:6.4in;height:4.26667in" />
@@ -363,6 +384,8 @@ oasis-seguros/
 
 - BitacoraAuditoria admite solo inserciones.
 
+- TransaccionPagoLinea registra cada intento de pago en línea con su clientTransactionId, su estado y la respuesta de la pasarela; no almacena datos de tarjeta.
+
 ### 9.0. Transcripción textual del modelo de datos (Ilustración 9-1)
 
 Todas las entidades usan `id: uuid` como clave primaria. Montos en `Decimal(12,2)`.
@@ -378,9 +401,10 @@ Todas las entidades usan `id: uuid` como clave primaria. Montos en `Decimal(12,2
 | Poliza | numero (único), clienteId, aseguradoraId, ramoId (FK), primaTotal, fechaInicio, fechaFin, estado (VIGENTE \| VENCIDA \| CANCELADA) | 1:N Cuota; 1:N Pago |
 | Cuota | polizaId (FK), numero (int), valor, valorPagado, fechaVencimiento, estado (PENDIENTE \| PARCIAL \| PAGADA \| VENCIDA) | N:1 Poliza; 1:N AplicacionPago |
 | MetodoPago | nombre, activo | 1:N Pago |
-| Pago | polizaId (FK), monto, fechaPago, metodoPagoId (FK), referencia, comprobanteRuta?, estado (REGISTRADO \| VALIDADO \| RECHAZADO), registradoPorId, validadoPorId (FK), validadoEn, motivoRechazo | N:1 Poliza; 1:N AplicacionPago; 1:0..1 Recibo |
+| Pago | polizaId (FK), monto, fechaPago, metodoPagoId (FK), referencia, comprobanteRuta?, estado (REGISTRADO \| VALIDADO \| RECHAZADO), registradoPorId, validadoPorId (FK), validadoEn, motivoRechazo | N:1 Poliza; 1:N AplicacionPago; 1:0..1 Recibo; 0..1:1 TransaccionPagoLinea |
 | AplicacionPago | pagoId (FK), cuotaId (FK), monto | N:1 Pago; N:1 Cuota |
-| Recibo | codigo (único, público), pagoId (FK, único), idOnchain, hashRecibo, sal (hex), payloadCanonico (text), estado (PENDIENTE_ANCLAJE \| ENVIADO \| ANCLADO \| FALLIDO \| ANULADO), txHash, blockNumber, gasUsed, creadoEn, enviadoEn, ancladoEn | 1:0..1 con Pago |
+| Recibo | codigo (único, de verificación), pagoId (FK, único), idOnchain, hashRecibo, sal (hex), payloadCanonico (text), estado (PENDIENTE_ANCLAJE \| ENVIADO \| ANCLADO \| FALLIDO \| ANULADO), txHash, blockNumber, gasUsed, creadoEn, enviadoEn, ancladoEn | 1:0..1 con Pago |
+| TransaccionPagoLinea | polizaId (FK), pagoId? (FK, único), clientTransactionId (único), monto, estado (PENDIENTE \| APROBADO \| CANCELADO), idPasarela, respuestaPasarela (json), creadoEn, confirmadoEn | N:1 Poliza; 0..1:1 Pago |
 
 ## 9.1. Interfaz del contrato RegistroRecibos
 **Tabla 9-1:** Interfaz del contrato RegistroRecibos
@@ -405,13 +429,15 @@ Todas las entidades usan `id: uuid` como clave primaria. Montos en `Decimal(12,2
 ## 10.2. Seguridad
 - **Autenticación:** token de acceso JWT de 15 minutos y token de renovación de 7 días en cookie httpOnly, con rotación.
 
-- **Autorización:** guard de roles en cada endpoint; el cliente accede solo a sus datos.
+- **Autorización:** guard de roles en cada endpoint, incluida la verificación de recibos; el cliente accede solo a sus datos. No existen endpoints públicos de negocio: solo el inicio de sesión y la recuperación de contraseña se atienden sin token.
 
 - **Contraseñas:** argon2.
 
 - **Borde:** HTTPS, cabeceras de seguridad (helmet y Caddy) y límite de solicitudes por IP.
 
 - **Claves:** la clave de la cuenta operadora solo existe en el worker; los secretos no se versionan.
+
+- **Pagos en línea:** el token de PayPhone solo existe en el API; la confirmación se hace desde el backend y el SRPP no recibe datos de tarjeta.
 
 - **Recuperación de contraseña:** token de un solo uso, almacenado como hash, válido 30 minutos.
 
@@ -436,30 +462,36 @@ Todas las entidades usan `id: uuid` como clave primaria. Montos en `Decimal(12,2
 ## 10.5. Pruebas
 **Tabla 10-1:** Niveles de prueba
 
-| **Nivel**              | **Alcance**                                                         | **Herramienta**           |
-|------------------------|---------------------------------------------------------------------|---------------------------|
-| Contrato               | Roles, duplicados, pausa, eventos, fuzzing de registrar             | Hardhat 3                 |
-| Dominio y casos de uso | Reglas de negocio con puertos simulados                             | Jest                      |
-| Integración            | Repositorios contra PostgreSQL; adaptador viem contra el nodo local | Jest y nodo Hardhat       |
-| Extremo a extremo      | Validar pago, anclar recibo y verificarlo                           | Supertest y Playwright    |
-| Rendimiento            | Tiempo de respuesta, rendimiento, capacidad y recursos              | k6, cAdvisor y Prometheus |
+| **Nivel**              | **Alcance**                                                                                              | **Herramienta**           |
+|------------------------|----------------------------------------------------------------------------------------------------------|---------------------------|
+| Contrato               | Roles, duplicados, pausa, eventos, fuzzing de registrar                                                  | Hardhat 3                 |
+| Dominio y casos de uso | Reglas de negocio con puertos simulados                                                                  | Jest                      |
+| Integración            | Repositorios contra PostgreSQL; adaptador viem contra el nodo local                                      | Jest y nodo Hardhat       |
+| Extremo a extremo      | Validar pago, anclar recibo y verificarlo con sesión; pago en línea en el entorno de pruebas de PayPhone | Supertest y Playwright    |
+| Rendimiento            | Tiempo de respuesta, rendimiento, capacidad y recursos                                                   | k6, cAdvisor y Prometheus |
 
 # 11. DECISIONES TÉCNICAS
 Cada decisión se registra en docs/adr/ del repositorio.
 
 **Tabla 11-1:** Registro de decisiones técnicas
 
-| **ID**  | **Decisión**                                                                   | **Estado** |
-|---------|--------------------------------------------------------------------------------|------------|
-| ADR-001 | Monolito modular en contenedores, desplegado con Docker Compose en un VPS      | Aceptada   |
-| ADR-002 | Arquitectura hexagonal por módulo de negocio en el backend                     | Aceptada   |
-| ADR-003 | Red Polygon PoS; red de pruebas Amoy                                           | Aceptada   |
-| ADR-004 | En la cadena se registran solo un identificador opaco y un hash con sal        | Aceptada   |
-| ADR-005 | Anclaje asíncrono con outbox transaccional y cola BullMQ                       | Aceptada   |
-| ADR-006 | Firma de transacciones en el servidor con una cuenta operadora del bróker      | Aceptada   |
-| ADR-007 | API y worker como procesos y contenedores separados                            | Aceptada   |
-| ADR-008 | Contrato inmutable, sin proxy actualizable                                     | Aceptada   |
-| ADR-009 | Caddy como punto de entrada único: SPA, proxy del API y TLS en el mismo origen | Aceptada   |
+| **ID**  | **Decisión**                                                                               | **Estado** |
+|---------|--------------------------------------------------------------------------------------------|------------|
+| ADR-001 | Monolito modular en contenedores, desplegado con Docker Compose en un VPS                  | Aceptada   |
+| ADR-002 | Arquitectura hexagonal por módulo de negocio en el backend                                 | Aceptada   |
+| ADR-003 | Red Polygon PoS; red de pruebas Amoy                                                       | Aceptada   |
+| ADR-004 | En la cadena se registran solo un identificador opaco y un hash con sal                    | Aceptada   |
+| ADR-005 | Anclaje asíncrono con outbox transaccional y cola BullMQ                                   | Aceptada   |
+| ADR-006 | Firma de transacciones en el servidor con una cuenta operadora del bróker                  | Aceptada   |
+| ADR-007 | API y worker como procesos y contenedores separados                                        | Aceptada   |
+| ADR-008 | Contrato inmutable, sin proxy actualizable                                                 | Aceptada   |
+| ADR-009 | Caddy como punto de entrada único: SPA, proxy del API y TLS en el mismo origen             | Aceptada   |
+| ADR-010 | Modelo de datos completo en la migración inicial                                           | Aceptada   |
+| ADR-011 | Alcance mínimo de compose.dev.yaml en el Sprint 1                                          | Aceptada   |
+| ADR-012 | Endpoint /health con Terminus, dentro del prefijo /api/v1                                  | Aceptada   |
+| ADR-013 | Bitácora de auditoría declarativa y de solo inserción                                      | Aceptada   |
+| ADR-014 | Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend              | Aceptada   |
+| ADR-015 | Acceso al sistema solo con inicio de sesión; sin página pública de verificación de recibos | Aceptada   |
 
 # 12. ESCENARIOS DE CALIDAD
 **Tabla 12-1:** Escenarios de calidad
@@ -472,21 +504,24 @@ Cada decisión se registra en docs/adr/ del repositorio.
 | EC-04  | Fiabilidad     | El worker se detiene mientras se validan 10 pagos y luego se reinicia | 10 de 10 anclados, sin duplicados                                              |
 | EC-05  | Fiabilidad     | El RPC principal no responde                                          | Uso del RPC de respaldo o reintento; ningún FALLIDO por caídas menores a 5 min |
 | EC-06  | Seguridad      | Acceso no autorizado al contenedor del API                            | La clave de firma no está presente                                             |
-| EC-07  | Seguridad      | Alteración del monto de un recibo en la base de datos                 | La verificación pública muestra "No coincide"                                  |
+| EC-07  | Seguridad      | Alteración del monto de un recibo en la base de datos                 | La verificación del recibo muestra "No coincide"                               |
 | EC-08  | Mantenibilidad | Cambio de Amoy a otra red EVM                                         | Solo cambian variables de entorno y el despliegue del contrato                 |
 | EC-09  | Recursos       | Operación normal en el VPS                                            | CPU ≤ 70 %; API + worker ≤ 1 GB de memoria                                     |
+| EC-10  | Seguridad      | Un cliente intenta verificar el recibo de otro cliente                | Respuesta "Recibo no encontrado"; sin datos del otro cliente                   |
+| EC-11  | Fiabilidad     | La confirmación de una misma transacción de PayPhone llega dos veces  | Un solo pago y un solo recibo                                                  |
 
 # 13. RIESGOS TÉCNICOS Y LIMITACIONES
 **Tabla 13-1:** Riesgos técnicos
 
-| **Riesgo**                                       | **Probabilidad** | **Impacto**                         | **Mitigación**                                          |
-|--------------------------------------------------|------------------|-------------------------------------|---------------------------------------------------------|
-| Caída o degradación de Amoy o Polygon PoS        | Media            | Demora en el anclaje                | Cola persistente, reintentos y barrido de pendientes    |
-| Límite o caída del plan gratuito de Alchemy      | Baja             | Anclaje detenido                    | RPC público de respaldo (transporte fallback de viem)   |
-| Saldo insuficiente de POL en la cuenta operadora | Media            | Transacciones rechazadas            | Monitoreo del saldo y recarga desde el faucet o compra  |
-| Filtración de la clave operadora                 | Baja             | Registros no autorizados            | Revocar REGISTRADOR_ROLE y rotar la clave               |
-| Pérdida de datos del servidor                    | Baja             | Pérdida del registro operativo      | Respaldo diario externo y procedimiento de restauración |
-| Correos marcados como spam                       | Media            | El cliente no recibe notificaciones | Dominio con SPF, DKIM y DMARC configurados              |
+| **Riesgo**                                       | **Probabilidad** | **Impacto**                         | **Mitigación**                                                                                 |
+|--------------------------------------------------|------------------|-------------------------------------|------------------------------------------------------------------------------------------------|
+| Caída o degradación de Amoy o Polygon PoS        | Media            | Demora en el anclaje                | Cola persistente, reintentos y barrido de pendientes                                           |
+| Límite o caída del plan gratuito de Alchemy      | Baja             | Anclaje detenido                    | RPC público de respaldo (transporte fallback de viem)                                          |
+| Saldo insuficiente de POL en la cuenta operadora | Media            | Transacciones rechazadas            | Monitoreo del saldo y recarga desde el faucet o compra                                         |
+| Filtración de la clave operadora                 | Baja             | Registros no autorizados            | Revocar REGISTRADOR_ROLE y rotar la clave                                                      |
+| Pérdida de datos del servidor                    | Baja             | Pérdida del registro operativo      | Respaldo diario externo y procedimiento de restauración                                        |
+| Correos marcados como spam                       | Media            | El cliente no recibe notificaciones | Dominio con SPF, DKIM y DMARC configurados                                                     |
+| Indisponibilidad de la pasarela PayPhone         | Baja             | El cliente no puede pagar en línea  | El cliente reporta el pago con comprobante; las transacciones pendientes se consultan de nuevo |
 
 ## 13.1. Limitaciones conocidas
 - La clave operadora se almacena como secreto de Docker; para operar en Polygon mainnet se trasladará a un servicio KMS.
