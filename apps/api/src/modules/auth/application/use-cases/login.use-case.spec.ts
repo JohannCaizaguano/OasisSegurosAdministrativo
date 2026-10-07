@@ -44,6 +44,7 @@ function crearDependencias(usuario: UsuarioCredenciales | null, passwordValida =
     tocar: jest.fn(),
     cerrar: jest.fn(),
     cerrarDemas: jest.fn(),
+    cerrarTodas: jest.fn(),
   };
   return { usuarios, hasher, emisor, almacen, familia };
 }

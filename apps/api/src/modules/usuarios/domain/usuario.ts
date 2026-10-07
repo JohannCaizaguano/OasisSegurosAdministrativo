@@ -5,6 +5,7 @@ import { Entity } from '../../../shared-kernel/entity';
 export interface PropsUsuario {
   id: string;
   email: string;
+  nombre: string;
   rol: Rol;
   activo: boolean;
   clienteId: string | null;
@@ -23,6 +24,10 @@ export class Usuario extends Entity<PropsUsuario> {
 
   get email(): string {
     return this.props.email;
+  }
+
+  get nombre(): string {
+    return this.props.nombre;
   }
 
   get rol(): Rol {

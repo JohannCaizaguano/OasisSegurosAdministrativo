@@ -11,4 +11,6 @@ export * from './schemas/poliza.schema';
 export * from './schemas/pago.schema';
 export * from './schemas/recibo.schema';
 export * from './schemas/auditoria.schema';
+export * from './schemas/usuario.schema';
+export * from './validacion/identificacion';
 export * from './abi';

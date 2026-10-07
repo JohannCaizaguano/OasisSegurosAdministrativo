@@ -37,6 +37,9 @@ const ETIQUETAS_ACCION: Record<AccionAuditoria, string> = {
   REINTENTAR: 'Reintento',
   INICIAR_SESION: 'Inicio de sesión',
   IMPORTAR: 'Importación',
+  DESACTIVAR: 'Desactivación',
+  REACTIVAR: 'Reactivación',
+  RESTABLECER_CONTRASENA: 'Restablecimiento de contraseña',
 };
 
 const ETIQUETAS_ENTIDAD: Record<string, string> = { Poliza: 'Póliza' };
@@ -107,7 +110,7 @@ export function BitacoraPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={TODOS}>Todos los usuarios</SelectItem>
-              {(usuarios.data?.data ?? []).map((usuario) => (
+              {(usuarios.data ?? []).map((usuario) => (
                 <SelectItem key={usuario.id} value={usuario.id}>
                   {usuario.email}
                 </SelectItem>

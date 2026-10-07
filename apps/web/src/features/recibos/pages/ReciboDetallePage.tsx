@@ -41,7 +41,7 @@ export function ReciboDetallePage() {
 
   return (
     <div className="grid gap-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button asChild variant="ghost" size="sm">
           <Link to="/recibos">
             <ArrowLeft className="size-4" /> Recibos

@@ -33,6 +33,5 @@ export interface ClientesRepositoryPort {
   listar(filtros: FiltrosClientes): Promise<PaginaClientes>;
   buscarPorId(id: string): Promise<Cliente | null>;
   actualizar(id: string, datos: DatosActualizarCliente): Promise<Cliente>;
-  eliminar(id: string): Promise<void>;
   existeIdentificacion(identificacion: string, exceptoId?: string): Promise<boolean>;
 }

@@ -34,7 +34,7 @@ export function PolizasPage() {
         </p>
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">
             {consulta.data ? `${consulta.data.meta.total} pólizas` : 'Pólizas'}

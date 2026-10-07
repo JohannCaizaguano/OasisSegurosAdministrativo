@@ -36,7 +36,7 @@ export function RecibosPage() {
         </p>
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">
             {consulta.data ? `${consulta.data.meta.total} recibos` : 'Recibos'}
@@ -69,7 +69,10 @@ export function RecibosPage() {
                     <TableCell>
                       <Badge variant={varianteEstado(recibo.estado)}>{recibo.estado}</Badge>
                     </TableCell>
-                    <TableCell className="max-w-[180px] truncate font-mono text-xs">
+                    <TableCell
+                      className="max-w-[180px] truncate font-mono text-xs"
+                      title={recibo.txHash ?? undefined}
+                    >
                       {recibo.txHash ?? '—'}
                     </TableCell>
                     <TableCell>{formatearFecha(recibo.creadoEn)}</TableCell>

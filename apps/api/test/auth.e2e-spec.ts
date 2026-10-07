@@ -37,6 +37,7 @@ describe('Autenticación (e2e)', () => {
       data: {
         email: `e2e.auth.${Date.now()}.${contadorUsuario}@example.com`,
         passwordHash: await hash(PASSWORD),
+        nombre: `Usuario E2E ${contadorUsuario}`,
         rol,
         activo,
       },

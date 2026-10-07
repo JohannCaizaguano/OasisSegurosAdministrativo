@@ -18,8 +18,15 @@ export interface PaginaBitacora {
   total: number;
 }
 
+export interface UsuarioBitacora {
+  id: string;
+  email: string;
+}
+
 /** Solo inserción y consulta: la bitácora no se modifica ni se elimina (RN-17). */
 export interface BitacoraRepositoryPort {
   registrar(registro: NuevoRegistroAuditoria): Promise<void>;
   listar(filtros: FiltrosBitacora): Promise<PaginaBitacora>;
+  /** Usuarios que aparecen en la bitácora (incluye CLIENTE), para el filtro de HU-45. */
+  listarUsuarios(): Promise<UsuarioBitacora[]>;
 }

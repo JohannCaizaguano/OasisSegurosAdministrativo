@@ -1,8 +1,7 @@
 import { useState } from 'react';
 
-import { AvisoError, EsqueletoTabla } from '@/components/DataState';
+import { TablaDatos } from '@/components/TablaDatos';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -15,11 +14,11 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { formatearFecha } from '@/lib/format';
 
 import { FormularioCliente } from '../components/FormularioCliente';
 import { useClientes } from '../hooks';
@@ -27,6 +26,9 @@ import { useClientes } from '../hooks';
 export function ClientesPage() {
   const [abierto, setAbierto] = useState(false);
   const consulta = useClientes();
+
+  const clientes = consulta.data?.data ?? [];
+  const meta = consulta.data?.meta;
 
   return (
     <div className="grid gap-4">
@@ -53,47 +55,40 @@ export function ClientesPage() {
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            {consulta.data ? `${consulta.data.meta.total} clientes` : 'Clientes'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {consulta.isLoading ? (
-            <EsqueletoTabla />
-          ) : consulta.isError ? (
-            <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Identificación</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Correo</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {consulta.data?.data.length === 0 && (
-                  <TableEmpty mensaje="Sin clientes registrados" />
-                )}
-                {consulta.data?.data.map((cliente) => (
-                  <TableRow key={cliente.id}>
-                    <TableCell className="font-mono text-xs">{cliente.identificacion}</TableCell>
-                    <TableCell>
-                      {cliente.razonSocial ??
-                        [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ')}
-                    </TableCell>
-                    <TableCell>{cliente.email}</TableCell>
-                    <TableCell>{cliente.telefono ?? '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <TablaDatos
+        titulo={meta ? `${meta.total} clientes` : 'Clientes'}
+        cargando={consulta.isLoading}
+        error={consulta.error}
+        alReintentar={() => void consulta.refetch()}
+        vacio="Sin clientes registrados"
+        hayDatos={clientes.length > 0}
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Identificación</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead>Correo</TableHead>
+              <TableHead>Teléfono</TableHead>
+              <TableHead>Registrado</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clientes.map((cliente) => (
+              <TableRow key={cliente.id}>
+                <TableCell className="font-mono text-xs">{cliente.identificacion}</TableCell>
+                <TableCell>
+                  {cliente.razonSocial ??
+                    [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ')}
+                </TableCell>
+                <TableCell>{cliente.email}</TableCell>
+                <TableCell>{cliente.telefono ?? '—'}</TableCell>
+                <TableCell>{formatearFecha(cliente.createdAt)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TablaDatos>
     </div>
   );
 }

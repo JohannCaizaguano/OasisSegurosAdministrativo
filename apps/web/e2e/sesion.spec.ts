@@ -1,5 +1,6 @@
-import type { Page } from '@playwright/test';
 import { expect, test } from '@playwright/test';
+
+import { iniciarSesion } from './ayudas';
 
 /**
  * E2E de sesión: "atrás" tras cerrar sesión (HU-02) e inactividad con reloj
@@ -8,18 +9,10 @@ import { expect, test } from '@playwright/test';
 const EMAIL = process.env.E2E_EMAIL ?? 'operador@oasis.com';
 const PASSWORD = process.env.E2E_PASSWORD ?? 'Operador.Oasis1';
 
-async function iniciarSesion(page: Page) {
-  await page.goto('/login');
-  await page.getByLabel('Correo electrónico').fill(EMAIL);
-  await page.getByLabel('Contraseña').fill(PASSWORD);
-  await page.getByTestId('boton-login').click();
-  await expect(page.getByRole('heading', { name: /Hola,/ })).toBeVisible();
-}
-
 test('volver atrás después de cerrar sesión no muestra datos protegidos', async ({ page }) => {
   // IP propia de la prueba: el límite de 5 inicios/min por IP no cruza pruebas (D25).
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.3.0.11' });
-  await iniciarSesion(page);
+  await iniciarSesion(page, EMAIL, PASSWORD);
 
   await page.getByRole('link', { name: 'Pagos', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos', exact: true })).toBeVisible();
@@ -38,7 +31,7 @@ test('volver atrás después de cerrar sesión no muestra datos protegidos', asy
 test('avisa a los 29 minutos sin actividad y cierra la sesión a los 30', async ({ page }) => {
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.3.0.12' });
   await page.clock.install();
-  await iniciarSesion(page);
+  await iniciarSesion(page, EMAIL, PASSWORD);
 
   await page.clock.fastForward('29:00');
   const dialogo = page.getByRole('alertdialog');
@@ -53,7 +46,7 @@ test('avisa a los 29 minutos sin actividad y cierra la sesión a los 30', async 
 test('Continuar mantiene la sesión', async ({ page }) => {
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.3.0.13' });
   await page.clock.install();
-  await iniciarSesion(page);
+  await iniciarSesion(page, EMAIL, PASSWORD);
 
   await page.clock.fastForward('29:00');
   const dialogo = page.getByRole('alertdialog');

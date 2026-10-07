@@ -25,6 +25,5 @@ export interface AseguradorasRepositoryPort {
   listar(filtros: FiltrosAseguradoras): Promise<PaginaAseguradoras>;
   buscarPorId(id: string): Promise<Aseguradora | null>;
   actualizar(id: string, datos: DatosActualizarAseguradora): Promise<Aseguradora>;
-  eliminar(id: string): Promise<void>;
   existeRuc(ruc: string, exceptoId?: string): Promise<boolean>;
 }

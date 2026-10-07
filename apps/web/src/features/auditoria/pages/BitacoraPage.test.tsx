@@ -49,13 +49,7 @@ function montar() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  listarUsuarios.mockResolvedValue(
-    respuesta([], { total: 0 }) as unknown as RespuestaPaginada<{
-      id: string;
-      email: string;
-      rol: 'ADMIN' | 'OPERADOR' | 'CLIENTE';
-    }>,
-  );
+  listarUsuarios.mockResolvedValue([]);
 });
 
 afterEach(cleanup);

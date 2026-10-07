@@ -5,7 +5,7 @@ import {
   idUuidParamSchema,
   listarAseguradorasQuerySchema,
 } from '@oasis/shared';
-import { Controller, Delete, Get, HttpCode, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
@@ -14,7 +14,6 @@ import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-valida
 import {
   ActualizarAseguradoraUseCase,
   CrearAseguradoraUseCase,
-  EliminarAseguradoraUseCase,
   ListarAseguradorasUseCase,
   ObtenerAseguradoraUseCase,
 } from '../../application/use-cases/aseguradoras.use-cases';
@@ -22,24 +21,24 @@ import type { Aseguradora } from '../../domain/aseguradora';
 
 @ApiTags('aseguradoras')
 @Controller('aseguradoras')
-@Roles('ADMIN', 'OPERADOR')
 export class AseguradorasController {
   constructor(
     private readonly crearAseguradora: CrearAseguradoraUseCase,
     private readonly listarAseguradoras: ListarAseguradorasUseCase,
     private readonly obtenerAseguradora: ObtenerAseguradoraUseCase,
     private readonly actualizarAseguradora: ActualizarAseguradoraUseCase,
-    private readonly eliminarAseguradora: EliminarAseguradoraUseCase,
   ) {}
 
   @Post()
+  @Roles('ADMIN')
   @Auditar('CREAR', 'Aseguradora')
-  @ApiOperation({ summary: 'Crea una aseguradora' })
+  @ApiOperation({ summary: 'Crea una aseguradora (ADMIN)' })
   async crear(@ZodBody(crearAseguradoraSchema) datos: { nombre: string; ruc: string }) {
     return this.aRespuesta(await this.crearAseguradora.ejecutar(datos));
   }
 
   @Get()
+  @Roles('ADMIN', 'OPERADOR')
   @ApiOperation({ summary: 'Lista aseguradoras' })
   async listar(
     @ZodQuery(listarAseguradorasQuerySchema) query: { page: number; pageSize: number; q?: string },
@@ -61,27 +60,21 @@ export class AseguradorasController {
   }
 
   @Get(':id')
+  @Roles('ADMIN', 'OPERADOR')
   @ApiOperation({ summary: 'Obtiene una aseguradora por id' })
   async obtener(@ZodParam(idUuidParamSchema) params: { id: string }) {
     return this.aRespuesta(await this.obtenerAseguradora.ejecutar(params.id));
   }
 
   @Patch(':id')
+  @Roles('ADMIN')
   @Auditar('MODIFICAR', 'Aseguradora')
-  @ApiOperation({ summary: 'Actualiza una aseguradora' })
+  @ApiOperation({ summary: 'Actualiza una aseguradora (ADMIN)' })
   async actualizar(
     @ZodParam(idUuidParamSchema) params: { id: string },
     @ZodBody(actualizarAseguradoraSchema) datos: { nombre?: string; ruc?: string },
   ) {
     return this.aRespuesta(await this.actualizarAseguradora.ejecutar(params.id, datos));
-  }
-
-  @Delete(':id')
-  @Auditar('ELIMINAR', 'Aseguradora')
-  @HttpCode(204)
-  @ApiOperation({ summary: 'Elimina una aseguradora sin pólizas' })
-  async eliminar(@ZodParam(idUuidParamSchema) params: { id: string }): Promise<void> {
-    await this.eliminarAseguradora.ejecutar(params.id);
   }
 
   private aRespuesta(aseguradora: Aseguradora): AseguradoraRespuesta {

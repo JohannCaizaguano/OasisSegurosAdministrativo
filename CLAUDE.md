@@ -61,6 +61,8 @@ leyendo varios archivos.
   `TTL_SESION_SEGUNDOS` de `@oasis/shared`; ambos tokens llevan el `sid`.
 - `JwtEstrategia` hace `EXPIRE` en cada petición: 401 si la llave no existe y 502 si Redis no
   responde en 2 s (`shared-kernel/tiempo-limite.ts`).
+- `cerrarTodas(usuarioId)` recorre con `SCAN` y borra todas las sesiones del usuario; lo usan
+  desactivar, cambiar el rol y restablecer la contraseña (HU-04).
 - La rotación del refresco es un script Lua en `RedisAlmacenSesionesAdapter` que conserva el `exp`
   de la familia y revoca la sesión ante un `jti` reutilizado.
 - En la SPA: Web Locks (`oasis-refresco`) serializa el refresco entre pestañas; `useInactividad`
@@ -77,7 +79,8 @@ leyendo varios archivos.
   `pnpm --filter @oasis/api build` o `pnpm --filter @oasis/api exec prisma generate`. El esquema ya
   contiene el modelo completo de la arquitectura, incluidas tablas de historias futuras (ADR-010),
   salvo `TransaccionPagoLinea` (ADR-014), que llega con HU-48 en S12; no tiene borrados en cascada
-  (RN-09).
+  (RN-09). `Usuario.nombre` es una columna con el nombre visible de cada cuenta (S4), que auth lee
+  directamente.
 - `@oasis/shared` se consume compilado (`dist/`, CommonJS): tras cambiar `packages/shared/src`,
   ejecuta `pnpm --filter @oasis/shared build` para que el API y la SPA vean el cambio.
 
@@ -109,7 +112,8 @@ leyendo varios archivos.
   `cookieParser()` y `setGlobalPrefix('api/v1', { exclude: ['metrics'] })`; los flujos con
   anclaje levantan `WorkerModule` en el mismo proceso. Usuarios del seed: `admin@oasis.com` /
   `Admin.Oasis1`, `operador@oasis.com` / `Operador.Oasis1` y `cliente@oasis.com` /
-  `Cliente.Oasis1`.
+  `Cliente.Oasis1`. Para crear clientes por el API se usa `cedulaValida`/`rucSociedad` de
+  `test/identificaciones.ts` (RN-11, ADR-017), nunca valores fijos.
 - Los e2e activan `trust proxy` y cada caso envía su `X-Forwarded-For`; Playwright hace lo mismo
   con `page.setExtraHTTPHeaders`. El seed no restablece contraseñas (`update: {}`), así que las
   pruebas que las cambian crean su usuario.

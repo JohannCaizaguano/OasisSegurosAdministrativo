@@ -1,9 +1,18 @@
 import { z } from 'zod';
+import { validarIdentificacion } from '../validacion/identificacion';
 import { paginacionQuerySchema } from './common.schema';
 
 export const crearAseguradoraSchema = z.object({
-  nombre: z.string().min(2).max(200),
-  ruc: z.string().regex(/^\d{13}$/, 'El RUC debe tener 13 dígitos'),
+  nombre: z.string().trim().min(2).max(200),
+  ruc: z
+    .string()
+    .trim()
+    .superRefine((valor, ctx) => {
+      const mensaje = validarIdentificacion('RUC', valor);
+      if (mensaje) {
+        ctx.addIssue({ code: 'custom', message: mensaje });
+      }
+    }),
 });
 export type CrearAseguradoraInput = z.infer<typeof crearAseguradoraSchema>;
 

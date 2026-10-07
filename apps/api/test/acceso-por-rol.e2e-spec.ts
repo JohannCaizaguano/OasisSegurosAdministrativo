@@ -114,6 +114,7 @@ describe('Acceso por rol (e2e)', () => {
       data: {
         email: `cliente2.${sufijo}@example.com`,
         passwordHash: await hash(PASSWORD),
+        nombre: 'Otro Cliente',
         rol: 'CLIENTE',
         clienteId: otroCliente.id,
       },

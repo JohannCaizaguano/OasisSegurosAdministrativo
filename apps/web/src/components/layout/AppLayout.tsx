@@ -1,5 +1,6 @@
 import type { Rol } from '@oasis/shared';
 import {
+  Building2,
   FileText,
   LayoutDashboard,
   Menu,
@@ -7,6 +8,7 @@ import {
   ScanSearch,
   ScrollText,
   ShieldCheck,
+  UserCog,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -54,6 +56,8 @@ const ENLACES: Enlace[] = [
   },
   { a: '/clientes', texto: 'Clientes', icono: Users, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/polizas', texto: 'Pólizas', icono: ShieldCheck, roles: ['ADMIN', 'OPERADOR'] },
+  { a: '/aseguradoras', texto: 'Aseguradoras', icono: Building2, roles: ['ADMIN', 'OPERADOR'] },
+  { a: '/usuarios', texto: 'Usuarios', icono: UserCog, roles: ['ADMIN'] },
   { a: '/bitacora', texto: 'Bitácora', icono: ScrollText, roles: ['ADMIN'] },
 ];
 
@@ -170,7 +174,7 @@ export function AppLayout() {
             </DropdownMenu>
           </div>
         </header>
-        <main id="contenido" className="flex-1 p-4 sm:p-5">
+        <main id="contenido" className="min-w-0 flex-1 p-4 sm:p-5">
           <Outlet />
         </main>
       </div>

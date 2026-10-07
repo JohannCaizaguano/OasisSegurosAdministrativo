@@ -13,7 +13,10 @@ export class CrearAseguradoraUseCase {
 
   async ejecutar(datos: DatosCrearAseguradora): Promise<Aseguradora> {
     if (await this.aseguradoras.existeRuc(datos.ruc)) {
-      throw new ConflictoError(`Ya existe una aseguradora con el RUC ${datos.ruc}`);
+      throw new ConflictoError('Ya existe una aseguradora con ese RUC', {
+        campo: 'ruc',
+        motivo: 'RUC_DUPLICADO',
+      });
     }
     return this.aseguradoras.crear(datos);
   }
@@ -49,21 +52,12 @@ export class ActualizarAseguradoraUseCase {
     }
     if (datos.ruc && datos.ruc !== existente.ruc) {
       if (await this.aseguradoras.existeRuc(datos.ruc, id)) {
-        throw new ConflictoError(`Ya existe una aseguradora con el RUC ${datos.ruc}`);
+        throw new ConflictoError('Ya existe una aseguradora con ese RUC', {
+          campo: 'ruc',
+          motivo: 'RUC_DUPLICADO',
+        });
       }
     }
     return this.aseguradoras.actualizar(id, datos);
-  }
-}
-
-export class EliminarAseguradoraUseCase {
-  constructor(private readonly aseguradoras: AseguradorasRepositoryPort) {}
-
-  async ejecutar(id: string): Promise<void> {
-    const existente = await this.aseguradoras.buscarPorId(id);
-    if (!existente) {
-      throw new NoEncontradoError('Aseguradora', id);
-    }
-    await this.aseguradoras.eliminar(id);
   }
 }

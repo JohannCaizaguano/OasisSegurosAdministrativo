@@ -98,7 +98,7 @@ export function PagosPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">{meta ? `${meta.total} pagos` : 'Pagos'}</CardTitle>
         </CardHeader>
@@ -173,7 +173,7 @@ export function PagosPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between text-sm text-[var(--muted-foreground)]">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
         <span data-testid="contador-registrados">{registrados} validables en esta página</span>
         <div className="flex gap-2">
           <Button

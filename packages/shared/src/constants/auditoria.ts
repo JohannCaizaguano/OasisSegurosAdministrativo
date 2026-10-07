@@ -8,6 +8,9 @@ export const ACCIONES_AUDITORIA = [
   'REINTENTAR',
   'INICIAR_SESION',
   'IMPORTAR',
+  'DESACTIVAR',
+  'REACTIVAR',
+  'RESTABLECER_CONTRASENA',
 ] as const;
 export type AccionAuditoria = (typeof ACCIONES_AUDITORIA)[number];
 

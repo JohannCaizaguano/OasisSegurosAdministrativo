@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
+  actualizarUsuarioSchema,
   apiErrorSchema,
   cambiarContrasenaSchema,
+  crearAseguradoraSchema,
   crearClienteSchema,
   crearPagoSchema,
+  crearUsuarioSchema,
   loginSchema,
   montoDecimalSchema,
   rechazarPagoSchema,
@@ -111,7 +114,7 @@ describe('crearClienteSchema', () => {
 
     const cedula = {
       tipoIdentificacion: 'CEDULA',
-      identificacion: '1712345678',
+      identificacion: '1710034065',
       email: 'a@b.com',
     };
     expect(crearClienteSchema.safeParse(cedula).success).toBe(false);
@@ -124,12 +127,80 @@ describe('crearClienteSchema', () => {
     expect(
       crearClienteSchema.safeParse({
         tipoIdentificacion: 'CEDULA',
-        identificacion: '1712345678',
+        identificacion: '1710034065',
         email: 'correo-invalido',
         nombres: 'Ana',
         apellidos: 'Pérez',
       }).success,
     ).toBe(false);
+  });
+});
+
+describe('RN-11 en el registro de cliente', () => {
+  it('rechaza una cédula inválida con el mensaje en identificacion', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'CEDULA',
+      identificacion: '1712345678',
+      email: 'a@b.com',
+      nombres: 'Ana',
+      apellidos: 'Pérez',
+    });
+    expect(resultado.success).toBe(false);
+    if (!resultado.success) {
+      const issue = resultado.error.issues.find((item) => item.path[0] === 'identificacion');
+      expect(issue?.message).toBe('Dígito verificador de la cédula inválido');
+    }
+  });
+
+  it('normaliza el pasaporte del cliente', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'PASAPORTE',
+      identificacion: ' ab123 ',
+      email: 'a@b.com',
+      nombres: 'Ana',
+      apellidos: 'Pérez',
+    });
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data.identificacion).toBe('AB123');
+    }
+  });
+
+  it('acepta un pasaporte de 20 caracteres con espacios alrededor', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'PASAPORTE',
+      identificacion: `  ${'a'.repeat(20)}  `,
+      email: 'a@b.com',
+      nombres: 'Ana',
+      apellidos: 'Pérez',
+    });
+    expect(resultado.success).toBe(true);
+  });
+});
+
+describe('esquemas de usuario del personal', () => {
+  it('rechaza crear un usuario con rol CLIENTE', () => {
+    const base = { email: 'nuevo@oasis.com', nombre: 'Nuevo Usuario' };
+    expect(crearUsuarioSchema.safeParse({ ...base, rol: 'OPERADOR' }).success).toBe(true);
+    expect(crearUsuarioSchema.safeParse({ ...base, rol: 'CLIENTE' }).success).toBe(false);
+  });
+
+  it('rechaza editar el correo de un usuario', () => {
+    expect(actualizarUsuarioSchema.safeParse({ nombre: 'Otro Nombre' }).success).toBe(true);
+    expect(
+      actualizarUsuarioSchema.safeParse({ nombre: 'Otro', email: 'otro@oasis.com' }).success,
+    ).toBe(false);
+  });
+});
+
+describe('RN-11 en aseguradoras', () => {
+  it('rechaza una aseguradora con RUC de tercer dígito 7', () => {
+    expect(
+      crearAseguradoraSchema.safeParse({ nombre: 'Aseguradora X', ruc: '1770012345001' }).success,
+    ).toBe(false);
+    expect(
+      crearAseguradoraSchema.safeParse({ nombre: 'Aseguradora X', ruc: '1790012345001' }).success,
+    ).toBe(true);
   });
 });
 

@@ -21,7 +21,7 @@ export function PanelCliente() {
 
   return (
     <div className="grid gap-4">
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Mis pólizas</CardTitle>
         </CardHeader>
@@ -60,7 +60,7 @@ export function PanelCliente() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <CardTitle className="text-base">Mis pagos</CardTitle>
         </CardHeader>

@@ -5,13 +5,19 @@ import { listarBitacoraQuerySchema } from '@oasis/shared';
 
 import { Roles } from '../../../../common/auth/decorators';
 import { ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
-import { ListarBitacoraUseCase } from '../../application/use-cases/auditoria.use-cases';
+import {
+  ListarBitacoraUseCase,
+  ListarUsuariosBitacoraUseCase,
+} from '../../application/use-cases/auditoria.use-cases';
 
 @ApiTags('auditoria')
 @Controller('bitacora')
 @Roles('ADMIN')
 export class BitacoraController {
-  constructor(private readonly listarBitacora: ListarBitacoraUseCase) {}
+  constructor(
+    private readonly listarBitacora: ListarBitacoraUseCase,
+    private readonly listarUsuariosBitacora: ListarUsuariosBitacoraUseCase,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Consulta la bitácora de auditoría con filtros (ADMIN)' })
@@ -35,5 +41,11 @@ export class BitacoraController {
         totalPages: Math.ceil(pagina.total / query.pageSize),
       },
     };
+  }
+
+  @Get('usuarios')
+  @ApiOperation({ summary: 'Lista los usuarios que aparecen en la bitácora (ADMIN)' })
+  async usuarios() {
+    return this.listarUsuariosBitacora.ejecutar();
   }
 }

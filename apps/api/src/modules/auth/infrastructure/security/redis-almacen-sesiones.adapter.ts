@@ -76,16 +76,21 @@ export class RedisAlmacenSesionesAdapter implements AlmacenSesionesPort {
   }
 
   async cerrarDemas(usuarioId: string, sidVigente: string): Promise<void> {
-    await this.conFalloCerrado(this.barrerDemas(usuarioId, sidVigente));
+    await this.conFalloCerrado(this.barrer(usuarioId, this.clave(usuarioId, sidVigente)));
   }
 
-  private async barrerDemas(usuarioId: string, sidVigente: string): Promise<void> {
-    const vigente = this.clave(usuarioId, sidVigente);
+  async cerrarTodas(usuarioId: string): Promise<void> {
+    await this.conFalloCerrado(this.barrer(usuarioId));
+  }
+
+  private async barrer(usuarioId: string, excepto?: string): Promise<void> {
     const flujo = this.redis.scanStream({ match: `${PREFIJO}${usuarioId}:*`, count: 100 });
     for await (const llaves of flujo) {
-      const otras = (llaves as string[]).filter((llave) => llave !== vigente);
-      if (otras.length > 0) {
-        await this.redis.del(...otras);
+      const objetivo = excepto
+        ? (llaves as string[]).filter((llave) => llave !== excepto)
+        : (llaves as string[]);
+      if (objetivo.length > 0) {
+        await this.redis.del(...objetivo);
       }
     }
   }

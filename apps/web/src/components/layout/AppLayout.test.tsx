@@ -68,6 +68,12 @@ describe('AppLayout — menú por rol', () => {
     ).toEqual(['Inicio']);
   });
 
+  it('muestra el nombre del usuario en el encabezado', () => {
+    montar('ADMIN');
+
+    expect(screen.getByTestId('menu-usuario')).toHaveTextContent('Usuario ADMIN');
+  });
+
   it('el menú del usuario ofrece cambiar la contraseña', async () => {
     montar('ADMIN');
 

@@ -5,6 +5,7 @@ import { BITACORA_REPOSITORY } from './application/ports/bitacora.repository.por
 import type { BitacoraRepositoryPort } from './application/ports/bitacora.repository.port';
 import {
   ListarBitacoraUseCase,
+  ListarUsuariosBitacoraUseCase,
   RegistrarAccionUseCase,
 } from './application/use-cases/auditoria.use-cases';
 import { PrismaBitacoraRepository } from './infrastructure/persistence/prisma-bitacora.repository';
@@ -24,6 +25,11 @@ import { BitacoraController } from './presentation/http/bitacora.controller';
       provide: ListarBitacoraUseCase,
       inject: [BITACORA_REPOSITORY],
       useFactory: (repo: BitacoraRepositoryPort) => new ListarBitacoraUseCase(repo),
+    },
+    {
+      provide: ListarUsuariosBitacoraUseCase,
+      inject: [BITACORA_REPOSITORY],
+      useFactory: (repo: BitacoraRepositoryPort) => new ListarUsuariosBitacoraUseCase(repo),
     },
     // Global aunque se declare aquí: aplica a todos los controladores del API, no al worker.
     { provide: APP_INTERCEPTOR, useClass: AuditoriaInterceptor },
