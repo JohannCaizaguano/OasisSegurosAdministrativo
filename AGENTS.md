@@ -101,6 +101,9 @@ convenciones que la skill ya define.
   Para auditar: `ponytail-review` (diff) y `ponytail-audit` (repo completo).
 - **Impeccable** para cualquier trabajo de UI (crear, auditar, pulir).
 - Orden: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
+- **Agentes de OpenCode** (`.opencode/agents/`): el primario `orquestador` reparte el sprint entre
+  `contrato-shared`, `backend-api`, `frontend-spa`, `verificador` y `revisor`, cada uno limitado a
+  su carpeta; el reparto y el orden de cada sprint están en su plan (`docs/sprints/`).
 
 ## Convenciones
 
