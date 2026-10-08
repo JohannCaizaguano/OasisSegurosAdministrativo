@@ -1,4 +1,4 @@
-import type { EstadoPago, MetodoPago } from '@oasis/shared';
+import type { EstadoPago, EstadoPoliza, MetodoPago } from '@oasis/shared';
 
 import type { DatosNuevoRecibo, Recibo } from '../../../recibos/domain/recibo';
 import type { Pago } from '../../domain/pago';
@@ -64,4 +64,6 @@ export interface PagosRepositoryPort {
   rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago>;
   /** Resuelve un método de pago activo por su código (catálogo `MetodoPago`). */
   buscarMetodoPago(codigo: MetodoPago): Promise<MetodoPagoResumen | null>;
+  /** D14 (RN-01): estado de la póliza del pago; `null` si no existe. */
+  estadoPoliza(polizaId: string): Promise<EstadoPoliza | null>;
 }

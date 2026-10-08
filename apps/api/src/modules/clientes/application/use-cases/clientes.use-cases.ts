@@ -3,6 +3,7 @@ import { normalizarIdentificacion, validarIdentificacion } from '@oasis/shared';
 import {
   ConflictoError,
   NoEncontradoError,
+  ReglaNegocioError,
   ValidacionError,
 } from '../../../../shared-kernel/domain-error';
 import type { Cliente } from '../../domain/cliente';
@@ -29,6 +30,7 @@ export class ListarClientesUseCase {
   ejecutar(filtros: {
     q?: string;
     tipoIdentificacion?: DatosCrearCliente['tipoIdentificacion'];
+    activo?: boolean;
     pagina: number;
     porPagina: number;
   }) {
@@ -65,6 +67,18 @@ export class ActualizarClienteUseCase {
         tipo,
         datos.identificacion ?? existente.identificacion,
       );
+
+      // D5: la identificación es la del recibo; con pólizas no se puede cambiar.
+      if (
+        existente.tienePolizas &&
+        (tipo !== existente.tipoIdentificacion || identificacion !== existente.identificacion)
+      ) {
+        throw new ReglaNegocioError(
+          'La identificación no se puede modificar porque el cliente tiene pólizas',
+          { campo: 'identificacion', motivo: 'IDENTIFICACION_CON_POLIZAS' },
+        );
+      }
+
       const mensaje = validarIdentificacion(tipo, identificacion);
       if (mensaje) {
         throw new ValidacionError(mensaje, [{ path: ['identificacion'], message: mensaje }]);
@@ -83,5 +97,30 @@ export class ActualizarClienteUseCase {
     }
 
     return this.clientes.actualizar(id, datosFinales);
+  }
+}
+
+export class DesactivarClienteUseCase {
+  constructor(private readonly clientes: ClientesRepositoryPort) {}
+
+  async ejecutar(id: string): Promise<Cliente> {
+    const existente = await this.clientes.buscarPorId(id);
+    if (!existente) {
+      throw new NoEncontradoError('Cliente', id);
+    }
+    // Idempotente: desactivar a uno inactivo devuelve el cliente igual (D6).
+    return this.clientes.actualizar(id, { activo: false });
+  }
+}
+
+export class ReactivarClienteUseCase {
+  constructor(private readonly clientes: ClientesRepositoryPort) {}
+
+  async ejecutar(id: string): Promise<Cliente> {
+    const existente = await this.clientes.buscarPorId(id);
+    if (!existente) {
+      throw new NoEncontradoError('Cliente', id);
+    }
+    return this.clientes.actualizar(id, { activo: true });
   }
 }

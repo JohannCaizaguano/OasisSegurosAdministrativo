@@ -1,3 +1,4 @@
+import type { Cliente } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,16 +7,36 @@ import { FormularioCliente } from './FormularioCliente';
 import { clientesApi } from '../api';
 
 vi.mock('../api', () => ({
-  clientesApi: { listar: vi.fn(), crear: vi.fn() },
+  clientesApi: {
+    listar: vi.fn(),
+    crear: vi.fn(),
+    actualizar: vi.fn(),
+    desactivar: vi.fn(),
+    reactivar: vi.fn(),
+  },
 }));
 
 const crear = vi.mocked(clientesApi.crear);
+const actualizar = vi.mocked(clientesApi.actualizar);
 
-function montar() {
-  const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+const CLIENTE: Cliente = {
+  id: '33333333-3333-3333-3333-333333333333',
+  tipoIdentificacion: 'CEDULA',
+  identificacion: '1710034065',
+  nombres: 'Ana',
+  apellidos: 'Pérez',
+  email: 'ana@example.com',
+  activo: true,
+  tienePolizas: false,
+  createdAt: '2026-10-01T12:00:00.000Z',
+  updatedAt: '2026-10-01T12:00:00.000Z',
+};
+
+function montar(cliente?: Cliente) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
-    <QueryClientProvider client={cliente}>
-      <FormularioCliente alGuardar={vi.fn()} />
+    <QueryClientProvider client={queryClient}>
+      <FormularioCliente cliente={cliente} alGuardar={vi.fn()} />
     </QueryClientProvider>,
   );
 }
@@ -82,6 +103,8 @@ describe('FormularioCliente', () => {
       nombres: 'Ana',
       apellidos: 'Pérez',
       email: 'ana@example.com',
+      activo: true,
+      tienePolizas: false,
       createdAt: '2026-10-01T12:00:00.000Z',
       updatedAt: '2026-10-01T12:00:00.000Z',
     });
@@ -98,6 +121,64 @@ describe('FormularioCliente', () => {
     await waitFor(() =>
       expect(crear).toHaveBeenCalledWith(
         expect.objectContaining({ tipoIdentificacion: 'PASAPORTE', identificacion: 'AB123' }),
+      ),
+    );
+  });
+
+  it('con pólizas deshabilita tipo e identificación y explica por qué', () => {
+    montar({ ...CLIENTE, tienePolizas: true });
+
+    const identificacion = screen.getByLabelText('Identificación');
+    expect(identificacion).toBeDisabled();
+    expect(screen.getByLabelText('Tipo de identificación')).toBeDisabled();
+    expect(identificacion).toHaveAttribute(
+      'aria-describedby',
+      expect.stringContaining('identificacion-ayuda'),
+    );
+    expect(screen.getByText('No se puede modificar: el cliente tiene pólizas')).toBeInTheDocument();
+  });
+
+  it('sin pólizas permite cambiar la identificación al editar', () => {
+    montar(CLIENTE);
+
+    expect(screen.getByLabelText('Identificación')).not.toBeDisabled();
+    expect(
+      screen.queryByText('No se puede modificar: el cliente tiene pólizas'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('con pólizas puede guardar sin enviar la identificación bloqueada', async () => {
+    actualizar.mockResolvedValue({ ...CLIENTE, tienePolizas: true });
+    montar({ ...CLIENTE, tienePolizas: true });
+
+    fireEvent.change(screen.getByLabelText('Correo electrónico'), {
+      target: { value: 'ana.nueva@example.com' },
+    });
+    fireEvent.click(screen.getByTestId('boton-guardar-cliente'));
+
+    await waitFor(() =>
+      expect(actualizar).toHaveBeenCalledWith(
+        CLIENTE.id,
+        expect.objectContaining({ email: 'ana.nueva@example.com' }),
+      ),
+    );
+    expect(actualizar).toHaveBeenCalledWith(
+      CLIENTE.id,
+      expect.not.objectContaining({ identificacion: expect.anything() }),
+    );
+  });
+
+  it('en edición guarda los cambios contra el endpoint de actualizar', async () => {
+    actualizar.mockResolvedValue({ ...CLIENTE, nombres: 'Ana María' });
+    montar(CLIENTE);
+
+    fireEvent.change(screen.getByLabelText('Nombres'), { target: { value: 'Ana María' } });
+    fireEvent.click(screen.getByTestId('boton-guardar-cliente'));
+
+    await waitFor(() =>
+      expect(actualizar).toHaveBeenCalledWith(
+        CLIENTE.id,
+        expect.objectContaining({ nombres: 'Ana María', identificacion: '1710034065' }),
       ),
     );
   });

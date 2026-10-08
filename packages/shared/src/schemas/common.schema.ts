@@ -42,6 +42,12 @@ export const montoDecimalSchema = z
   .string()
   .regex(/^\d{1,10}(\.\d{1,2})?$/, 'Monto inválido: use hasta 10 enteros y 2 decimales');
 
+/** RN-10: la prima de una póliza debe ser estrictamente mayor que cero. */
+export const montoPositivoSchema = montoDecimalSchema.refine(
+  (valor) => Number(valor) > 0,
+  'La prima debe ser mayor que cero',
+);
+
 export const hex32Schema = z
   .string()
   .regex(/^0x[0-9a-fA-F]{64}$/, 'Se espera un valor bytes32 en hex (0x + 64 hex)');

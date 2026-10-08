@@ -21,9 +21,14 @@ interface FilaCliente {
   razonSocial: string | null;
   email: string;
   telefono: string | null;
+  activo: boolean;
+  _count?: { polizas: number };
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** D7: `tienePolizas` sale del `_count` de la misma consulta, sin N+1. */
+const INCLUIR_POLIZAS = { _count: { select: { polizas: true } } } as const;
 
 @Injectable()
 export class PrismaClientesRepository implements ClientesRepositoryPort {
@@ -52,17 +57,22 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
   }
 
   async listar(filtros: FiltrosClientes): Promise<PaginaClientes> {
+    const palabras = filtros.q?.split(/\s+/).filter(Boolean) ?? [];
     const where = {
       tipoIdentificacion: filtros.tipoIdentificacion,
-      ...(filtros.q
+      activo: filtros.activo,
+      // ponytail: ILIKE no ignora tildes (techo); salida: extensión `unaccent`.
+      ...(palabras.length > 0
         ? {
-            OR: [
-              { identificacion: { contains: filtros.q, mode: 'insensitive' as const } },
-              { nombres: { contains: filtros.q, mode: 'insensitive' as const } },
-              { apellidos: { contains: filtros.q, mode: 'insensitive' as const } },
-              { razonSocial: { contains: filtros.q, mode: 'insensitive' as const } },
-              { email: { contains: filtros.q, mode: 'insensitive' as const } },
-            ],
+            AND: palabras.map((palabra) => ({
+              OR: [
+                { identificacion: { contains: palabra, mode: 'insensitive' as const } },
+                { nombres: { contains: palabra, mode: 'insensitive' as const } },
+                { apellidos: { contains: palabra, mode: 'insensitive' as const } },
+                { razonSocial: { contains: palabra, mode: 'insensitive' as const } },
+                { email: { contains: palabra, mode: 'insensitive' as const } },
+              ],
+            })),
           }
         : {}),
     };
@@ -70,6 +80,7 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
     const [filas, total] = await this.prisma.$transaction([
       this.prisma.cliente.findMany({
         where,
+        include: INCLUIR_POLIZAS,
         orderBy: { createdAt: 'desc' },
         skip: (filtros.pagina - 1) * filtros.porPagina,
         take: filtros.porPagina,
@@ -81,13 +92,17 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
   }
 
   async buscarPorId(id: string): Promise<Cliente | null> {
-    const fila = await this.prisma.cliente.findUnique({ where: { id } });
+    const fila = await this.prisma.cliente.findUnique({ where: { id }, include: INCLUIR_POLIZAS });
     return fila ? this.mapear(fila) : null;
   }
 
   async actualizar(id: string, datos: DatosActualizarCliente): Promise<Cliente> {
     try {
-      const fila = await this.prisma.cliente.update({ where: { id }, data: datos });
+      const fila = await this.prisma.cliente.update({
+        where: { id },
+        data: datos,
+        include: INCLUIR_POLIZAS,
+      });
       return this.mapear(fila);
     } catch (error: unknown) {
       if (esConflictoUnico(error)) {
@@ -119,6 +134,8 @@ export class PrismaClientesRepository implements ClientesRepositoryPort {
       razonSocial: fila.razonSocial,
       email: fila.email,
       telefono: fila.telefono,
+      activo: fila.activo,
+      tienePolizas: (fila._count?.polizas ?? 0) > 0,
       createdAt: fila.createdAt.toISOString(),
       updatedAt: fila.updatedAt.toISOString(),
     });

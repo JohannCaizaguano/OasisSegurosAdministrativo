@@ -7,6 +7,8 @@ export const CLIENTES_REPOSITORY = Symbol('ClientesRepositoryPort');
 export interface FiltrosClientes {
   q?: string;
   tipoIdentificacion?: TipoIdentificacion;
+  /** D8: `undefined` no filtra (estado TODOS). */
+  activo?: boolean;
   pagina: number;
   porPagina: number;
 }
@@ -26,7 +28,7 @@ export interface DatosCrearCliente {
   telefono?: string;
 }
 
-export type DatosActualizarCliente = Partial<DatosCrearCliente>;
+export type DatosActualizarCliente = Partial<DatosCrearCliente> & { activo?: boolean };
 
 export interface ClientesRepositoryPort {
   crear(datos: DatosCrearCliente): Promise<Cliente>;

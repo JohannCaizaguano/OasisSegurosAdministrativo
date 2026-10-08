@@ -93,6 +93,21 @@ describe('Acceso por rol (e2e)', () => {
     await peticion(ruta).set('Authorization', `Bearer ${tokens[rol]}`).expect(403);
   });
 
+  it('la matriz cubre las rutas nuevas y no la retirada (HU-08 a HU-14, D13)', () => {
+    const claves = RUTAS.map((ruta) => ruta.clave);
+    const rutas = RUTAS.map((ruta) => ruta.ruta);
+
+    expect(rutas).toEqual(
+      expect.arrayContaining([
+        '/api/v1/ramos',
+        '/api/v1/clientes/:id/desactivar',
+        '/api/v1/clientes/:id/reactivar',
+        '/api/v1/polizas/:id/estado',
+      ]),
+    );
+    expect(claves).not.toContain('PolizasController.eliminar');
+  });
+
   it('el CLIENTE solo obtiene sus pólizas y pagos', async () => {
     const sufijo = Date.now();
     const aseguradora = await prisma.aseguradora.findFirstOrThrow();

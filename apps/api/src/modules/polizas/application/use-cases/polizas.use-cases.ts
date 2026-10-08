@@ -2,36 +2,59 @@ import {
   ConflictoError,
   NoEncontradoError,
   ProhibidoError,
+  ReglaNegocioError,
   ValidacionError,
 } from '../../../../shared-kernel/domain-error';
 import type { Poliza } from '../../domain/poliza';
 import type {
-  ComandoActualizarPoliza,
-  ComandoCrearPoliza,
   DatosActualizarPoliza,
+  DatosCrearPoliza,
   FiltrosPolizas,
   PaginaPolizas,
   PolizasRepositoryPort,
+  RamoResumen,
 } from '../ports/polizas.repository.port';
 
-/** Traduce el ramo recibido (código o nombre) al id del catálogo. */
-async function resolverRamoId(polizas: PolizasRepositoryPort, ramo: string): Promise<string> {
-  const encontrado = await polizas.buscarRamo(ramo);
-  if (!encontrado) {
-    throw new ValidacionError(`Ramo de seguro no reconocido: ${ramo}`);
-  }
-  return encontrado.id;
+/** D9: el número repetido se reporta igual desde el caso de uso y desde el P2002. */
+function numeroDuplicado(numero: string): ConflictoError {
+  return new ConflictoError(`Ya existe una póliza con el número ${numero}`, {
+    campo: 'numero',
+    motivo: 'NUMERO_DUPLICADO',
+  });
+}
+
+function ramoInvalido(): ReglaNegocioError {
+  return new ReglaNegocioError('El ramo seleccionado no está disponible', {
+    campo: 'ramoId',
+    motivo: 'RAMO_INVALIDO',
+  });
 }
 
 export class CrearPolizaUseCase {
   constructor(private readonly polizas: PolizasRepositoryPort) {}
 
-  async ejecutar(datos: ComandoCrearPoliza): Promise<Poliza> {
-    if (await this.polizas.existeNumero(datos.numero)) {
-      throw new ConflictoError(`Ya existe una póliza con el número ${datos.numero}`);
+  /** D9: valida cliente, aseguradora, ramo y número, en ese orden. */
+  async ejecutar(datos: DatosCrearPoliza): Promise<Poliza> {
+    const cliente = await this.polizas.buscarClienteParaPoliza(datos.clienteId);
+    if (!cliente) {
+      throw new NoEncontradoError('Cliente', datos.clienteId);
     }
-    const { ramo, ...resto } = datos;
-    return this.polizas.crear({ ...resto, ramoId: await resolverRamoId(this.polizas, ramo) });
+    if (!cliente.activo) {
+      throw new ReglaNegocioError('El cliente está inactivo y no admite pólizas nuevas', {
+        campo: 'clienteId',
+        motivo: 'CLIENTE_INACTIVO',
+      });
+    }
+    if (!(await this.polizas.existeAseguradora(datos.aseguradoraId))) {
+      throw new NoEncontradoError('Aseguradora', datos.aseguradoraId);
+    }
+    if (!(await this.polizas.buscarRamoActivoPorId(datos.ramoId))) {
+      throw ramoInvalido();
+    }
+    if (await this.polizas.existeNumero(datos.numero)) {
+      throw numeroDuplicado(datos.numero);
+    }
+    return this.polizas.crear(datos);
   }
 }
 
@@ -72,34 +95,84 @@ export class ObtenerPolizaUseCase {
 export class ActualizarPolizaUseCase {
   constructor(private readonly polizas: PolizasRepositoryPort) {}
 
-  async ejecutar(id: string, datos: ComandoActualizarPoliza): Promise<Poliza> {
+  /** D11: solo pólizas VIGENTES; prima fija con pagos validados; fechas coherentes. */
+  async ejecutar(id: string, datos: DatosActualizarPoliza): Promise<Poliza> {
     const existente = await this.polizas.buscarPorId(id);
     if (!existente) {
       throw new NoEncontradoError('Póliza', id);
     }
-    if (datos.numero && datos.numero !== existente.numero) {
-      if (await this.polizas.existeNumero(datos.numero, id)) {
-        throw new ConflictoError(`Ya existe una póliza con el número ${datos.numero}`);
-      }
+    if (existente.estado !== 'VIGENTE') {
+      throw new ReglaNegocioError('Solo una póliza vigente puede editarse', {
+        campo: 'estado',
+        motivo: 'POLIZA_NO_VIGENTE',
+      });
     }
 
-    let aPersistir: DatosActualizarPoliza = datos;
-    if (datos.ramo !== undefined) {
-      const { ramo, ...resto } = datos;
-      aPersistir = { ...resto, ramoId: await resolverRamoId(this.polizas, ramo) };
+    if (
+      datos.primaTotal !== undefined &&
+      Number(datos.primaTotal) !== Number(existente.primaTotal) &&
+      existente.tienePagosValidados
+    ) {
+      throw new ReglaNegocioError(
+        'La prima no se puede modificar porque la póliza tiene pagos validados',
+        { campo: 'primaTotal', motivo: 'PRIMA_CON_PAGOS_VALIDADOS' },
+      );
     }
-    return this.polizas.actualizar(id, aPersistir);
+
+    // Si llega una sola fecha, se compara con la guardada.
+    const fechaInicio = datos.fechaInicio ?? existente.fechaInicio;
+    const fechaFin = datos.fechaFin ?? existente.fechaFin;
+    if (fechaFin <= fechaInicio) {
+      throw new ValidacionError('La fecha de fin debe ser posterior a la de inicio', [
+        { path: ['fechaFin'], message: 'La fecha de fin debe ser posterior a la de inicio' },
+      ]);
+    }
+
+    // Mismo orden que al crear (D9): aseguradora y ramo antes que el número.
+    if (
+      datos.aseguradoraId !== undefined &&
+      !(await this.polizas.existeAseguradora(datos.aseguradoraId))
+    ) {
+      throw new NoEncontradoError('Aseguradora', datos.aseguradoraId);
+    }
+    if (datos.ramoId !== undefined && !(await this.polizas.buscarRamoActivoPorId(datos.ramoId))) {
+      throw ramoInvalido();
+    }
+    if (
+      datos.numero !== undefined &&
+      datos.numero !== existente.numero &&
+      (await this.polizas.existeNumero(datos.numero, id))
+    ) {
+      throw numeroDuplicado(datos.numero);
+    }
+
+    return this.polizas.actualizar(id, datos);
   }
 }
 
-export class EliminarPolizaUseCase {
+export class CambiarEstadoPolizaUseCase {
   constructor(private readonly polizas: PolizasRepositoryPort) {}
 
-  async ejecutar(id: string): Promise<void> {
-    const existente = await this.polizas.buscarPorId(id);
-    if (!existente) {
+  /** D12: VIGENTE → VENCIDA o CANCELADA; ambos terminales. */
+  async ejecutar(id: string, estado: 'VENCIDA' | 'CANCELADA'): Promise<Poliza> {
+    const poliza = await this.polizas.buscarPorId(id);
+    if (!poliza) {
       throw new NoEncontradoError('Póliza', id);
     }
-    await this.polizas.eliminar(id);
+    if (poliza.estado !== 'VIGENTE') {
+      throw new ReglaNegocioError('Solo una póliza vigente puede cambiar de estado', {
+        campo: 'estado',
+        motivo: 'POLIZA_NO_VIGENTE',
+      });
+    }
+    return this.polizas.cambiarEstado(id, estado);
+  }
+}
+
+export class ListarRamosUseCase {
+  constructor(private readonly polizas: PolizasRepositoryPort) {}
+
+  ejecutar(): Promise<RamoResumen[]> {
+    return this.polizas.listarRamosActivos();
   }
 }

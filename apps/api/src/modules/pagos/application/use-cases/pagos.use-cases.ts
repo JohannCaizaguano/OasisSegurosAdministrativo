@@ -14,7 +14,19 @@ import type {
 export class CrearPagoUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
+  /** D14 (RN-01): la póliza debe existir y estar VIGENTE antes de resolver el método. */
   async ejecutar(datos: ComandoCrearPago): Promise<Pago> {
+    const estadoPoliza = await this.pagos.estadoPoliza(datos.polizaId);
+    if (estadoPoliza === null) {
+      throw new NoEncontradoError('Póliza', datos.polizaId);
+    }
+    if (estadoPoliza !== 'VIGENTE') {
+      throw new ReglaNegocioError('La póliza no está vigente y no admite pagos (RN-01)', {
+        campo: 'polizaId',
+        motivo: 'POLIZA_NO_VIGENTE',
+      });
+    }
+
     const metodo = await this.pagos.buscarMetodoPago(datos.metodo);
     if (!metodo) {
       throw new ValidacionError(`Método de pago no reconocido: ${datos.metodo}`);

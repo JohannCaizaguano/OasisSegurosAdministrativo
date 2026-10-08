@@ -6,6 +6,8 @@ export type DetalleAuditoria = {
   ruta: string;
   requestId: string | null;
   campos?: string[];
+  /** D12: estado nuevo de la póliza, para poder encontrarlo en la bitácora. */
+  estado?: string;
 };
 
 export interface NuevoRegistroAuditoria {
@@ -39,11 +41,20 @@ export function construirDetalle(
     ruta: peticion.ruta,
     requestId: peticion.requestId,
   };
-  if (accion === 'MODIFICAR' && typeof peticion.cuerpo === 'object' && peticion.cuerpo !== null) {
-    const campos = Object.keys(peticion.cuerpo).sort();
+  const cuerpo =
+    typeof peticion.cuerpo === 'object' && peticion.cuerpo !== null
+      ? (peticion.cuerpo as Record<string, unknown>)
+      : null;
+
+  if (accion === 'MODIFICAR' && cuerpo) {
+    const campos = Object.keys(cuerpo).sort();
     if (campos.length > 0) {
       detalle.campos = campos;
     }
+  }
+
+  if (accion === 'CAMBIAR_ESTADO' && typeof cuerpo?.estado === 'string') {
+    detalle.estado = cuerpo.estado;
   }
   return detalle;
 }
