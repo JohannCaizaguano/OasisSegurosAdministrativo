@@ -3,8 +3,7 @@ import type { ClientesRepositoryPort } from '../ports/clientes.repository.port';
 import {
   ActualizarClienteUseCase,
   CrearClienteUseCase,
-  DesactivarClienteUseCase,
-  ReactivarClienteUseCase,
+  CambiarActivoClienteUseCase,
 } from './clientes.use-cases';
 
 const CLIENTE_ID = '33333333-3333-3333-3333-333333333333';
@@ -148,40 +147,23 @@ describe('ActualizarClienteUseCase', () => {
   });
 });
 
-describe('DesactivarClienteUseCase', () => {
+describe('CambiarActivoClienteUseCase', () => {
   it('404 si el cliente no existe', async () => {
     const deps = crearDobles(null);
-    const caso = new DesactivarClienteUseCase(deps.clientes);
+    const caso = new CambiarActivoClienteUseCase(deps.clientes);
 
-    await expect(caso.ejecutar(CLIENTE_ID)).rejects.toMatchObject({ codigo: 'NO_ENCONTRADO' });
+    await expect(caso.ejecutar(CLIENTE_ID, false)).rejects.toMatchObject({
+      codigo: 'NO_ENCONTRADO',
+    });
     expect(deps.clientes.actualizar).not.toHaveBeenCalled();
   });
 
-  it('desactivar a uno ya inactivo es idempotente', async () => {
-    const inactivo = crearCliente({ activo: false });
-    const deps = crearDobles(inactivo);
-    const caso = new DesactivarClienteUseCase(deps.clientes);
+  it.each([false, true])('es idempotente al dejar el cliente con activo=%s', async (activo) => {
+    const cliente = crearCliente({ activo });
+    const deps = crearDobles(cliente);
+    const caso = new CambiarActivoClienteUseCase(deps.clientes);
 
-    await expect(caso.ejecutar(CLIENTE_ID)).resolves.toBe(inactivo);
-    expect(deps.clientes.actualizar).toHaveBeenCalledWith(CLIENTE_ID, { activo: false });
-  });
-});
-
-describe('ReactivarClienteUseCase', () => {
-  it('404 si el cliente no existe', async () => {
-    const deps = crearDobles(null);
-    const caso = new ReactivarClienteUseCase(deps.clientes);
-
-    await expect(caso.ejecutar(CLIENTE_ID)).rejects.toMatchObject({ codigo: 'NO_ENCONTRADO' });
-    expect(deps.clientes.actualizar).not.toHaveBeenCalled();
-  });
-
-  it('reactivar a uno ya activo es idempotente', async () => {
-    const activo = crearCliente({ activo: true });
-    const deps = crearDobles(activo);
-    const caso = new ReactivarClienteUseCase(deps.clientes);
-
-    await expect(caso.ejecutar(CLIENTE_ID)).resolves.toBe(activo);
-    expect(deps.clientes.actualizar).toHaveBeenCalledWith(CLIENTE_ID, { activo: true });
+    await expect(caso.ejecutar(CLIENTE_ID, activo)).resolves.toBe(cliente);
+    expect(deps.clientes.actualizar).toHaveBeenCalledWith(CLIENTE_ID, { activo });
   });
 });

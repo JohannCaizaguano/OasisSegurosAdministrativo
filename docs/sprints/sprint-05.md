@@ -57,7 +57,7 @@ el API y la SPA se implementan en paralelo contra él.
 | 10  | HU-12.3 prima > 0 con dos decimales (RN-10)       | `esquemas-compartidos.spec.ts`; `polizas.e2e-spec.ts` (mismo caso: `0` y `1.234` → 400)                                                                    |
 | 11  | HU-12.4 nace VIGENTE                              | `polizas.use-cases.spec.ts`; `polizas.e2e-spec.ts` «crea una póliza VIGENTE…»                                                                              |
 | 12  | HU-13.1 VENCIDA o CANCELADA con confirmación      | `polizas.use-cases.spec.ts`; `polizas.e2e-spec.ts` «cancela, bloquea cambios posteriores y lo audita»; `PolizasPage.test.tsx`; `clientes-polizas.spec.ts`  |
-| 13  | HU-13.2 no vigente sin pagos (RN-01)              | `pagos.use-cases.spec.ts`; `pagos-rn01.e2e-spec.ts` (3 casos); ADR-018                                                                                     |
+| 13  | HU-13.2 no vigente sin pagos (RN-01)              | `pagos.use-cases.spec.ts`; `validar-pago.use-case.spec.ts`; `pagos-rn01.e2e-spec.ts` (4 casos); ADR-018                                                    |
 | 14  | HU-13.3 prima fija con pagos validados            | `polizas.use-cases.spec.ts`; `polizas.e2e-spec.ts` «bloquea la prima con pagos validados…»; `FormularioPoliza.test.tsx`                                    |
 | 15  | HU-14.1 filtros cliente, aseguradora y estado     | `polizas.e2e-spec.ts` «filtra por cliente, aseguradora y estado…»; `PolizasPage.test.tsx`                                                                  |
 | 16  | HU-14.2 paginado                                  | `polizas.e2e-spec.ts` (mismo caso con `pageSize` 2)                                                                                                        |
@@ -72,7 +72,7 @@ el API y la SPA se implementan en paralelo contra él.
 | Ítem                                                        | Estado   | Nota                                                                                                                                                                                                                                                              |
 | ----------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cumple todos sus criterios de aceptación                    | ✅       | Sección 3.                                                                                                                                                                                                                                                        |
-| Pruebas automatizadas y CI en verde                         | ✅ local | 30 contratos + 170 API (38 suites) + 145 SPA (17 archivos) + 161 e2e del API (11 suites) + 11 de Playwright; `lint`, Prettier, `typecheck`, `deps:check`, `deps:check:negativo` y build en verde. El CI se ejecuta al abrir el PR: no se publica desde el agente. |
+| Pruebas automatizadas y CI en verde                         | ✅ local | 30 contratos + 174 API (39 suites) + 148 SPA (17 archivos) + 162 e2e del API (11 suites) + 11 de Playwright; `lint`, Prettier, `typecheck`, `deps:check`, `deps:check:negativo` y build en verde. El CI se ejecuta al abrir el PR: no se publica desde el agente. |
 | Código integrado en la rama principal mediante pull request | ⏳       | El usuario hace push y abre el PR.                                                                                                                                                                                                                                |
 | Funciona en el entorno de desarrollo con Docker Compose     | ✅       | PostgreSQL 17 y Redis 7 con `compose.dev.yaml` (cliente `docker.exe`); nodo Hardhat en contenedor; dev:chain, migrate + seed, e2e y Playwright contra esos contenedores.                                                                                          |
 | Documentación afectada actualizada                          | ✅       | ADR-018, `docs/adr/README.md`, `CLAUDE.md` y este informe. `apps/api/src/modules/README.md` no lista las acciones de auditoría, así que no requería cambios.                                                                                                      |
@@ -80,8 +80,9 @@ el API y la SPA se implementan en paralelo contra él.
 
 ## 5. Versiones exactas
 
-Sin cambios de dependencias: el sprint solo usó lo ya instalado (shadcn/ui, Radix, TanStack Query,
-RHF, Zod). Se mantienen Node.js 24, pnpm 12.3.4, NestJS 11.2.6, Prisma 7.10.0, TypeScript 6.0.3,
+Sin altas de dependencias: el sprint solo usó lo ya instalado (shadcn/ui, Radix, TanStack Query,
+RHF, Zod). Tras la revisión se retiró `@tanstack/react-table`, que seguía instalada sin uso desde
+HT-04. Se mantienen Node.js 24, pnpm 12.3.4, NestJS 11.2.6, Prisma 7.10.0, TypeScript 6.0.3,
 Zod 4.6.5, React 19.3 y Playwright 1.63.
 
 ## 6. Decisiones y discrepancias
@@ -97,8 +98,10 @@ bloqueos de edición y RN-01). El informe pide al autor agregarlo a la tabla 11-
    VIGENTE (D9).
 2. Se retiró `DELETE /polizas/:id` con su caso de uso y su método de repositorio (D13, RN-09); el
    API responde 404 y la matriz de acceso/cobertura lo verifica.
-3. RN-01 se aplicó ya en `CrearPagoUseCase` (D14) aunque el registro de pagos de la SPA llegue con
-   HU-16 (S6); era el criterio de HU-13 con evidencia en este sprint.
+3. RN-01 se aplicó ya en `CrearPagoUseCase` (D14) y también en `ValidarPagoUseCase` —si la póliza
+   se cancela entre el registro y la validación, la validación responde 422 y no emite recibo—
+   aunque el registro de pagos de la SPA llegue con HU-16 (S6); era el criterio de HU-13 con
+   evidencia en este sprint.
 4. La tabla 6-1 de la arquitectura dice NestJS 12 y se usa 11 (limitación conocida desde S1).
 5. Un `PATCH /polizas/:id` que envía las dos fechas invertidas responde **400** (lo corta el
    `superRefine` del esquema); el 422 `VALIDACION` de `fechaFin` cubre solo una fecha suelta contra
@@ -122,6 +125,27 @@ bloqueos de edición y RN-01). El informe pide al autor agregarlo a la tabla 11-
   ronda de confirmación, que aprobó sin hallazgos nuevos. El bloqueante era `PATCH /polizas/:id`
   con `aseguradoraId` inexistente: `P2003` sin traducir → 500; se corrigió validando la aseguradora
   en el caso de uso (404), con prueba rojo→verde.
+- **Revisión posterior al commit.** Una segunda lectura del commit `9513b94` dejó 8 hallazgos
+  (ninguno bloqueante); se corrigieron todos y se re-verificó:
+  - RN-01 también al validar el pago (`ValidarPagoUseCase`): una póliza cancelada entre el registro
+    y la validación devuelve 422 y no emite recibo; con unitarias y un caso e2e nuevo.
+  - Escrituras condicionales en el repositorio de pólizas (`updateMany` con `estado: 'VIGENTE'` y,
+    si viaja la prima, `pagos: { none: VALIDADO }`): una carrera responde 409 `POLIZA_MODIFICADA`
+    en vez de aplicar un cambio sobre datos ya obsoletos.
+  - El `PATCH` valida ramo y aseguradora solo si cambian (un catálogo desactivado en S15 no romperá
+    la edición de otros campos).
+  - `numeroDuplicado` vive una sola vez en `polizas/domain/errores.ts`; el caso de uso y el
+    repositorio lo importan.
+  - Un solo `CambiarActivoClienteUseCase.ejecutar(id, activo)` reemplaza los dos casos de uso
+    gemelos de desactivar y reactivar.
+  - `FormularioPoliza` usa un componente `Campo` para los siete campos (ids y `aria-describedby`
+    consistentes) y `manejarError` solo asigna errores a campos montados; el resto va a toast.
+  - `SelectorCliente` ya no sincroniza con `useRef` + `useEffect`: `PolizasPage` lo remonta con una
+    `key` al limpiar filtros y el diálogo lo desmonta al cerrarse.
+  - Se retiró `@tanstack/react-table` (no se usaba).
+  - Cierre tras las correcciones: 174 API (39 suites), 148 SPA, 162 e2e del API y 11 de Playwright,
+    con `lint`, Prettier, `typecheck`, `deps:check`, `deps:check:negativo` y build en verde; commit
+    `fix(repo): atender los hallazgos de la revisión del sprint 5`.
 - **Entorno.** Docker Desktop estaba apagado al empezar la Fase 3; se arrancó desde Windows y se
   levantó `compose.dev.yaml` con `docker.exe` (la distro WSL no tiene cliente `docker`). El nodo
   Hardhat del contenedor ocupa 8545, así que `start-servicios.mjs` de Playwright se sustituyó por
@@ -147,7 +171,6 @@ bloqueos de edición y RN-01). El informe pide al autor agregarlo a la tabla 11-
 - «Vigencia» no muestra la dirección del orden con un icono (solo `aria-sort`); alias de `Ramo`,
   `OrdenPoliza` y `FiltroEstadoCliente` en `types/index.ts`; `scope="col"` en el componente de
   tabla (pre-existente de S4).
-- `@tanstack/react-table` sigue instalado sin uso (heredado de HT-04).
 
 ## 9. Acciones del autor
 
@@ -183,13 +206,13 @@ Pendientes de una persona:
 pnpm install --frozen-lockfile
 pnpm -r build && pnpm -r lint && pnpm format:check && pnpm -r typecheck
 pnpm deps:check && pnpm deps:check:negativo
-pnpm test                       # 30 contratos + 170 API + 145 SPA
+pnpm test                       # 30 contratos + 174 API + 148 SPA
 
 # Infraestructura (PostgreSQL y Redis con compose; nodo Hardhat aparte)
 docker compose -f compose.dev.yaml up -d
 pnpm dev:chain
 pnpm --filter @oasis/api exec prisma migrate deploy   # sin migraciones nuevas
 pnpm --filter @oasis/api seed
-pnpm test:e2e                   # 11 suites, 161 pruebas
+pnpm test:e2e                   # 11 suites, 162 pruebas
 pnpm --filter @oasis/web test:e2e   # Playwright: 11 pruebas
 ```

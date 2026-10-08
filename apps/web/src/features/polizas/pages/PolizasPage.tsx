@@ -84,6 +84,7 @@ function varianteEstado(estado: EstadoPoliza) {
 
 export function PolizasPage() {
   const [clienteId, setClienteId] = useState<string | undefined>(undefined);
+  const [generacionCliente, setGeneracionCliente] = useState(0);
   const [aseguradoraId, setAseguradoraId] = useState(TODAS);
   const [estado, setEstado] = useState(TODAS);
   const [orden, setOrden] = useState<OrdenPoliza>('recientes');
@@ -127,6 +128,8 @@ export function PolizasPage() {
     setEstado(TODAS);
     setOrden('recientes');
     setPagina(1);
+    // El combobox es no controlado: remontarlo vacía el texto y la selección.
+    setGeneracionCliente((valor) => valor + 1);
   }
 
   function confirmarEstado() {
@@ -158,8 +161,8 @@ export function PolizasPage() {
         <div className="grid w-full gap-1.5 sm:w-64">
           <Label htmlFor="filtro-cliente-polizas">Cliente</Label>
           <SelectorCliente
+            key={`filtro-cliente-${generacionCliente}`}
             id="filtro-cliente-polizas"
-            value={clienteId}
             onChange={(id) => {
               setClienteId(id);
               setPagina(1);

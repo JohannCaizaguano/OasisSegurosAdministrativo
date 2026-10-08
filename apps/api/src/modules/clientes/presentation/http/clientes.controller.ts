@@ -13,11 +13,10 @@ import { Roles } from '../../../../common/auth/decorators';
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import {
   ActualizarClienteUseCase,
+  CambiarActivoClienteUseCase,
   CrearClienteUseCase,
-  DesactivarClienteUseCase,
   ListarClientesUseCase,
   ObtenerClienteUseCase,
-  ReactivarClienteUseCase,
 } from '../../application/use-cases/clientes.use-cases';
 import type { Cliente } from '../../domain/cliente';
 
@@ -32,8 +31,7 @@ export class ClientesController {
     private readonly listarClientes: ListarClientesUseCase,
     private readonly obtenerCliente: ObtenerClienteUseCase,
     private readonly actualizarCliente: ActualizarClienteUseCase,
-    private readonly desactivarCliente: DesactivarClienteUseCase,
-    private readonly reactivarCliente: ReactivarClienteUseCase,
+    private readonly cambiarActivoCliente: CambiarActivoClienteUseCase,
   ) {}
 
   @Post()
@@ -96,7 +94,7 @@ export class ClientesController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Desactiva un cliente sin borrar su historial (D6)' })
   async desactivar(@ZodParam(idUuidParamSchema) params: ParamsId) {
-    return this.aRespuesta(await this.desactivarCliente.ejecutar(params.id));
+    return this.aRespuesta(await this.cambiarActivoCliente.ejecutar(params.id, false));
   }
 
   @Post(':id/reactivar')
@@ -104,7 +102,7 @@ export class ClientesController {
   @HttpCode(200)
   @ApiOperation({ summary: 'Reactiva un cliente desactivado (D6)' })
   async reactivar(@ZodParam(idUuidParamSchema) params: ParamsId) {
-    return this.aRespuesta(await this.reactivarCliente.ejecutar(params.id));
+    return this.aRespuesta(await this.cambiarActivoCliente.ejecutar(params.id, true));
   }
 
   private aRespuesta(cliente: Cliente): ClienteRespuesta {

@@ -100,27 +100,15 @@ export class ActualizarClienteUseCase {
   }
 }
 
-export class DesactivarClienteUseCase {
+/** Desactivar y reactivar (D6): idempotente, no borra nada y no toca la cuenta del cliente. */
+export class CambiarActivoClienteUseCase {
   constructor(private readonly clientes: ClientesRepositoryPort) {}
 
-  async ejecutar(id: string): Promise<Cliente> {
+  async ejecutar(id: string, activo: boolean): Promise<Cliente> {
     const existente = await this.clientes.buscarPorId(id);
     if (!existente) {
       throw new NoEncontradoError('Cliente', id);
     }
-    // Idempotente: desactivar a uno inactivo devuelve el cliente igual (D6).
-    return this.clientes.actualizar(id, { activo: false });
-  }
-}
-
-export class ReactivarClienteUseCase {
-  constructor(private readonly clientes: ClientesRepositoryPort) {}
-
-  async ejecutar(id: string): Promise<Cliente> {
-    const existente = await this.clientes.buscarPorId(id);
-    if (!existente) {
-      throw new NoEncontradoError('Cliente', id);
-    }
-    return this.clientes.actualizar(id, { activo: true });
+    return this.clientes.actualizar(id, { activo });
   }
 }

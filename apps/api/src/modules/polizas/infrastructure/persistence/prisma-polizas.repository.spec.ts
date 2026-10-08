@@ -31,12 +31,40 @@ describe('PrismaPolizasRepository', () => {
   });
 
   it('traduce el P2002 al actualizar el número en el mismo 409 (D11)', async () => {
-    const prisma = { poliza: { update: jest.fn().mockRejectedValue(p2002()) } };
+    const prisma = { poliza: { updateMany: jest.fn().mockRejectedValue(p2002()) } };
     const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
 
     await expect(repositorio.actualizar('1', { numero: 'POL-002' })).rejects.toMatchObject({
       codigo: 'CONFLICTO',
       detalles: { campo: 'numero', motivo: 'NUMERO_DUPLICADO' },
     });
+  });
+
+  it('409 POLIZA_MODIFICADA si la póliza dejó de estar vigente antes de escribir', async () => {
+    const prisma = { poliza: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) } };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    await expect(repositorio.cambiarEstado('1', 'CANCELADA')).rejects.toMatchObject({
+      codigo: 'CONFLICTO',
+      detalles: { motivo: 'POLIZA_MODIFICADA' },
+    });
+    expect(prisma.poliza.updateMany).toHaveBeenCalledWith({
+      where: { id: '1', estado: 'VIGENTE' },
+      data: { estado: 'CANCELADA' },
+    });
+  });
+
+  it('al cambiar la prima exige que no haya pagos validados en la misma escritura', async () => {
+    const prisma = { poliza: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) } };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    await expect(repositorio.actualizar('1', { primaTotal: '10.00' })).rejects.toMatchObject({
+      detalles: { motivo: 'POLIZA_MODIFICADA' },
+    });
+    expect(prisma.poliza.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: '1', estado: 'VIGENTE', pagos: { none: { estado: 'VALIDADO' } } },
+      }),
+    );
   });
 });

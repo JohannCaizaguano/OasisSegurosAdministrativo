@@ -8,8 +8,9 @@ import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
 import { cedulaValida } from './identificaciones';
 
 /**
- * E2E de RN-01 (HU-13.2): una póliza no vigente no admite pagos nuevos. Cada póliza
- * la crea la prueba (D19); la del seed no se toca. Requiere PostgreSQL con el seed.
+ * E2E de RN-01 (HU-13.2): una póliza no vigente no admite pagos nuevos ni la
+ * validación de un pago ya registrado. Cada póliza la crea la prueba (D19); la del
+ * seed no se toca. Requiere PostgreSQL con el seed.
  */
 describe('RN-01 en el registro de pagos (e2e)', () => {
   let app: NestExpressApplication;
@@ -27,7 +28,7 @@ describe('RN-01 en el registro de pagos (e2e)', () => {
     return `198.51.100.${(contadorIp % 250) + 1}`;
   }
 
-  function conSesion(metodo: 'get' | 'post', ruta: string) {
+  function conSesion(metodo: 'get' | 'post' | 'patch', ruta: string) {
     return request(app.getHttpServer())
       [metodo](ruta)
       .set('X-Forwarded-For', ip())
@@ -122,5 +123,24 @@ describe('RN-01 en el registro de pagos (e2e)', () => {
     const creado = await crearPago(polizaId).expect(201);
     expect(creado.body.polizaId).toBe(polizaId);
     expect(creado.body.estado).toBe('REGISTRADO');
+  });
+
+  it('rechaza la validación si la póliza se cancela después de registrar el pago (HU-13.2)', async () => {
+    const polizaId = await polizaNueva('VIGENTE');
+    const pago = await crearPago(polizaId).expect(201);
+    const pagoId = pago.body.id as string;
+
+    await conSesion('post', `/api/v1/polizas/${polizaId}/estado`)
+      .send({ estado: 'CANCELADA' })
+      .expect(200);
+
+    const respuesta = await conSesion('patch', `/api/v1/pagos/${pagoId}/validar`)
+      .send({ confirmado: true })
+      .expect(422);
+    expect(respuesta.body.details).toEqual({ campo: 'polizaId', motivo: 'POLIZA_NO_VIGENTE' });
+
+    const guardado = await prisma.pago.findUniqueOrThrow({ where: { id: pagoId } });
+    expect(guardado.estado).toBe('REGISTRADO');
+    expect(await prisma.recibo.count({ where: { pagoId } })).toBe(0);
   });
 });

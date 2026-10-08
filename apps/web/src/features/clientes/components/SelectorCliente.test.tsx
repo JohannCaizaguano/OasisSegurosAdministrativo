@@ -44,7 +44,7 @@ function montar() {
   render(
     <QueryClientProvider client={queryClient}>
       <label htmlFor="cliente-test">Cliente</label>
-      <SelectorCliente id="cliente-test" value={undefined} onChange={onChange} />
+      <SelectorCliente id="cliente-test" onChange={onChange} />
     </QueryClientProvider>,
   );
   return onChange;

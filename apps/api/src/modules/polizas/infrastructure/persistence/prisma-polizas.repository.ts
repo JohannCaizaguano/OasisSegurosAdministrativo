@@ -5,6 +5,7 @@ import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-pris
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Prisma } from '../../../../generated/prisma/client';
 import { ConflictoError } from '../../../../shared-kernel/domain-error';
+import { numeroDuplicado } from '../../domain/errores';
 import { Poliza } from '../../domain/poliza';
 import type {
   DatosActualizarPoliza,
@@ -70,7 +71,9 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       });
       return this.mapear(fila);
     } catch (error: unknown) {
-      this.relanzarSiNumeroDuplicado(error, datos.numero);
+      if (esConflictoUnico(error)) {
+        throw numeroDuplicado(datos.numero);
+      }
       throw error;
     }
   }
@@ -105,10 +108,15 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     return fila ? this.mapear(fila) : null;
   }
 
+  /** Escritura condicional: solo si sigue VIGENTE y, al cambiar la prima, sin pagos validados. */
   async actualizar(id: string, datos: DatosActualizarPoliza): Promise<Poliza> {
     try {
-      const fila = await this.prisma.poliza.update({
-        where: { id },
+      const { count } = await this.prisma.poliza.updateMany({
+        where: {
+          id,
+          estado: 'VIGENTE',
+          ...(datos.primaTotal !== undefined ? { pagos: { none: { estado: 'VALIDADO' } } } : {}),
+        },
         data: {
           ...datos,
           ...(datos.fechaInicio
@@ -116,22 +124,22 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
             : {}),
           ...(datos.fechaFin ? { fechaFin: new Date(`${datos.fechaFin}T00:00:00.000Z`) } : {}),
         },
-        include: INCLUIR_POLIZA,
       });
-      return this.mapear(fila);
+      return this.releerTrasEscribir(id, count);
     } catch (error: unknown) {
-      this.relanzarSiNumeroDuplicado(error, datos.numero);
+      if (datos.numero !== undefined && esConflictoUnico(error)) {
+        throw numeroDuplicado(datos.numero);
+      }
       throw error;
     }
   }
 
   async cambiarEstado(id: string, estado: EstadoPoliza): Promise<Poliza> {
-    const fila = await this.prisma.poliza.update({
-      where: { id },
+    const { count } = await this.prisma.poliza.updateMany({
+      where: { id, estado: 'VIGENTE' },
       data: { estado },
-      include: INCLUIR_POLIZA,
     });
-    return this.mapear(fila);
+    return this.releerTrasEscribir(id, count);
   }
 
   async existeNumero(numero: string, exceptoId?: string): Promise<boolean> {
@@ -163,14 +171,20 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     });
   }
 
-  /** D9/D11: el índice único del número se reporta igual que la comprobación previa. */
-  private relanzarSiNumeroDuplicado(error: unknown, numero?: string): void {
-    if (esConflictoUnico(error)) {
-      throw new ConflictoError(`Ya existe una póliza con el número ${numero}`, {
-        campo: 'numero',
-        motivo: 'NUMERO_DUPLICADO',
-      });
+  private async releerTrasEscribir(id: string, filasEscritas: number): Promise<Poliza> {
+    if (filasEscritas === 0) {
+      throw new ConflictoError(
+        'La póliza cambió mientras se editaba; recargue e intente de nuevo',
+        {
+          motivo: 'POLIZA_MODIFICADA',
+        },
+      );
     }
+    const fila = await this.prisma.poliza.findUniqueOrThrow({
+      where: { id },
+      include: INCLUIR_POLIZA,
+    });
+    return this.mapear(fila);
   }
 
   private mapear(fila: FilaPoliza): Poliza {

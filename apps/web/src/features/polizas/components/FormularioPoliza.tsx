@@ -3,6 +3,7 @@ import { actualizarPolizaSchema, crearPolizaSchema } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useForm, type Control, type Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -37,26 +38,57 @@ interface FormularioPolizaProps {
   alGuardar: () => void;
 }
 
+interface AtributosCampo {
+  id: string;
+  'aria-invalid'?: true;
+  'aria-describedby'?: string;
+}
+
+interface CampoProps {
+  id: string;
+  label: string;
+  error?: string;
+  /** Ayuda permanente del control; su id se enlaza junto con el del error. */
+  ayuda?: string;
+  children: (atributos: AtributosCampo) => ReactNode;
+}
+
+/** Label, control, ayuda y error de un campo, con el ARIA consistente en un solo sitio. */
+function Campo({ id, label, error, ayuda, children }: CampoProps) {
+  const descrito = [error ? `${id}-error` : null, ayuda ? `${id}-ayuda` : null]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      {children({
+        id,
+        'aria-invalid': error ? true : undefined,
+        'aria-describedby': descrito || undefined,
+      })}
+      {ayuda && (
+        <p id={`${id}-ayuda`} className="text-xs text-[var(--muted-foreground)]">
+          {ayuda}
+        </p>
+      )}
+      {error && (
+        <p id={`${id}-error`} role="alert" className="text-sm text-[var(--destructive)]">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** El cliente solo existe al crear; editarlo rompería la trazabilidad (D11). */
 function CampoCliente({ control, error }: { control: Control<DatosFormulario>; error?: string }) {
   const { field } = useController({ control, name: 'clienteId' });
 
   return (
-    <div className="grid gap-2">
-      <Label htmlFor="poliza-cliente">Cliente</Label>
-      <SelectorCliente
-        id="poliza-cliente"
-        value={field.value}
-        onChange={field.onChange}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? 'poliza-cliente-error' : undefined}
-      />
-      {error && (
-        <p id="poliza-cliente-error" role="alert" className="text-sm text-[var(--destructive)]">
-          {error}
-        </p>
-      )}
-    </div>
+    <Campo id="poliza-cliente" label="Cliente" error={error}>
+      {(atributos) => <SelectorCliente onChange={field.onChange} {...atributos} />}
+    </Campo>
   );
 }
 
@@ -99,12 +131,15 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
   const { field: campoRamo } = useController({ control: formulario.control, name: 'ramoId' });
   const errores = formulario.formState.errors;
 
+  // El cliente no se monta en edición (D11): un 422 suyo ahí solo puede ir a toast.
+  const camposDelFormulario: ReadonlyArray<keyof DatosFormulario> = esEdicion
+    ? ['numero', 'aseguradoraId', 'ramoId', 'primaTotal', 'fechaInicio', 'fechaFin']
+    : ['numero', 'clienteId', 'aseguradoraId', 'ramoId', 'primaTotal', 'fechaInicio', 'fechaFin'];
+
   function manejarError(error: unknown) {
     const detalle =
       error instanceof ApiError ? (error.details as { campo?: string } | undefined) : undefined;
-    const campo = (Object.keys(formulario.getValues()) as Array<keyof DatosFormulario>).find(
-      (nombre) => nombre === detalle?.campo,
-    );
+    const campo = camposDelFormulario.find((nombre) => nombre === detalle?.campo);
     if (campo) {
       formulario.setError(campo, {
         message: error instanceof Error ? error.message : 'Dato inválido',
@@ -139,146 +174,77 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
         crear.mutate(datos as CrearPolizaInput, { onSuccess: alGuardar, onError: manejarError });
       })}
     >
-      <div className="grid gap-2">
-        <Label htmlFor="poliza-numero">Número</Label>
-        <Input
-          id="poliza-numero"
-          aria-invalid={errores.numero ? true : undefined}
-          aria-describedby={errores.numero ? 'poliza-numero-error' : undefined}
-          {...formulario.register('numero')}
-        />
-        {errores.numero && (
-          <p id="poliza-numero-error" role="alert" className="text-sm text-[var(--destructive)]">
-            {errores.numero.message}
-          </p>
-        )}
-      </div>
+      <Campo id="poliza-numero" label="Número" error={errores.numero?.message}>
+        {(atributos) => <Input {...atributos} {...formulario.register('numero')} />}
+      </Campo>
 
       {!esEdicion && (
         <CampoCliente control={formulario.control} error={errores.clienteId?.message} />
       )}
 
-      <div className="grid gap-2">
-        <Label htmlFor="poliza-aseguradora">Aseguradora</Label>
-        <Select value={campoAseguradora.value} onValueChange={campoAseguradora.onChange}>
-          <SelectTrigger
-            id="poliza-aseguradora"
-            aria-invalid={errores.aseguradoraId ? true : undefined}
-            aria-describedby={errores.aseguradoraId ? 'poliza-aseguradora-error' : undefined}
-          >
-            <SelectValue placeholder="Seleccione una aseguradora" />
-          </SelectTrigger>
-          <SelectContent>
-            {(aseguradoras.data?.data ?? []).map((aseguradora) => (
-              <SelectItem key={aseguradora.id} value={aseguradora.id}>
-                {aseguradora.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errores.aseguradoraId && (
-          <p
-            id="poliza-aseguradora-error"
-            role="alert"
-            className="text-sm text-[var(--destructive)]"
-          >
-            {errores.aseguradoraId.message}
-          </p>
+      <Campo id="poliza-aseguradora" label="Aseguradora" error={errores.aseguradoraId?.message}>
+        {(atributos) => (
+          <Select value={campoAseguradora.value} onValueChange={campoAseguradora.onChange}>
+            <SelectTrigger {...atributos}>
+              <SelectValue placeholder="Seleccione una aseguradora" />
+            </SelectTrigger>
+            <SelectContent>
+              {(aseguradoras.data?.data ?? []).map((aseguradora) => (
+                <SelectItem key={aseguradora.id} value={aseguradora.id}>
+                  {aseguradora.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
-      </div>
+      </Campo>
 
-      <div className="grid gap-2">
-        <Label htmlFor="poliza-ramo">Ramo</Label>
-        <Select value={campoRamo.value} onValueChange={campoRamo.onChange}>
-          <SelectTrigger
-            id="poliza-ramo"
-            aria-invalid={errores.ramoId ? true : undefined}
-            aria-describedby={errores.ramoId ? 'poliza-ramo-error' : undefined}
-          >
-            <SelectValue placeholder="Seleccione un ramo" />
-          </SelectTrigger>
-          <SelectContent>
-            {(ramos.data ?? []).map((ramo) => (
-              <SelectItem key={ramo.id} value={ramo.id}>
-                {ramo.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errores.ramoId && (
-          <p id="poliza-ramo-error" role="alert" className="text-sm text-[var(--destructive)]">
-            {errores.ramoId.message}
-          </p>
+      <Campo id="poliza-ramo" label="Ramo" error={errores.ramoId?.message}>
+        {(atributos) => (
+          <Select value={campoRamo.value} onValueChange={campoRamo.onChange}>
+            <SelectTrigger {...atributos}>
+              <SelectValue placeholder="Seleccione un ramo" />
+            </SelectTrigger>
+            <SelectContent>
+              {(ramos.data ?? []).map((ramo) => (
+                <SelectItem key={ramo.id} value={ramo.id}>
+                  {ramo.nombre}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
-      </div>
+      </Campo>
 
-      <div className="grid gap-2">
-        <Label htmlFor="poliza-prima">Prima total</Label>
-        <Input
-          id="poliza-prima"
-          inputMode="decimal"
-          placeholder="0.00"
-          aria-invalid={errores.primaTotal ? true : undefined}
-          aria-describedby={
-            errores.primaTotal
-              ? 'poliza-prima-error poliza-prima-ayuda'
-              : bloqueoPrima
-                ? 'poliza-prima-ayuda'
-                : undefined
-          }
-          {...formulario.register('primaTotal', { disabled: bloqueoPrima })}
-        />
-        {bloqueoPrima && (
-          <p id="poliza-prima-ayuda" className="text-xs text-[var(--muted-foreground)]">
-            {AYUDA_PRIMA_BLOQUEADA}
-          </p>
+      <Campo
+        id="poliza-prima"
+        label="Prima total"
+        error={errores.primaTotal?.message}
+        ayuda={bloqueoPrima ? AYUDA_PRIMA_BLOQUEADA : undefined}
+      >
+        {(atributos) => (
+          <Input
+            {...atributos}
+            inputMode="decimal"
+            placeholder="0.00"
+            {...formulario.register('primaTotal', { disabled: bloqueoPrima })}
+          />
         )}
-        {errores.primaTotal && (
-          <p id="poliza-prima-error" role="alert" className="text-sm text-[var(--destructive)]">
-            {errores.primaTotal.message}
-          </p>
-        )}
-      </div>
+      </Campo>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
-          <Label htmlFor="poliza-fecha-inicio">Fecha de inicio</Label>
-          <Input
-            id="poliza-fecha-inicio"
-            type="date"
-            aria-invalid={errores.fechaInicio ? true : undefined}
-            aria-describedby={errores.fechaInicio ? 'poliza-fecha-inicio-error' : undefined}
-            {...formulario.register('fechaInicio')}
-          />
-          {errores.fechaInicio && (
-            <p
-              id="poliza-fecha-inicio-error"
-              role="alert"
-              className="text-sm text-[var(--destructive)]"
-            >
-              {errores.fechaInicio.message}
-            </p>
+        <Campo
+          id="poliza-fecha-inicio"
+          label="Fecha de inicio"
+          error={errores.fechaInicio?.message}
+        >
+          {(atributos) => (
+            <Input {...atributos} type="date" {...formulario.register('fechaInicio')} />
           )}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="poliza-fecha-fin">Fecha de fin</Label>
-          <Input
-            id="poliza-fecha-fin"
-            type="date"
-            aria-invalid={errores.fechaFin ? true : undefined}
-            aria-describedby={errores.fechaFin ? 'poliza-fecha-fin-error' : undefined}
-            {...formulario.register('fechaFin')}
-          />
-          {errores.fechaFin && (
-            <p
-              id="poliza-fecha-fin-error"
-              role="alert"
-              className="text-sm text-[var(--destructive)]"
-            >
-              {errores.fechaFin.message}
-            </p>
-          )}
-        </div>
+        </Campo>
+        <Campo id="poliza-fecha-fin" label="Fecha de fin" error={errores.fechaFin?.message}>
+          {(atributos) => <Input {...atributos} type="date" {...formulario.register('fechaFin')} />}
+        </Campo>
       </div>
 
       <DialogFooter>

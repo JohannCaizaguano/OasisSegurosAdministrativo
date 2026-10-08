@@ -1,6 +1,6 @@
 import type { Cliente } from '@oasis/shared';
 import { X } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useId, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,6 @@ import { nombreCliente } from '../nombre-cliente';
 import { useClientes } from '../hooks';
 
 interface SelectorClienteProps {
-  value?: string;
   onChange: (clienteId: string | undefined) => void;
   id?: string;
   'aria-invalid'?: boolean;
@@ -22,9 +21,10 @@ interface SelectorClienteProps {
 /**
  * Combobox ARIA 1.2 (D16): la búsqueda y el resaltado viven en el servidor; el foco
  * se queda en el input y `aria-activedescendant` apunta a la opción resaltada.
+ * Es no controlado: reporta ids por `onChange` y el padre lo remonta con una `key`
+ * cuando necesita vaciar la selección (p. ej. "Limpiar filtros").
  */
 export function SelectorCliente({
-  value,
   onChange,
   id,
   'aria-invalid': ariaInvalid,
@@ -49,19 +49,6 @@ export function SelectorCliente({
   const clientes = consulta.data?.data ?? [];
   const indiceActivo = activo >= 0 && activo < clientes.length ? activo : -1;
   const opcionActiva = indiceActivo >= 0 ? clientes[indiceActivo] : undefined;
-
-  // El padre puede limpiar la selección (p. ej. "Limpiar filtros"): solo se
-  // sincroniza cuando el valor pasa de definido a indefinido, no cuando nace vacío.
-  const valorPrevio = useRef(value);
-  useEffect(() => {
-    const seLimpió = valorPrevio.current !== undefined && value === undefined;
-    valorPrevio.current = value;
-    if (seLimpió && seleccionado) {
-      setSeleccionado(null);
-      setTexto('');
-      setActivo(-1);
-    }
-  }, [value, seleccionado]);
 
   function elegir(cliente: Cliente) {
     setSeleccionado(cliente);

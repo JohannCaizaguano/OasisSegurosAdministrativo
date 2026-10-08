@@ -1,6 +1,7 @@
 import type { Aseguradora, Cliente, Poliza, Ramo } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { toast } from 'sonner';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/lib/api-client';
@@ -24,11 +25,14 @@ vi.mock('@/features/clientes/api', () => ({
   clientesApi: { listar: vi.fn() },
 }));
 
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
+
 const crear = vi.mocked(polizasApi.crear);
 const actualizar = vi.mocked(polizasApi.actualizar);
 const aseguradoras = vi.mocked(polizasApi.aseguradoras);
 const ramos = vi.mocked(polizasApi.ramos);
 const listarClientes = vi.mocked(clientesApi.listar);
+const toastError = vi.mocked(toast.error);
 
 const CLIENTE_ID = '33333333-3333-4333-8333-333333333333';
 const ASEGURADORA_ID = '44444444-4444-4444-8444-444444444444';
@@ -228,5 +232,44 @@ describe('FormularioPoliza', () => {
       'aria-describedby',
       expect.stringContaining('poliza-cliente-error'),
     );
+  });
+
+  it('un error de un campo que no está montado en edición cae al toast', async () => {
+    actualizar.mockRejectedValue(
+      new ApiError(
+        {
+          statusCode: 422,
+          code: 'REGLA_NEGOCIO',
+          message: 'El cliente está inactivo y no admite nuevas pólizas',
+          details: { campo: 'clienteId', motivo: 'CLIENTE_INACTIVO' },
+        },
+        422,
+      ),
+    );
+    montar(POLIZA);
+
+    fireEvent.click(screen.getByTestId('boton-guardar-poliza'));
+
+    await waitFor(() =>
+      expect(toastError).toHaveBeenCalledWith(
+        'El cliente está inactivo y no admite nuevas pólizas',
+      ),
+    );
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('un error sin campo identificado cae al toast', async () => {
+    actualizar.mockRejectedValue(
+      new ApiError(
+        { statusCode: 500, code: 'ERROR_INTERNO', message: 'No fue posible guardar' },
+        500,
+      ),
+    );
+    montar(POLIZA);
+
+    fireEvent.click(screen.getByTestId('boton-guardar-poliza'));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith('No fue posible guardar'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

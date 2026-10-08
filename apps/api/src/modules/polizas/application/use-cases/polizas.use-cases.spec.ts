@@ -166,7 +166,23 @@ describe('ActualizarPolizaUseCase', () => {
 
     await caso.ejecutar(POLIZA_ID, { primaTotal: '1500.50' });
 
-    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { primaTotal: '1500.50' });
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, {});
+  });
+
+  it('no revalida el ramo ni la aseguradora si no cambian (catálogo con retiros)', async () => {
+    const poliza = crearPoliza();
+    const deps = crearDobles(poliza);
+    jest.mocked(deps.polizas.buscarRamoActivoPorId).mockResolvedValue(null);
+    jest.mocked(deps.polizas.existeAseguradora).mockResolvedValue(false);
+    const caso = new ActualizarPolizaUseCase(deps.polizas);
+
+    await caso.ejecutar(POLIZA_ID, {
+      ramoId: poliza.ramoId,
+      aseguradoraId: poliza.aseguradoraId,
+      fechaFin: '2027-06-30',
+    });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalled();
   });
 
   it('422 VALIDACION si la fecha final resultante no es posterior a la inicial (D11)', async () => {

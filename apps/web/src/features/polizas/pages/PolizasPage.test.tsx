@@ -187,9 +187,21 @@ describe('PolizasPage', () => {
     );
   });
 
-  it('"Limpiar filtros" restablece los parámetros', async () => {
+  it('"Limpiar filtros" vacía el combobox y restablece los parámetros', async () => {
     montar();
     await screen.findByText('POL-0001');
+
+    const cliente = screen.getByRole('combobox', { name: 'Cliente' });
+    fireEvent.focus(cliente);
+    fireEvent.change(cliente, { target: { value: 'ana' } });
+    await screen.findByRole('option', { name: /Ana Pérez/ });
+    fireEvent.keyDown(cliente, { key: 'ArrowDown' });
+    fireEvent.keyDown(cliente, { key: 'Enter' });
+    await waitFor(() =>
+      expect(listar).toHaveBeenLastCalledWith(
+        expect.objectContaining({ clienteId: CLIENTE_ID, page: 1 }),
+      ),
+    );
 
     await elegirEnSelect('Estado', 'Cancelada');
     await waitFor(() =>
@@ -198,9 +210,13 @@ describe('PolizasPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
 
-    await waitFor(() =>
-      expect(listar).toHaveBeenLastCalledWith(expect.not.objectContaining({ estado: 'CANCELADA' })),
-    );
+    expect(screen.getByRole('combobox', { name: 'Cliente' })).toHaveValue('');
+    await waitFor(() => {
+      const ultima = listar.mock.calls.at(-1)?.[0];
+      expect(ultima).toMatchObject({ page: 1, orden: 'recientes' });
+      expect(ultima?.clienteId).toBeUndefined();
+      expect(ultima?.estado).toBeUndefined();
+    });
   });
 
   it('una póliza cancelada no ofrece acciones de fila', async () => {
@@ -209,6 +225,30 @@ describe('PolizasPage', () => {
     await screen.findByText('POL-0001');
 
     expect(screen.queryByTestId(`menu-poliza-${POLIZA_ID}`)).not.toBeInTheDocument();
+  });
+
+  it('el combobox de Nueva póliza nace vacío cada vez que se abre el diálogo', async () => {
+    montar();
+    await screen.findByText('POL-0001');
+
+    fireEvent.click(screen.getByTestId('boton-nueva-poliza'));
+    const dialogo = await screen.findByRole('dialog', { name: 'Nueva póliza' });
+    const combobox = within(dialogo).getByRole('combobox', { name: 'Cliente' });
+    fireEvent.focus(combobox);
+    fireEvent.change(combobox, { target: { value: 'ana' } });
+    await screen.findByRole('option', { name: /Ana Pérez/ });
+    fireEvent.keyDown(combobox, { key: 'ArrowDown' });
+    fireEvent.keyDown(combobox, { key: 'Enter' });
+    expect(combobox).toHaveValue('Ana Pérez');
+
+    fireEvent.click(within(dialogo).getByRole('button', { name: 'Cerrar' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'Nueva póliza' })).not.toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByTestId('boton-nueva-poliza'));
+    const dialogoNuevo = await screen.findByRole('dialog', { name: 'Nueva póliza' });
+    expect(within(dialogoNuevo).getByRole('combobox', { name: 'Cliente' })).toHaveValue('');
   });
 
   it('Escape cierra la lista del combobox sin cerrar el diálogo', async () => {

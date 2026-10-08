@@ -5,6 +5,7 @@ import { EmitirReciboUseCase } from '../../../recibos/application/use-cases/emit
 import type { Pago } from '../../domain/pago';
 import type { Recibo } from '../../../recibos/domain/recibo';
 import type { PagosRepositoryPort } from '../ports/pagos.repository.port';
+import { exigirPolizaVigente } from './pagos.use-cases';
 
 export interface ResultadoValidacion {
   pago: Pago;
@@ -35,6 +36,8 @@ export class ValidarPagoUseCase {
     if (!pago.puedeValidarse()) {
       throw new ReglaNegocioError(`El pago ya está ${pago.estado.toLowerCase()}`);
     }
+
+    await exigirPolizaVigente(this.pagos, pago.polizaId);
 
     const ahora = this.clock.ahora();
     const datosRecibo = this.emitirRecibo.ejecutar({

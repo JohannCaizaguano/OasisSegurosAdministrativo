@@ -1,10 +1,10 @@
 import {
-  ConflictoError,
   NoEncontradoError,
   ProhibidoError,
   ReglaNegocioError,
   ValidacionError,
 } from '../../../../shared-kernel/domain-error';
+import { numeroDuplicado } from '../../domain/errores';
 import type { Poliza } from '../../domain/poliza';
 import type {
   DatosActualizarPoliza,
@@ -14,14 +14,6 @@ import type {
   PolizasRepositoryPort,
   RamoResumen,
 } from '../ports/polizas.repository.port';
-
-/** D9: el número repetido se reporta igual desde el caso de uso y desde el P2002. */
-function numeroDuplicado(numero: string): ConflictoError {
-  return new ConflictoError(`Ya existe una póliza con el número ${numero}`, {
-    campo: 'numero',
-    motivo: 'NUMERO_DUPLICADO',
-  });
-}
 
 function ramoInvalido(): ReglaNegocioError {
   return new ReglaNegocioError('El ramo seleccionado no está disponible', {
@@ -108,11 +100,11 @@ export class ActualizarPolizaUseCase {
       });
     }
 
-    if (
-      datos.primaTotal !== undefined &&
-      Number(datos.primaTotal) !== Number(existente.primaTotal) &&
-      existente.tienePagosValidados
-    ) {
+    // La prima solo viaja si cambia: así el repositorio exige "sin pagos validados" únicamente entonces.
+    const { primaTotal, ...resto } = datos;
+    const primaCambia =
+      primaTotal !== undefined && Number(primaTotal) !== Number(existente.primaTotal);
+    if (primaCambia && existente.tienePagosValidados) {
       throw new ReglaNegocioError(
         'La prima no se puede modificar porque la póliza tiene pagos validados',
         { campo: 'primaTotal', motivo: 'PRIMA_CON_PAGOS_VALIDADOS' },
@@ -128,14 +120,20 @@ export class ActualizarPolizaUseCase {
       ]);
     }
 
-    // Mismo orden que al crear (D9): aseguradora y ramo antes que el número.
+    // Mismo orden que al crear (D9). Solo se valida lo que cambia: un ramo o una aseguradora
+    // retirados del catálogo no deben impedir editar otros campos de una póliza vieja.
     if (
       datos.aseguradoraId !== undefined &&
+      datos.aseguradoraId !== existente.aseguradoraId &&
       !(await this.polizas.existeAseguradora(datos.aseguradoraId))
     ) {
       throw new NoEncontradoError('Aseguradora', datos.aseguradoraId);
     }
-    if (datos.ramoId !== undefined && !(await this.polizas.buscarRamoActivoPorId(datos.ramoId))) {
+    if (
+      datos.ramoId !== undefined &&
+      datos.ramoId !== existente.ramoId &&
+      !(await this.polizas.buscarRamoActivoPorId(datos.ramoId))
+    ) {
       throw ramoInvalido();
     }
     if (
@@ -146,7 +144,7 @@ export class ActualizarPolizaUseCase {
       throw numeroDuplicado(datos.numero);
     }
 
-    return this.polizas.actualizar(id, datos);
+    return this.polizas.actualizar(id, primaCambia ? { ...resto, primaTotal } : resto);
   }
 }
 
