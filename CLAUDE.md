@@ -55,6 +55,19 @@ leyendo varios archivos.
   `useFactory` + `inject` por token `Symbol`. Un módulo reutiliza otro importándolo (por ejemplo,
   `PagosModule` importa `RecibosModule` para usar `EmitirReciboUseCase` y `COLA_ANCLAJE`).
 
+## Clientes y pólizas (S5)
+
+- `GET /ramos` (ADMIN y OPERADOR) sirve el `Select` de ramo del formulario de póliza y devuelve
+  los ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. El catálogo se
+  administra en HU-46 (S15): hoy es de solo lectura.
+- Ciclo de vida de la póliza (ADR-018): nace VIGENTE; `POST /polizas/:id/estado` solo acepta
+  VIGENTE → VENCIDA o CANCELADA (ambos terminales) y queda en la bitácora como `CAMBIAR_ESTADO`;
+  `PATCH /polizas/:id` solo edita pólizas VIGENTE y no admite `clienteId` ni `estado`; la prima no
+  cambia si hay pagos VALIDADOS; `DELETE` no existe (RN-09). Renovar es crear una póliza nueva.
+- RN-01 vive en `CrearPagoUseCase`: póliza inexistente → 404 y no VIGENTE → 422
+  `POLIZA_NO_VIGENTE`, antes de resolver el método de pago (el registro completo de pagos es
+  HU-16, S6).
+
 ## Sesiones (ADR-016)
 
 - La llave `sesion:<usuarioId>:<sid>` guarda en Redis el `jti` vigente con TTL
@@ -105,6 +118,10 @@ leyendo varios archivos.
   deduplicada en la pestaña y serializada entre pestañas con Web Locks; si no puede, cierra la
   sesión con el motivo `expirada`, que el login muestra.
 - En desarrollo, Vite redirige `/api` a `:3000`, igual que Caddy en producción.
+- `features/clientes/components/SelectorCliente.tsx` es el combobox ARIA 1.2 compartido (sin
+  dependencias): busca en el servidor `GET /clientes?q=…&estado=ACTIVOS&pageSize=20` con debounce
+  de 300 ms y lo usan el formulario y el filtro de `PolizasPage`. Dentro de un `Dialog`, el
+  `onEscapeKeyDown` del contenido protege la lista abierta del cierre del diálogo.
 
 ## Pruebas: detalles que no están en AGENTS.md
 

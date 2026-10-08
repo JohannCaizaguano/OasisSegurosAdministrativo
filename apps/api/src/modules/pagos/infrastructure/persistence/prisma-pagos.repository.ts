@@ -1,4 +1,4 @@
-import type { MetodoPago } from '@oasis/shared';
+import type { EstadoPoliza, MetodoPago } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { ConflictoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
@@ -105,6 +105,14 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       select: { id: true, codigo: true },
     });
     return fila ? { id: fila.id, codigo: fila.codigo as MetodoPago } : null;
+  }
+
+  async estadoPoliza(polizaId: string): Promise<EstadoPoliza | null> {
+    const fila = await this.prisma.poliza.findUnique({
+      where: { id: polizaId },
+      select: { estado: true },
+    });
+    return fila?.estado ?? null;
   }
 
   async validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion> {

@@ -23,3 +23,4 @@ y no se reutilizan.
 | ADR-015 | Acceso solo con inicio de sesión; sin página pública de verificación          | S3 y S8 | `ADR-015-acceso-solo-autenticado.md`        |
 | ADR-016 | Sesiones por familia de rotación con cierre por inactividad en Redis          | S3      | `ADR-016-sesiones-redis.md`                 |
 | ADR-017 | Validación de identificaciones ecuatorianas (RN-11)                           | S4      | `ADR-017-validacion-identificaciones.md`    |
+| ADR-018 | Ciclo de vida de la póliza: estados terminales y edición restringida          | S5      | `ADR-018-ciclo-vida-poliza.md`              |

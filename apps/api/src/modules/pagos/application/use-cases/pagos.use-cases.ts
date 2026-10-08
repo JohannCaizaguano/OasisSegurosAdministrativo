@@ -11,10 +11,30 @@ import type {
   PagosRepositoryPort,
 } from '../ports/pagos.repository.port';
 
+/** RN-01: se exige al registrar y de nuevo al validar, por si la póliza cambió entre ambos. */
+export async function exigirPolizaVigente(
+  pagos: PagosRepositoryPort,
+  polizaId: string,
+): Promise<void> {
+  const estado = await pagos.estadoPoliza(polizaId);
+  if (estado === null) {
+    throw new NoEncontradoError('Póliza', polizaId);
+  }
+  if (estado !== 'VIGENTE') {
+    throw new ReglaNegocioError('La póliza no está vigente y no admite pagos (RN-01)', {
+      campo: 'polizaId',
+      motivo: 'POLIZA_NO_VIGENTE',
+    });
+  }
+}
+
 export class CrearPagoUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
+  /** D14 (RN-01): la póliza debe existir y estar VIGENTE antes de resolver el método. */
   async ejecutar(datos: ComandoCrearPago): Promise<Pago> {
+    await exigirPolizaVigente(this.pagos, datos.polizaId);
+
     const metodo = await this.pagos.buscarMetodoPago(datos.metodo);
     if (!metodo) {
       throw new ValidacionError(`Método de pago no reconocido: ${datos.metodo}`);

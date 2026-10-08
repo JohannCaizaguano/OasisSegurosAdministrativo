@@ -14,6 +14,8 @@ export interface PropsPoliza {
   fechaInicio: string;
   fechaFin: string;
   estado: EstadoPoliza;
+  /** D11: si tiene pagos VALIDADOS, la prima no se puede editar. */
+  tienePagosValidados: boolean;
   clienteNombre?: string;
   aseguradoraNombre?: string;
   createdAt: string;
@@ -63,6 +65,10 @@ export class Poliza extends Entity<PropsPoliza> {
 
   get estado(): EstadoPoliza {
     return this.props.estado;
+  }
+
+  get tienePagosValidados(): boolean {
+    return this.props.tienePagosValidados;
   }
 
   get clienteNombre(): string | undefined {

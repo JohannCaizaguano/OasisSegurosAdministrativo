@@ -163,6 +163,62 @@ describe('Bitácora de auditoría (e2e)', () => {
     expect(creacion.entidadId).toBe(pagoId);
   });
 
+  it('registra el cambio de estado de una póliza con su acción nueva (HU-13, HU-45)', async () => {
+    const aseguradora = await prisma.aseguradora.findFirstOrThrow();
+    const ramo = await prisma.ramo.findUniqueOrThrow({ where: { codigo: 'VEHICULOS' } });
+    const cliente = await prisma.cliente.create({
+      data: {
+        tipoIdentificacion: 'PASAPORTE',
+        identificacion: `E2E-BIT-${sufijo}`,
+        nombres: 'Bitácora',
+        apellidos: 'Estado',
+        email: `bitacora.estado.${sufijo}@example.com`,
+      },
+    });
+    const poliza = await prisma.poliza.create({
+      data: {
+        numero: `POL-BIT-${sufijo}`,
+        clienteId: cliente.id,
+        aseguradoraId: aseguradora.id,
+        ramoId: ramo.id,
+        primaTotal: '100.00',
+        fechaInicio: new Date(Date.UTC(2026, 10, 1)),
+        fechaFin: new Date(Date.UTC(2027, 9, 31)),
+        estado: 'VIGENTE',
+      },
+    });
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/polizas/${poliza.id}/estado`)
+      .set('X-Forwarded-For', '10.6.0.42')
+      .set('Authorization', `Bearer ${tokenOperador}`)
+      .send({ estado: 'VENCIDA' })
+      .expect(200);
+
+    const fila = await ultimo({
+      accion: 'CAMBIAR_ESTADO',
+      entidad: 'Poliza',
+      entidadId: poliza.id,
+    });
+    expect(fila.detalle).toMatchObject({ estado: 'VENCIDA' });
+
+    const hoy = hoyEnEcuador();
+    const listado = await request(app.getHttpServer())
+      .get('/api/v1/bitacora')
+      .query({ usuarioId: operadorId, accion: 'CAMBIAR_ESTADO', desde: hoy, hasta: hoy })
+      .set('Authorization', `Bearer ${tokenAdmin}`)
+      .expect(200);
+
+    expect(listado.body.meta.total).toBeGreaterThanOrEqual(1);
+    for (const item of listado.body.data) {
+      expect(item.accion).toBe('CAMBIAR_ESTADO');
+    }
+    const entidades = (listado.body.data as Array<{ entidadId: string | null }>).map(
+      (registro) => registro.entidadId,
+    );
+    expect(entidades).toContain(poliza.id);
+  });
+
   it('el ADMIN filtra por usuario, acción y fecha de Ecuador', async () => {
     const hoy = hoyEnEcuador();
     const respuesta = await request(app.getHttpServer())

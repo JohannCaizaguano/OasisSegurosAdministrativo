@@ -1,9 +1,15 @@
 import { z } from 'zod';
-import { TIPOS_IDENTIFICACION, type TipoIdentificacion } from '../constants/estados';
+import {
+  FILTROS_ESTADO_CLIENTE,
+  TIPOS_IDENTIFICACION,
+  type TipoIdentificacion,
+} from '../constants/estados';
 import { normalizarIdentificacion, validarIdentificacion } from '../validacion/identificacion';
 import { paginacionQuerySchema } from './common.schema';
 
 export const tipoIdentificacionSchema = z.enum(TIPOS_IDENTIFICACION);
+
+export const filtroEstadoClienteSchema = z.enum(FILTROS_ESTADO_CLIENTE);
 
 const clienteBaseSchema = z.object({
   tipoIdentificacion: tipoIdentificacionSchema,
@@ -110,6 +116,8 @@ export type ActualizarClienteInput = z.infer<typeof actualizarClienteSchema>;
 
 export const clienteSchema = clienteBaseSchema.extend({
   id: z.uuid(),
+  activo: z.boolean(),
+  tienePolizas: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });
@@ -118,5 +126,6 @@ export type Cliente = z.infer<typeof clienteSchema>;
 export const listarClientesQuerySchema = paginacionQuerySchema.extend({
   q: z.string().trim().min(1).max(120).optional(),
   tipoIdentificacion: tipoIdentificacionSchema.optional(),
+  estado: filtroEstadoClienteSchema.default('ACTIVOS'),
 });
 export type ListarClientesQuery = z.infer<typeof listarClientesQuerySchema>;

@@ -64,6 +64,15 @@ describe('BitacoraPage', () => {
     expect(screen.getByText(/10:30:00/)).toBeInTheDocument();
   });
 
+  it('traduce la acción de cambio de estado de una póliza', async () => {
+    listar.mockResolvedValue(
+      respuesta([{ ...REGISTRO, accion: 'CAMBIAR_ESTADO', entidad: 'Poliza' }]),
+    );
+    montar();
+
+    expect(await screen.findByText('Cambio de estado')).toBeInTheDocument();
+  });
+
   it('al elegir una fecha desde vuelve a la página 1 y filtra', async () => {
     listar.mockResolvedValue(respuesta([REGISTRO], { total: 45, totalPages: 3 }));
     montar();

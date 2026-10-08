@@ -11,6 +11,9 @@ export interface PropsCliente {
   razonSocial: string | null;
   email: string;
   telefono: string | null;
+  activo: boolean;
+  /** Si el cliente tiene al menos una póliza, la identificación no se puede cambiar (D5). */
+  tienePolizas: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -50,6 +53,14 @@ export class Cliente extends Entity<PropsCliente> {
 
   get telefono(): string | null {
     return this.props.telefono;
+  }
+
+  get activo(): boolean {
+    return this.props.activo;
+  }
+
+  get tienePolizas(): boolean {
+    return this.props.tienePolizas;
   }
 
   get createdAt(): string {

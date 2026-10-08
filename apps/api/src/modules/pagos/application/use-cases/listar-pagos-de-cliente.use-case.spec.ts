@@ -9,6 +9,7 @@ function crearRepo(): PagosRepositoryPort {
     validarYCrearRecibo: jest.fn(),
     rechazar: jest.fn(),
     buscarMetodoPago: jest.fn(),
+    estadoPoliza: jest.fn(),
   };
 }
 

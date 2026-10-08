@@ -3,17 +3,19 @@ import { Module } from '@nestjs/common';
 import { POLIZAS_REPOSITORY } from './application/ports/polizas.repository.port';
 import {
   ActualizarPolizaUseCase,
+  CambiarEstadoPolizaUseCase,
   CrearPolizaUseCase,
-  EliminarPolizaUseCase,
   ListarPolizasDeClienteUseCase,
   ListarPolizasUseCase,
+  ListarRamosUseCase,
   ObtenerPolizaUseCase,
 } from './application/use-cases/polizas.use-cases';
 import { PrismaPolizasRepository } from './infrastructure/persistence/prisma-polizas.repository';
 import { MisPolizasController, PolizasController } from './presentation/http/polizas.controller';
+import { RamosController } from './presentation/http/ramos.controller';
 
 @Module({
-  controllers: [PolizasController, MisPolizasController],
+  controllers: [PolizasController, MisPolizasController, RamosController],
   providers: [
     { provide: POLIZAS_REPOSITORY, useClass: PrismaPolizasRepository },
     {
@@ -42,9 +44,14 @@ import { MisPolizasController, PolizasController } from './presentation/http/pol
       useFactory: (repo: PrismaPolizasRepository) => new ActualizarPolizaUseCase(repo),
     },
     {
-      provide: EliminarPolizaUseCase,
+      provide: CambiarEstadoPolizaUseCase,
       inject: [POLIZAS_REPOSITORY],
-      useFactory: (repo: PrismaPolizasRepository) => new EliminarPolizaUseCase(repo),
+      useFactory: (repo: PrismaPolizasRepository) => new CambiarEstadoPolizaUseCase(repo),
+    },
+    {
+      provide: ListarRamosUseCase,
+      inject: [POLIZAS_REPOSITORY],
+      useFactory: (repo: PrismaPolizasRepository) => new ListarRamosUseCase(repo),
     },
   ],
   exports: [POLIZAS_REPOSITORY],

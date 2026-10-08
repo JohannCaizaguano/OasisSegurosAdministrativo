@@ -54,6 +54,16 @@ async function sinDesborde(page: Page, ruta: string): Promise<void> {
     .toBeLessThanOrEqual(360);
 }
 
+/** Igual que `sinDesborde`, pero sobre la pantalla ya abierta (diálogos, listas). */
+async function sinDesbordeActual(page: Page, mensaje: string): Promise<void> {
+  await expect
+    .poll(() => page.evaluate(() => document.documentElement.scrollWidth), {
+      message: mensaje,
+      timeout: 15_000,
+    })
+    .toBeLessThanOrEqual(360);
+}
+
 for (const rol of Object.keys(CUENTAS) as Rol[]) {
   test(`sin desborde a 360 px: ${rol}`, async ({ page }) => {
     await page.setExtraHTTPHeaders({
@@ -79,3 +89,24 @@ for (const rol of Object.keys(CUENTAS) as Rol[]) {
     }
   });
 }
+
+test('sin desborde a 360 px con los diálogos abiertos (HU-08 a HU-12)', async ({ page }) => {
+  await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.5.0.41' });
+  await iniciarSesion(page, 'operador@oasis.com', 'Operador.Oasis1');
+
+  await page.goto('/clientes');
+  await esperarCarga(page);
+  await page.getByTestId('boton-nuevo-cliente').click();
+  await expect(page.getByRole('dialog', { name: 'Nuevo cliente' })).toBeVisible();
+  await sinDesbordeActual(page, 'desborde en el diálogo de nuevo cliente');
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+
+  await page.goto('/polizas');
+  await esperarCarga(page);
+  await page.getByTestId('boton-nueva-poliza').click();
+  const dialogo = page.getByRole('dialog', { name: 'Nueva póliza' });
+  await expect(dialogo).toBeVisible();
+  await dialogo.getByRole('combobox', { name: 'Cliente' }).click();
+  await sinDesbordeActual(page, 'desborde en el diálogo de nueva póliza');
+  await dialogo.getByRole('button', { name: 'Cerrar' }).click();
+});

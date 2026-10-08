@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { CLIENTES_REPOSITORY } from './application/ports/clientes.repository.port';
 import {
   ActualizarClienteUseCase,
+  CambiarActivoClienteUseCase,
   CrearClienteUseCase,
   ListarClientesUseCase,
   ObtenerClienteUseCase,
@@ -33,6 +34,11 @@ import { ClientesController } from './presentation/http/clientes.controller';
       provide: ActualizarClienteUseCase,
       inject: [CLIENTES_REPOSITORY],
       useFactory: (repo: PrismaClientesRepository) => new ActualizarClienteUseCase(repo),
+    },
+    {
+      provide: CambiarActivoClienteUseCase,
+      inject: [CLIENTES_REPOSITORY],
+      useFactory: (repo: PrismaClientesRepository) => new CambiarActivoClienteUseCase(repo),
     },
   ],
   exports: [CLIENTES_REPOSITORY],

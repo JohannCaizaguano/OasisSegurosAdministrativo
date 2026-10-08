@@ -35,6 +35,7 @@ const ETIQUETAS_ACCION: Record<AccionAuditoria, string> = {
   RECHAZAR: 'Rechazo',
   ANULAR: 'Anulación',
   REINTENTAR: 'Reintento',
+  CAMBIAR_ESTADO: 'Cambio de estado',
   INICIAR_SESION: 'Inicio de sesión',
   IMPORTAR: 'Importación',
   DESACTIVAR: 'Desactivación',

@@ -2,15 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
+  ACCIONES_AUDITORIA,
+  actualizarPolizaSchema,
   actualizarUsuarioSchema,
   apiErrorSchema,
   cambiarContrasenaSchema,
+  cambiarEstadoPolizaSchema,
+  clienteSchema,
   crearAseguradoraSchema,
   crearClienteSchema,
   crearPagoSchema,
+  crearPolizaSchema,
   crearUsuarioSchema,
+  listarClientesQuerySchema,
+  listarPolizasQuerySchema,
   loginSchema,
   montoDecimalSchema,
+  montoPositivoSchema,
+  polizaSchema,
+  ramoSchema,
   rechazarPagoSchema,
   respuestaPaginadaSchema,
   validarPagoSchema,
@@ -23,6 +33,9 @@ import {
 
 // UUID v4 válido: `z.uuid()` exige la variante RFC 4122 (versión 1-8, variante 8/9/a/b).
 const POLIZA_ID = '3f2a1c8e-4b5d-4e6f-8a9b-0c1d2e3f4a5b';
+const CLIENTE_ID = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
+const ASEGURADORA_ID = 'd3b07384-d9a0-4c9b-a63c-1b0e1b1e0e11';
+const RAMO_ID = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
 describe('respuestaPaginadaSchema', () => {
   it('exige los elementos y los metadatos de paginación', () => {
@@ -253,5 +266,195 @@ describe('apiErrorSchema (contrato de error compartido)', () => {
     expect(apiErrorSchema.safeParse({ statusCode: 500, code: 'X', message: 'y' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('filtro de estado de clientes (HU-09)', () => {
+  it('por defecto lista solo los activos', () => {
+    const resultado = listarClientesQuerySchema.safeParse({});
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data.estado).toBe('ACTIVOS');
+    }
+  });
+
+  it('acepta los tres filtros y rechaza uno desconocido', () => {
+    expect(listarClientesQuerySchema.safeParse({ estado: 'TODOS' }).success).toBe(true);
+    expect(listarClientesQuerySchema.safeParse({ estado: 'INACTIVOS' }).success).toBe(true);
+    expect(listarClientesQuerySchema.safeParse({ estado: 'BAJAS' }).success).toBe(false);
+  });
+});
+
+describe('respuesta de cliente (D7)', () => {
+  const respuesta = {
+    id: CLIENTE_ID,
+    tipoIdentificacion: 'CEDULA',
+    identificacion: '1710034065',
+    nombres: 'Ana',
+    apellidos: 'Pérez',
+    email: 'ana@example.com',
+    activo: true,
+    tienePolizas: false,
+    createdAt: '2026-10-05T12:00:00.000Z',
+    updatedAt: '2026-10-05T12:00:00.000Z',
+  };
+
+  it('acepta activo y tienePolizas', () => {
+    expect(clienteSchema.safeParse(respuesta).success).toBe(true);
+  });
+
+  it('los exige: el API siempre calcula ambos', () => {
+    expect(clienteSchema.safeParse({ ...respuesta, activo: undefined }).success).toBe(false);
+    expect(clienteSchema.safeParse({ ...respuesta, tienePolizas: undefined }).success).toBe(false);
+  });
+});
+
+describe('montoPositivoSchema (RN-10)', () => {
+  it('exige una prima mayor que cero con hasta dos decimales', () => {
+    expect(montoPositivoSchema.safeParse('0').success).toBe(false);
+    expect(montoPositivoSchema.safeParse('0.00').success).toBe(false);
+    expect(montoPositivoSchema.safeParse('-1').success).toBe(false);
+    expect(montoPositivoSchema.safeParse('1.234').success).toBe(false);
+    expect(montoPositivoSchema.safeParse('0.01').success).toBe(true);
+    expect(montoPositivoSchema.safeParse('1500.5').success).toBe(true);
+  });
+});
+
+describe('crearPolizaSchema (HU-12)', () => {
+  const valida = {
+    numero: 'POL-2026-001',
+    clienteId: CLIENTE_ID,
+    aseguradoraId: ASEGURADORA_ID,
+    ramoId: RAMO_ID,
+    primaTotal: '1500.50',
+    fechaInicio: '2026-10-05',
+    fechaFin: '2027-10-04',
+  };
+
+  it('acepta una póliza válida con ramoId del catálogo', () => {
+    expect(crearPolizaSchema.safeParse(valida).success).toBe(true);
+  });
+
+  it('rechaza un ramo que no sea uuid', () => {
+    expect(crearPolizaSchema.safeParse({ ...valida, ramoId: 'Vehículos' }).success).toBe(false);
+  });
+
+  it('exige que la fecha de fin sea estrictamente posterior a la de inicio', () => {
+    const iguales = crearPolizaSchema.safeParse({ ...valida, fechaFin: valida.fechaInicio });
+    expect(iguales.success).toBe(false);
+    if (!iguales.success) {
+      const issue = iguales.error.issues.find((item) => item.path[0] === 'fechaFin');
+      expect(issue?.message).toBe('La fecha de fin debe ser posterior a la de inicio');
+    }
+    expect(crearPolizaSchema.safeParse({ ...valida, fechaFin: '2026-10-04' }).success).toBe(false);
+  });
+
+  it('descarta el estado entrante: el caso de uso crea la póliza VIGENTE', () => {
+    const resultado = crearPolizaSchema.safeParse({ ...valida, estado: 'VENCIDA' });
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data).not.toHaveProperty('estado');
+    }
+  });
+});
+
+describe('actualizarPolizaSchema (D11)', () => {
+  it('exige al menos un campo y acepta uno solo', () => {
+    expect(actualizarPolizaSchema.safeParse({}).success).toBe(false);
+    expect(actualizarPolizaSchema.safeParse({ numero: 'POL-2026-002' }).success).toBe(true);
+  });
+
+  it('rechaza clienteId y estado: la póliza no cambia de cliente ni salta estados', () => {
+    expect(actualizarPolizaSchema.safeParse({ clienteId: CLIENTE_ID }).success).toBe(false);
+    expect(actualizarPolizaSchema.safeParse({ estado: 'CANCELADA' }).success).toBe(false);
+  });
+
+  it('valida las fechas cuando llegan ambas, incluso iguales', () => {
+    expect(
+      actualizarPolizaSchema.safeParse({
+        fechaInicio: '2026-10-05',
+        fechaFin: '2026-10-05',
+      }).success,
+    ).toBe(false);
+    expect(
+      actualizarPolizaSchema.safeParse({
+        fechaInicio: '2026-10-05',
+        fechaFin: '2027-10-04',
+      }).success,
+    ).toBe(true);
+  });
+});
+
+describe('cambiarEstadoPolizaSchema (D12)', () => {
+  it('solo acepta VENCIDA o CANCELADA como destino', () => {
+    expect(cambiarEstadoPolizaSchema.safeParse({ estado: 'VENCIDA' }).success).toBe(true);
+    expect(cambiarEstadoPolizaSchema.safeParse({ estado: 'CANCELADA' }).success).toBe(true);
+    expect(cambiarEstadoPolizaSchema.safeParse({ estado: 'VIGENTE' }).success).toBe(false);
+  });
+});
+
+describe('polizaSchema de respuesta', () => {
+  const respuesta = {
+    id: POLIZA_ID,
+    numero: 'POL-2026-001',
+    clienteId: CLIENTE_ID,
+    aseguradoraId: ASEGURADORA_ID,
+    ramoId: RAMO_ID,
+    ramo: 'Vehículos',
+    primaTotal: '480.50',
+    fechaInicio: '2026-10-05',
+    fechaFin: '2027-10-04',
+    estado: 'VIGENTE',
+    clienteNombre: 'Ana Pérez',
+    aseguradoraNombre: 'Aseguradora X',
+    tienePagosValidados: false,
+    createdAt: '2026-10-05T12:00:00.000Z',
+    updatedAt: '2026-10-05T12:00:00.000Z',
+  };
+
+  it('incluye ramoId, ramo y tienePagosValidados', () => {
+    expect(polizaSchema.safeParse(respuesta).success).toBe(true);
+    expect(polizaSchema.safeParse({ ...respuesta, tienePagosValidados: undefined }).success).toBe(
+      false,
+    );
+  });
+
+  it('exige clienteId y ramo: la SPA los pinta sin consultas extra', () => {
+    expect(polizaSchema.safeParse({ ...respuesta, clienteId: undefined }).success).toBe(false);
+    expect(polizaSchema.safeParse({ ...respuesta, ramo: undefined }).success).toBe(false);
+  });
+});
+
+describe('listarPolizasQuerySchema (HU-14)', () => {
+  it('filtra por aseguradora y ordena por recientes por defecto', () => {
+    const resultado = listarPolizasQuerySchema.safeParse({ aseguradoraId: ASEGURADORA_ID });
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data.orden).toBe('recientes');
+      expect(resultado.data.aseguradoraId).toBe(ASEGURADORA_ID);
+    }
+  });
+
+  it('acepta los tres órdenes y rechaza uno desconocido', () => {
+    expect(listarPolizasQuerySchema.safeParse({ orden: 'fechaFinAsc' }).success).toBe(true);
+    expect(listarPolizasQuerySchema.safeParse({ orden: 'fechaFinDesc' }).success).toBe(true);
+    expect(listarPolizasQuerySchema.safeParse({ orden: 'antiguas' }).success).toBe(false);
+  });
+});
+
+describe('ramoSchema', () => {
+  it('valida el ramo del catálogo', () => {
+    expect(
+      ramoSchema.safeParse({ id: RAMO_ID, codigo: 'VEHICULOS', nombre: 'Vehículos' }).success,
+    ).toBe(true);
+    expect(
+      ramoSchema.safeParse({ id: 'no-es-uuid', codigo: 'VEHICULOS', nombre: 'Vehículos' }).success,
+    ).toBe(false);
+  });
+});
+
+describe('acciones de auditoría', () => {
+  it('incluye CAMBIAR_ESTADO (D12)', () => {
+    expect(ACCIONES_AUDITORIA).toContain('CAMBIAR_ESTADO');
   });
 });

@@ -1,11 +1,11 @@
-import type { Cliente as ClienteRespuesta } from '@oasis/shared';
+import type { Cliente as ClienteRespuesta, FiltroEstadoCliente } from '@oasis/shared';
 import {
   actualizarClienteSchema,
   crearClienteSchema,
   idUuidParamSchema,
   listarClientesQuerySchema,
 } from '@oasis/shared';
-import { Controller, Get, Patch, Post } from '@nestjs/common';
+import { Controller, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
@@ -13,6 +13,7 @@ import { Roles } from '../../../../common/auth/decorators';
 import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import {
   ActualizarClienteUseCase,
+  CambiarActivoClienteUseCase,
   CrearClienteUseCase,
   ListarClientesUseCase,
   ObtenerClienteUseCase,
@@ -30,6 +31,7 @@ export class ClientesController {
     private readonly listarClientes: ListarClientesUseCase,
     private readonly obtenerCliente: ObtenerClienteUseCase,
     private readonly actualizarCliente: ActualizarClienteUseCase,
+    private readonly cambiarActivoCliente: CambiarActivoClienteUseCase,
   ) {}
 
   @Post()
@@ -44,17 +46,20 @@ export class ClientesController {
   async listar(
     @ZodQuery(listarClientesQuerySchema) query: { pagina?: unknown } & Record<string, unknown>,
   ) {
-    const { page, pageSize, q, tipoIdentificacion } = query as {
+    const { page, pageSize, q, tipoIdentificacion, estado } = query as {
       page: number;
       pageSize: number;
       q?: string;
       tipoIdentificacion?: Cliente['tipoIdentificacion'];
+      estado: FiltroEstadoCliente;
     };
     const pagina = await this.listarClientes.ejecutar({
       pagina: page,
       porPagina: pageSize,
       q,
       tipoIdentificacion,
+      // D8: `estado` se traduce a `activo`; TODOS no filtra.
+      activo: estado === 'TODOS' ? undefined : estado === 'ACTIVOS',
     });
     return {
       data: pagina.items.map((cliente) => this.aRespuesta(cliente)),
@@ -84,6 +89,22 @@ export class ClientesController {
     return this.aRespuesta(await this.actualizarCliente.ejecutar(params.id, datos));
   }
 
+  @Post(':id/desactivar')
+  @Auditar('DESACTIVAR', 'Cliente')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Desactiva un cliente sin borrar su historial (D6)' })
+  async desactivar(@ZodParam(idUuidParamSchema) params: ParamsId) {
+    return this.aRespuesta(await this.cambiarActivoCliente.ejecutar(params.id, false));
+  }
+
+  @Post(':id/reactivar')
+  @Auditar('REACTIVAR', 'Cliente')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Reactiva un cliente desactivado (D6)' })
+  async reactivar(@ZodParam(idUuidParamSchema) params: ParamsId) {
+    return this.aRespuesta(await this.cambiarActivoCliente.ejecutar(params.id, true));
+  }
+
   private aRespuesta(cliente: Cliente): ClienteRespuesta {
     return {
       id: cliente.id,
@@ -94,6 +115,8 @@ export class ClientesController {
       razonSocial: cliente.razonSocial ?? undefined,
       email: cliente.email,
       telefono: cliente.telefono ?? undefined,
+      activo: cliente.activo,
+      tienePolizas: cliente.tienePolizas,
       createdAt: cliente.createdAt,
       updatedAt: cliente.updatedAt,
     };

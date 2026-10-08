@@ -1,5 +1,10 @@
-import type { CrearClienteInput, TipoIdentificacion } from '@oasis/shared';
-import { crearClienteSchema } from '@oasis/shared';
+import type {
+  ActualizarClienteInput,
+  Cliente,
+  CrearClienteInput,
+  TipoIdentificacion,
+} from '@oasis/shared';
+import { actualizarClienteSchema, crearClienteSchema } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useForm, type Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -17,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { ApiError } from '@/lib/api-client';
 
-import { useCrearCliente } from '../hooks';
+import { useActualizarCliente, useCrearCliente } from '../hooks';
 
 const AYUDAS: Record<TipoIdentificacion, string> = {
   CEDULA: '10 dígitos',
@@ -25,16 +30,50 @@ const AYUDAS: Record<TipoIdentificacion, string> = {
   PASAPORTE: '5 a 20 letras o números',
 };
 
-export function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
-  const formulario = useForm<CrearClienteInput>({
-    resolver: zodResolver(crearClienteSchema) as Resolver<CrearClienteInput>,
-    defaultValues: { tipoIdentificacion: 'CEDULA', identificacion: '', email: '' },
+const AYUDA_BLOQUEADA = 'No se puede modificar: el cliente tiene pólizas';
+
+interface DatosFormulario {
+  tipoIdentificacion: TipoIdentificacion;
+  identificacion: string;
+  nombres?: string;
+  apellidos?: string;
+  razonSocial?: string;
+  email: string;
+  telefono?: string;
+}
+
+interface FormularioClienteProps {
+  cliente?: Cliente;
+  alGuardar: () => void;
+}
+
+export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps) {
+  const esEdicion = cliente !== undefined;
+  const bloqueoIdentificacion = esEdicion && cliente.tienePolizas;
+  const resolver = esEdicion
+    ? zodResolver(actualizarClienteSchema)
+    : zodResolver(crearClienteSchema);
+  const formulario = useForm<DatosFormulario>({
+    resolver: resolver as Resolver<DatosFormulario>,
+    defaultValues: esEdicion
+      ? {
+          tipoIdentificacion: cliente.tipoIdentificacion,
+          identificacion: cliente.identificacion,
+          nombres: cliente.nombres,
+          apellidos: cliente.apellidos,
+          razonSocial: cliente.razonSocial,
+          email: cliente.email,
+          telefono: cliente.telefono ?? '',
+        }
+      : { tipoIdentificacion: 'CEDULA', identificacion: '', email: '' },
     // Evita que los campos de la rama anterior viajen en el cuerpo al cambiar
     // de tipo de identificación.
     shouldUnregister: true,
   });
 
   const crear = useCrearCliente();
+  const actualizar = useActualizarCliente();
+  const enviando = crear.isPending || actualizar.isPending;
 
   // El Select no es un input nativo: `useController` lo registra para que el valor viaje al enviar.
   const { field: campoTipo } = useController({
@@ -53,20 +92,34 @@ export function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
       });
       return;
     }
-    toast.error(error instanceof ApiError ? error.message : 'No fue posible crear el cliente');
+    toast.error(
+      error instanceof ApiError
+        ? error.message
+        : esEdicion
+          ? 'No fue posible guardar los cambios'
+          : 'No fue posible crear el cliente',
+    );
   }
 
   return (
     <form
       className="grid gap-4"
-      onSubmit={formulario.handleSubmit((datos) =>
-        crear.mutate(datos, { onSuccess: alGuardar, onError: manejarError }),
-      )}
+      onSubmit={formulario.handleSubmit((datos) => {
+        if (esEdicion) {
+          actualizar.mutate(
+            { id: cliente.id, datos: datos as ActualizarClienteInput },
+            { onSuccess: alGuardar, onError: manejarError },
+          );
+          return;
+        }
+        crear.mutate(datos as CrearClienteInput, { onSuccess: alGuardar, onError: manejarError });
+      })}
     >
       <div className="grid gap-2">
         <Label htmlFor="tipo-identificacion">Tipo de identificación</Label>
         <Select
           value={campoTipo.value}
+          disabled={bloqueoIdentificacion}
           onValueChange={(valor) => {
             campoTipo.onChange(valor);
             // El mensaje de identificación depende del tipo: se revalida al cambiarlo.
@@ -107,10 +160,10 @@ export function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
               ? 'identificacion-error identificacion-ayuda'
               : 'identificacion-ayuda'
           }
-          {...formulario.register('identificacion')}
+          {...formulario.register('identificacion', { disabled: bloqueoIdentificacion })}
         />
         <p id="identificacion-ayuda" className="text-xs text-[var(--muted-foreground)]">
-          {AYUDAS[tipo]}
+          {bloqueoIdentificacion ? AYUDA_BLOQUEADA : AYUDAS[tipo]}
         </p>
         {errores.identificacion && (
           <p id="identificacion-error" role="alert" className="text-sm text-[var(--destructive)]">
@@ -195,8 +248,8 @@ export function FormularioCliente({ alGuardar }: { alGuardar: () => void }) {
         )}
       </div>
       <DialogFooter>
-        <Button type="submit" disabled={crear.isPending} data-testid="boton-guardar-cliente">
-          {crear.isPending ? 'Guardando…' : 'Guardar cliente'}
+        <Button type="submit" disabled={enviando} data-testid="boton-guardar-cliente">
+          {enviando ? 'Guardando…' : esEdicion ? 'Guardar cambios' : 'Guardar cliente'}
         </Button>
       </DialogFooter>
     </form>

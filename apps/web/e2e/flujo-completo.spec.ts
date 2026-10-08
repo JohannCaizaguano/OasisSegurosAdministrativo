@@ -24,11 +24,14 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   const { accessToken } = (await loginApi.json()) as { accessToken: string };
   const cabeceras = { Authorization: `Bearer ${accessToken}`, 'X-Forwarded-For': IP };
 
-  const polizas = (await (
-    await request.get('/api/v1/polizas?page=1&pageSize=1', { headers: cabeceras })
-  ).json()) as {
-    data: Array<{ id: string }>;
-  };
+  const polizas =
+    (await // Solo una póliza VIGENTE admite pagos (RN-01): las pruebas del sprint crean
+    // pólizas terminales que pueden ser las más recientes.
+    (
+      await request.get('/api/v1/polizas?page=1&pageSize=1&estado=VIGENTE', { headers: cabeceras })
+    ).json()) as {
+      data: Array<{ id: string }>;
+    };
   expect(polizas.data.length).toBeGreaterThan(0);
 
   // Referencia única por ejecución para localizar la fila en la UI.

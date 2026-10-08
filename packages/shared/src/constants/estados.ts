@@ -4,6 +4,9 @@ export type TipoIdentificacion = (typeof TIPOS_IDENTIFICACION)[number];
 export const ESTADOS_POLIZA = ['VIGENTE', 'VENCIDA', 'CANCELADA'] as const;
 export type EstadoPoliza = (typeof ESTADOS_POLIZA)[number];
 
+export const FILTROS_ESTADO_CLIENTE = ['ACTIVOS', 'INACTIVOS', 'TODOS'] as const;
+export type FiltroEstadoCliente = (typeof FILTROS_ESTADO_CLIENTE)[number];
+
 export const METODOS_PAGO = ['TRANSFERENCIA', 'DEPOSITO', 'EFECTIVO', 'TARJETA'] as const;
 export type MetodoPago = (typeof METODOS_PAGO)[number];
 

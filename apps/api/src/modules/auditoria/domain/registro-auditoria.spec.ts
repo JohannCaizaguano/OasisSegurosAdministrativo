@@ -27,6 +27,26 @@ describe('construirDetalle', () => {
     expect(detalle.campos).toBeUndefined();
   });
 
+  it('en CAMBIAR_ESTADO guarda el estado nuevo del cuerpo (D12)', () => {
+    const detalle = construirDetalle('CAMBIAR_ESTADO', {
+      ...PETICION,
+      cuerpo: { estado: 'CANCELADA' },
+    });
+
+    expect(detalle.estado).toBe('CANCELADA');
+    expect(detalle.campos).toBeUndefined();
+  });
+
+  it('en CAMBIAR_ESTADO sin estado válido en el cuerpo no agrega nada', () => {
+    expect(construirDetalle('CAMBIAR_ESTADO', { ...PETICION, cuerpo: {} }).estado).toBeUndefined();
+    expect(
+      construirDetalle('CAMBIAR_ESTADO', { ...PETICION, cuerpo: { estado: 7 } }).estado,
+    ).toBeUndefined();
+    expect(
+      construirDetalle('CAMBIAR_ESTADO', { ...PETICION, cuerpo: null }).estado,
+    ).toBeUndefined();
+  });
+
   it('un cuerpo vacío o no objeto no agrega campos', () => {
     expect(construirDetalle('MODIFICAR', { ...PETICION, cuerpo: {} }).campos).toBeUndefined();
     expect(construirDetalle('MODIFICAR', { ...PETICION, cuerpo: null }).campos).toBeUndefined();
