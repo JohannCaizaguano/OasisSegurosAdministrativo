@@ -93,17 +93,45 @@ convenciones que la skill ya define.
 
 - **Superpowers** antes de actuar: `brainstorming` para features o diseño nuevo,
   `systematic-debugging` ante bugs, `test-driven-development` para implementar,
-  `verification-before-completion` antes de declarar algo terminado, y
-  `writing-plans`/`executing-plans` para trabajo de varios pasos.
+  `verification-before-completion` antes de declarar algo terminado, y `writing-plans` más
+  `subagent-driven-development` o `executing-plans` para trabajo de varios pasos.
 - **Ponytail** siempre activo: YAGNI, stdlib o nativo antes que dependencias, el diff más
   corto que funcione, sin abstracciones con una sola implementación. Las simplificaciones
   deliberadas se marcan con un comentario `ponytail:` que nombre el techo y la salida.
   Para auditar: `ponytail-review` (diff) y `ponytail-audit` (repo completo).
 - **Impeccable** para cualquier trabajo de UI (crear, auditar, pulir).
 - Orden: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
-- **Agentes de OpenCode** (`.opencode/agents/`): el primario `orquestador` reparte el sprint entre
-  `contrato-shared`, `backend-api`, `frontend-spa`, `verificador` y `revisor`, cada uno limitado a
-  su carpeta; el reparto y el orden de cada sprint están en su plan (`docs/sprints/`).
+- **Agentes** (`.opencode/agents/`): superpowers dirige la ejecución y cada tarea la hace el
+  especialista de su área (sección "Agentes").
+
+## Agentes
+
+Los agentes de `.opencode/agents/` son especialistas **del proyecto**, uno por área del
+repositorio. No se crean agentes por sprint ni orquestadores a medida: un plan elige entre los de
+esta tabla. Cada uno trae sus skills, sus reglas y su verificación, y edita solo su carpeta.
+
+| Agente                | Úsalo cuando la tarea…                                                                                                   | Edita                                                                     |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| `contrato-shared`     | crea o cambia esquemas Zod, constantes, tipos o validadores de `@oasis/shared`                                           | `packages/shared/src/` (salvo `abi/`) y `apps/web/src/contratos/`         |
+| `backend-api`         | vive en el API o el worker: dominio, casos de uso, adaptadores, controladores, migraciones, seed y sus pruebas unitarias | `apps/api/src/` y `apps/api/prisma/`                                      |
+| `frontend-spa`        | es de interfaz: páginas, componentes, hooks, rutas y sus pruebas Vitest                                                  | `apps/web/src/` (salvo `contratos/`)                                      |
+| `contrato-blockchain` | toca `RegistroRecibos.sol`, sus pruebas, su despliegue o su ABI                                                          | `packages/contracts/`                                                     |
+| `infra`               | es de contenedores, CI/CD, despliegue, respaldos, monitoreo o carga                                                      | `infra/`, `compose.*.yaml`, `Dockerfile`, `Caddyfile` y `.github/`        |
+| `verificador`         | pide evidencia de extremo a extremo con Supertest o Playwright                                                           | `apps/api/test/` y `apps/web/e2e/`                                        |
+| `documentacion`       | redacta un ADR, el mapa técnico, un README o un informe                                                                  | `docs/` (salvo `referencia/`), `CLAUDE.md`, `AGENTS.md` y los `README.md` |
+| `revisor`             | es la revisión de un diff contra su encargo y estas reglas                                                               | nada (solo lectura)                                                       |
+
+- **Elección:** manda la carpeta de los archivos que la tarea toca. Una tarea que cruza dos áreas
+  se parte en dos; lo que no cae en ninguna lo hace la sesión principal.
+- **Superpowers dirige y el agente ejecuta.** La sesión principal ejecuta el plan con
+  `subagent-driven-development` (o con `executing-plans`, si el plan pide ejecución en línea), con
+  su ledger, su pre-flight y su revisión final, y lanza cada tarea al agente de su área en lugar de
+  a un subagente genérico. Las revisiones van a `revisor`.
+- **Fronteras:** si un agente necesita un cambio fuera de su carpeta, no lo hace: lo reporta y la
+  sesión principal relanza al dueño. Los agentes no hacen commits ni lanzan subagentes.
+- **Planes de sprint** (`docs/sprints/sprint-NN-plan.md`): no definen agentes. Cada tarea declara
+  su agente, sus archivos y sus skills, con el detalle suficiente para ejecutarse sin leer el resto
+  del plan.
 
 ## Convenciones
 
