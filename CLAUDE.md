@@ -31,7 +31,7 @@ leyendo varios archivos.
   `hashRecibo = keccak256(sal ‖ payload)` con una sal de 32 bytes que solo vive en PostgreSQL, e
   `idOnchain = keccak256(uuid)`. La verificación (`GET /api/v1/recibos/:codigo/verificacion`)
   recalcula el hash desde la base y lo compara con `verificar()`; los resultados posibles están en
-  `ESTADOS_VERIFICACION` de `@oasis/shared`. Hoy es solo del personal; HU-28 (S8) la abre al
+  `ESTADOS_VERIFICACION` de `@oasis/shared`. Hoy es solo del personal; HU-28 (S5) la abre al
   CLIENTE para sus recibos, con 30 consultas por minuto por usuario (ADR-015).
 
 ## API: tubería de cada petición
@@ -55,18 +55,18 @@ leyendo varios archivos.
   `useFactory` + `inject` por token `Symbol`. Un módulo reutiliza otro importándolo (por ejemplo,
   `PagosModule` importa `RecibosModule` para usar `EmitirReciboUseCase` y `COLA_ANCLAJE`).
 
-## Clientes y pólizas (S5)
+## Clientes y pólizas (S3)
 
 - `GET /ramos` (ADMIN y OPERADOR) sirve el `Select` de ramo del formulario de póliza y devuelve
   los ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. El catálogo se
-  administra en HU-46 (S15): hoy es de solo lectura.
+  administra en HU-46 (S9): hoy es de solo lectura.
 - Ciclo de vida de la póliza (ADR-018): nace VIGENTE; `POST /polizas/:id/estado` solo acepta
   VIGENTE → VENCIDA o CANCELADA (ambos terminales) y queda en la bitácora como `CAMBIAR_ESTADO`;
   `PATCH /polizas/:id` solo edita pólizas VIGENTE y no admite `clienteId` ni `estado`; la prima no
   cambia si hay pagos VALIDADOS; `DELETE` no existe (RN-09). Renovar es crear una póliza nueva.
 - RN-01 vive en `CrearPagoUseCase`: póliza inexistente → 404 y no VIGENTE → 422
   `POLIZA_NO_VIGENTE`, antes de resolver el método de pago (el registro completo de pagos es
-  HU-16, S6).
+  HU-16, S4).
 
 ## Sesiones (ADR-016)
 
@@ -91,8 +91,8 @@ leyendo varios archivos.
 - El cliente de Prisma se genera en `apps/api/src/generated/prisma` (no versionado) con
   `pnpm --filter @oasis/api build` o `pnpm --filter @oasis/api exec prisma generate`. El esquema ya
   contiene el modelo completo de la arquitectura, incluidas tablas de historias futuras (ADR-010),
-  salvo `TransaccionPagoLinea` (ADR-014), que llega con HU-48 en S12; no tiene borrados en cascada
-  (RN-09). `Usuario.nombre` es una columna con el nombre visible de cada cuenta (S4), que auth lee
+  salvo `TransaccionPagoLinea` (ADR-014), que HU-48 habría agregado (HU-48 se retiró del alcance); no tiene borrados en cascada
+  (RN-09). `Usuario.nombre` es una columna con el nombre visible de cada cuenta (S2), que auth lee
   directamente.
 - `@oasis/shared` se consume compilado (`dist/`, CommonJS): tras cambiar `packages/shared/src`,
   ejecuta `pnpm --filter @oasis/shared build` para que el API y la SPA vean el cambio.
@@ -112,6 +112,9 @@ leyendo varios archivos.
 
 ## SPA
 
+- Diseño Claroscuro (ADR-019): tokens y reglas en `apps/web/DESIGN.md`, contexto de producto en
+  `apps/web/PRODUCT.md` y prototipo navegable en `docs/diseno/prototipo/`. HT-13 lleva los tokens
+  a `src/index.css`; la correspondencia con las variables de shadcn/ui está en `docs/diseno/README.md`.
 - Rutas y protección por rol en `src/app/router.tsx` (`RutaProtegida roles={[...]}`); el menú
   lateral (`ENLACES`) y el menú del usuario viven en `components/layout/AppLayout.tsx`.
 - `lib/api-client.ts` envía el access token y, ante un 401, renueva la sesión una sola vez,

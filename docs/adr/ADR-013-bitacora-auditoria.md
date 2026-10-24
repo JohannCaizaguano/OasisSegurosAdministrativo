@@ -47,4 +47,4 @@ módulos.
 - Negativas: el registro no es atómico con la operación. Si la inserción falla después del commit,
   la acción queda solo en el log de pino con su `requestId`. Los intentos fallidos de inicio de
   sesión quedan en el log, no en la bitácora. La conservación de un año se cumple porque nada se
-  borra; los respaldos llegan con HT-06 (S13).
+  borra; los respaldos llegan con HT-06 (S7).

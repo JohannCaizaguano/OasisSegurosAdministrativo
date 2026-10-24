@@ -9,10 +9,10 @@
 La arquitectura cierra el modelo de datos (§9 y transcripción 9.0): **12 entidades**
 (`Usuario`, `TokenRecuperacion`, `BitacoraAuditoria`, `Cliente`, `Aseguradora`, `Ramo`,
 `Poliza`, `Cuota`, `MetodoPago`, `Pago`, `AplicacionPago` y `Recibo`), con `id` UUID y
-montos `Decimal(12,2)`. El backlog reparte su uso entre varios sprints (auditoría en S2,
-cuotas en S6, recuperación de contraseña en S13), pero el diseño ya está cerrado: migrar
+montos `Decimal(12,2)`. El backlog reparte su uso entre varios sprints (auditoría en S1,
+cuotas en S4, recuperación de contraseña en S7), pero el diseño ya está cerrado: migrar
 por partes generaría migraciones correctivas y diferencias entre el diagrama y la base. El
-despliegue en el VPS es en S13; hasta entonces no hay una base productiva ni datos que
+despliegue en el VPS es en S7; hasta entonces no hay una base productiva ni datos que
 preservar.
 
 ## Decisión

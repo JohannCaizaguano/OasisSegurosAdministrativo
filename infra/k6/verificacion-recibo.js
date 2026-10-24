@@ -1,4 +1,4 @@
-// Escenario k6: verificación de recibos con sesión (ADR-015). Hasta S8 rige el límite global por
+// Escenario k6: verificación de recibos con sesión (ADR-015). Hasta S5 rige el límite global por
 // IP; la cadencia se calcula desde él.
 //
 // Uso: k6 run -e BASE_URL=https://dominio -e EMAIL=... -e PASSWORD=... infra/k6/verificacion-recibo.js

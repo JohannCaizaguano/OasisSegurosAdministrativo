@@ -8,7 +8,7 @@
 
 HU-12 a HU-14 cambian el ciclo de vida de la póliza: el registro deja de aceptar un `estado`
 entrante y un ramo por texto libre, la renovación no estaba definida y `DELETE /polizas/:id` deja
-de tener sentido con RN-09. S6–S8 (cuotas, pagos y saldo) heredan estas reglas, así que deben
+de tener sentido con RN-09. S4–S5 (cuotas, pagos y saldo) heredan estas reglas, así que deben
 quedar escritas antes de tocar el API.
 
 ## Decisión
@@ -44,6 +44,6 @@ quedar escritas antes de tocar el API.
 ## Consecuencias
 
 - Positivas: el estado y la vigencia tienen una única vía de cambio, auditada; el esquema estricto
-  evita que la SPA ofrezca acciones que el API rechaza; S6–S8 pueden asumir estados terminales.
+  evita que la SPA ofrezca acciones que el API rechaza; S4–S5 pueden asumir estados terminales.
 - Negativas: corregir un cliente mal elegido exige cancelar la póliza y crear otra; una póliza
   vencida por error no se reabre.

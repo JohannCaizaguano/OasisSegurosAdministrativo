@@ -1,6 +1,6 @@
 # ADR-015 · Acceso al sistema solo con inicio de sesión; sin página pública de verificación
 
-- **Estado**: aceptado (S3: regla de acceso; S8: verificación del cliente)
+- **Estado**: aceptado (S2: regla de acceso; S5: verificación del cliente)
 - **Fecha**: 2026-10
 - **Sprint**: 3 y 8
 
@@ -21,7 +21,7 @@ Las aseguradoras siguen existiendo como datos de las pólizas (HU-11).
   prueba fija la lista de rutas públicas y exige roles en las demás, y un e2e comprueba 401 y 403
   en todas las rutas.
 - La verificación del recibo (HU-28; RF-33, RF-34) pasa a `GET /api/v1/recibos/:codigo/verificacion`.
-  En S3 la usan ADMIN y OPERADOR; en S8 (HU-28) se abre al CLIENTE solo para sus recibos (RN-07): un
+  En S2 la usan ADMIN y OPERADOR; en S5 (HU-28) se abre al CLIENTE solo para sus recibos (RN-07): un
   recibo ajeno responde "No encontrado", y el límite es de 30 consultas por minuto por usuario
   (RNF-12).
 - El QR del recibo apunta a `/recibos/verificar/:codigo` en la SPA, que pide iniciar sesión si no
@@ -40,5 +40,5 @@ Las aseguradoras siguen existiendo como datos de las pólizas (HU-11).
 
 - Positivas: menos superficie expuesta y una sola regla de acceso para todo el API.
 - Negativas: un tercero ya no puede comprobar un recibo sin cuenta; si lo necesita, el cliente
-  le muestra el resultado o el enlace a PolygonScan, que sigue siendo público. Entre S3 y S8 el
-  CLIENTE no puede verificar recibos; no hay clientes reales hasta el despliegue (S13).
+  le muestra el resultado o el enlace a PolygonScan, que sigue siendo público. Entre S2 y S5 el
+  CLIENTE no puede verificar recibos; no hay clientes reales hasta el despliegue (S7).

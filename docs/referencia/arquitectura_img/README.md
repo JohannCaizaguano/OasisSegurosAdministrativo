@@ -19,5 +19,5 @@ Nombres esperados (tal como los cita el documento):
 | `ilustracion-8-2.png`      | Flujo de integración y despliegue continuos          |
 | `ilustracion-9-1.png`      | Modelo de datos del SRPP                             |
 
-> Pendiente para el cierre del proyecto (Sprint 18): versionar los PNG y borrar
+> Pendiente para el cierre del proyecto (Sprint 9): versionar los PNG y borrar
 > esta nota.

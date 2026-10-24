@@ -1,0 +1,1062 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>SRPP Oasis Seguros</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap">
+<style>
+/* Layout: slim prototype bar on top; login = photo with centered welcome + form; staff = icon rail + workspace; insured = phone frame beside a test guide.
+   Palette: Claroscuro (black and gold), set explicitly so it ignores the host theme. Tokens mirror apps/web/DESIGN.md. */
+:root{
+  --bg:#f6f4f0; --surface:#ffffff; --sunk:#efebe4; --ink:#1a1714; --ink2:#5e564b; --line:#8c8478; --hair:#e9e4db;
+  --brand:#1a1714; --brand-hover:#33302b; --on-brand:#ffffff; --link:#8a6122;
+  --rail:#14110d; --rail-2:#26201a; --rail-ink:#f3ece0; --rail-mute:#a59985; --gold:#f0c878; --on-gold:#1a140c;
+  --focus:rgba(226,173,91,.38); --shadow:0 0 0 1px #ebe6dd,0 4px 16px rgba(26,23,20,.05); --shadow-lg:0 24px 60px rgba(20,17,13,.28);
+  --r-s:6px; --r:8px; --r-l:12px; --r-xl:16px;
+  --display:'Outfit',system-ui,sans-serif; --dw:700; --body:'Figtree',system-ui,sans-serif;
+  --ok:#2f6b3a; --ok-bg:#eaf4e4; --info:#2b5c87; --info-bg:#e6f0f7; --warn:#8c4f0a; --warn-bg:#fcefd9; --bad:#a2332b; --bad-bg:#fbe8e4; --void:#5e564b; --void-bg:#efebe4;
+  --bar:#0f0d0a; --bar-ink:#f3ece0; --bar-mute:#a59985; --device:#0d0b09;
+  --metal:linear-gradient(135deg,#f6d592 0%,#e2ad5b 55%,#c98f3e 100%);
+  --glow:radial-gradient(120% 130% at 0% 0%,rgba(240,200,120,.22),rgba(240,200,120,0) 60%);
+  --ease:cubic-bezier(.32,.72,0,1);
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);caret-color:var(--ink);accent-color:var(--brand);scrollbar-color:var(--rail-mute) transparent}
+::selection{background:var(--gold);color:var(--on-gold)}
+a{text-underline-offset:3px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--link)}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.rail :focus-visible,.pbar :focus-visible,.hero :focus-visible,.summary :focus-visible,.kpi.dark :focus-visible,.toast :focus-visible{outline-color:var(--gold)}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* prototype bar */
+.pbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bar);color:var(--bar-ink);display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));font-size:13px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bar)}
+.pbar b{font-weight:700;letter-spacing:.02em}
+.pbar .lbl{color:var(--bar-mute);text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+.seg{display:inline-flex;background:rgba(255,255,255,.08);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--bar-ink);height:30px;padding:0 13px;border-radius:999px;font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold)}
+.pbar .grow{flex:1}
+.pbar .ghost{border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--bar-ink);height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600}
+.grp{display:inline-flex;gap:8px;align-items:center}
+
+/* common controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:0;border-radius:var(--r);font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s var(--ease),background-color .2s}
+.btn:active{transform:scale(.97)}
+.btn-p{background:var(--brand);color:var(--on-brand)}
+.btn-p:hover{background:var(--brand-hover)}
+.btn-s{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.btn-q{background:var(--sunk);color:var(--ink)}
+.btn-bad{background:var(--surface);color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--bad)}
+.btn-lg{min-height:52px;font-size:16px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.field .hint{font-weight:400;font-size:13px;color:var(--ink2)}
+.field .err{font-weight:500;font-size:13px;color:var(--bad)}
+.inp{height:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font-weight:400;font-size:16px;width:100%;min-width:0}
+textarea.inp{height:auto;padding:12px 14px;resize:vertical}
+.inp:focus{outline:0;border:2px solid var(--brand);box-shadow:0 0 0 4px var(--focus);padding-left:13px}
+.inp[aria-invalid="true"]{border:2px solid var(--bad)}
+.card{background:var(--surface);border-radius:var(--r-l);box-shadow:var(--shadow)}
+.pill{display:inline-flex;gap:6px;align-items:center;padding:4px 11px 4px 8px;border-radius:999px;font-weight:600;font-size:13px;white-space:nowrap}
+.pill svg{width:14px;height:14px}
+.s-ok{background:var(--ok-bg);color:var(--ok)} .s-info{background:var(--info-bg);color:var(--info)} .s-warn{background:var(--warn-bg);color:var(--warn)} .s-bad{background:var(--bad-bg);color:var(--bad)} .s-void{background:var(--void-bg);color:var(--void)}
+.av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--void-bg);display:grid;place-items:center;font-weight:700;font-size:13px}
+.muted{color:var(--ink2)}
+.alert{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--r);line-height:1.45}
+.alert svg{flex:none;width:20px;height:20px;margin-top:1px}
+
+/* toast */
+.toasts{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;width:min(440px,calc(100% - 32px));pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;width:100%;padding:13px 16px;border-radius:var(--r);background:var(--bar);color:var(--bar-ink);box-shadow:var(--shadow-lg);animation:toastIn .35s var(--ease)}
+.toast svg{flex:none;width:20px;height:20px;color:var(--gold)}
+.toast.out{animation:toastOut .3s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px)}}
+
+/* login */
+.login{display:flex;flex-wrap:wrap;min-height:calc(100vh - 48px)}
+.login .photo{flex:1 1 480px;position:relative;min-height:560px;background:#14110d url(oasis.jpg) center/cover;display:flex;flex-direction:column;align-items:center;padding:clamp(48px,10vh,120px) 24px 64px;overflow:hidden;text-align:center}
+.login .photo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,13,10,.7) 0%,rgba(15,13,10,.38) 42%,rgba(15,13,10,.12) 68%,rgba(15,13,10,.4) 100%)}
+.welcome{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;max-width:680px;isolation:isolate}
+.welcome::before{content:"";position:absolute;z-index:-1;left:-12%;right:-12%;top:38%;bottom:-28%;background:radial-gradient(closest-side,rgba(15,13,10,.72),rgba(15,13,10,.45) 60%,rgba(15,13,10,0));pointer-events:none}
+.welcome img{width:clamp(150px,17vw,236px);height:auto;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 6px 24px rgba(0,0,0,.5));animation:pop .8s .15s var(--ease) both}
+.welcome h2{margin-top:clamp(28px,5vh,56px);font:var(--dw) clamp(30px,3.4vw,48px)/1.1 var(--display);letter-spacing:-.015em;color:#f6efe2;text-shadow:0 2px 18px rgba(0,0,0,.45);animation:rise .7s .1s var(--ease) both}
+.welcome p{margin:16px 0 0;font-size:clamp(17px,1.5vw,21px);color:#e6d9c3;text-shadow:0 1px 10px rgba(0,0,0,.55);animation:rise .7s .2s var(--ease) both}
+.welcome i{display:block;width:80px;height:3px;border-radius:2px;background:var(--metal);margin-top:20px}
+@keyframes rise{from{opacity:0;transform:translateY(-18px)}}
+@keyframes pop{from{opacity:0;transform:scale(.6) rotate(-8deg)}}
+.login main{flex:1 1 440px;display:grid;place-items:center;padding-block:44px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--bg)}
+.lform{width:100%;max-width:480px;display:flex;flex-direction:column;gap:20px;animation:fadeUp .6s .1s var(--ease) both}
+.lform h1{font-size:clamp(34px,3.2vw,46px);font-weight:var(--dw);letter-spacing:-.02em}
+.lform .lead{font-size:16px}
+.lform .inp,.lform .pw{height:54px}
+.lform .btn-p{min-height:56px;font-size:17px;background:linear-gradient(90deg,#f6d592 0%,#e2ad5b 60%,#c98f3e 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 4px 14px rgba(26,20,12,.16)}
+.lform .btn-p:hover{background:linear-gradient(90deg,#f6d592 0%,#e2ad5b 60%,#c98f3e 100%)}
+.lform .fine{font-size:13.5px;line-height:1.55}
+.pw{display:flex;align-items:center;height:48px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);padding:0 6px 0 14px}
+.pw:focus-within{border:2px solid var(--brand);box-shadow:0 0 0 4px var(--focus);padding-left:13px}
+.pw input{flex:1;border:0;outline:0;background:transparent;font-size:16px;min-width:0;height:100%}
+.pw button{border:0;background:transparent;height:36px;padding:0 10px;border-radius:var(--r-s);font-weight:500;display:flex;gap:6px;align-items:center}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}}
+
+/* staff */
+.staff{display:flex;min-height:calc(100vh - 48px)}
+.rail{flex:none;width:92px;background:var(--rail);color:var(--rail-ink);padding:18px 8px;display:flex;flex-direction:column;gap:6px;position:sticky;top:48px;height:calc(100vh - 48px)}
+.rail img{width:52px;height:52px;object-fit:contain;align-self:center;margin-bottom:12px}
+.rail button{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border:0;border-radius:var(--r);background:transparent;color:var(--rail-ink);font-size:12px;min-height:56px}
+.rail button svg{width:22px;height:22px;color:var(--rail-mute)}
+.rail button:hover{background:var(--rail-2)}
+.rail button[aria-current="page"]{background:var(--rail-2);color:var(--gold);font-weight:700}
+.rail button[aria-current="page"] svg{color:var(--gold)}
+.rail .badge{position:absolute;top:3px;right:12px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:800;display:grid;place-items:center}
+.rail .me{margin-top:auto;align-self:center;width:40px;height:40px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;font-weight:800;font-size:13px;border:0}
+.work{flex:1;min-width:0;padding:22px 30px 40px;display:flex;flex-direction:column;gap:20px}
+.view{display:flex;flex-direction:column;gap:20px;animation:fadeUp .35s var(--ease) both}
+.crumb{color:var(--ink2);font-size:14px}
+.crumb button{border:0;background:none;padding:0;color:var(--link);font-weight:600}
+.head{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between}
+.head h1{font-size:30px;font-weight:var(--dw);letter-spacing:-.01em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.kpi{padding:18px;display:flex;flex-direction:column;gap:6px}
+.kpi b{font:var(--dw) 32px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.kpi.dark{background:var(--brand);color:var(--on-brand);border-radius:var(--r-l)}
+.kpi.dark .t{color:rgba(255,255,255,.75)}
+.kpi.dark button{align-self:flex-start;border:0;background:none;padding:0;color:var(--gold);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:18px}
+.panel{padding:6px 8px 8px;min-width:0}
+.panel .ph{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 10px}
+.panel h2{font-size:17px;font-weight:700}
+.linkbtn{border:0;background:none;padding:0;color:var(--link);font-weight:600;font-size:14px}
+.row{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 10px;border-radius:var(--r);width:100%;border:0;background:transparent;text-align:left}
+button.row:hover{background:var(--sunk)}
+.row .main{flex:1;min-width:0;display:flex;flex-direction:column}
+.row .main b{font-weight:600}
+.row .main span{font-size:13px;color:var(--ink2)}
+.date{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;border-radius:var(--r-s);background:var(--sunk);padding:4px 0}
+.date b{font-weight:800;font-size:17px;line-height:1.1}
+.date span{font-size:11px;color:var(--ink2)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{height:40px;padding:0 16px;border:0;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--brand);color:var(--on-brand);font-weight:600}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.plist li{display:flex;flex-wrap:wrap;gap:14px;align-items:center;min-height:64px;padding:12px 16px;animation:fadeUp .35s var(--ease) both}
+.plist li .main{flex:1 1 240px;min-width:0}
+.plist li .main span{font-size:13.5px;color:var(--ink2)}
+.amt{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.strip{display:flex;flex-wrap:wrap;gap:12px 26px;align-items:center;padding:14px 18px;border-radius:var(--r-l);background:var(--sunk)}
+.strip span{display:inline-flex;gap:6px;align-items:center}
+.strip svg{width:16px;height:16px}
+.split{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.split > *{min-width:0}
+.voucher{flex:1 1 340px;padding:22px;display:flex;flex-direction:column;gap:14px}
+.paper{background:#fff;color:#222;border-radius:var(--r);padding:22px;border:1px solid var(--hair);font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.06);transform:rotate(-.6deg)}
+.paper .bk{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #f2c200;padding-bottom:10px;margin-bottom:12px;font-weight:800;color:#0b3d7a}
+.paper dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0}
+.paper dt{color:#666}.paper dd{margin:0;font-weight:600;text-align:right}
+.checks{display:flex;flex-direction:column;gap:8px}
+.checks div{display:flex;gap:10px;align-items:center;font-size:14px}
+.checks svg{width:18px;height:18px;flex:none}
+.notif{border-radius:var(--r);background:var(--sunk);padding:18px;font-size:14px}
+.notif .nh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-bottom:10px;margin-bottom:12px;border-bottom:1px solid var(--hair)}
+.notif .nh span{color:var(--ink2);font-size:13px}
+.notif dl{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;margin:0}
+.notif dt{color:var(--ink2)}.notif dd{margin:0;font-weight:600;text-align:right}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.tl li{display:flex;gap:12px;align-items:flex-start;position:relative}
+.tl li:not(:last-child)::after{content:"";position:absolute;left:11px;top:26px;bottom:-12px;width:2px;background:var(--ok-bg)}
+.tl .dot{flex:none;width:24px;height:24px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center}
+.tl b{display:block;font-size:14.5px}
+.tl div span{font-size:13px;color:var(--ink2)}
+.tl .dot.wait{background:var(--info)}.tl .dot.bad{background:var(--bad)}.tl .dot.off{background:var(--sunk);color:var(--ink2)}.tl .dot.void{background:var(--void)}
+.tag{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:var(--r-s);font-size:12px;font-weight:700;letter-spacing:.04em;background:var(--sunk);color:var(--ink);white-space:nowrap}
+.tag.adm{background:var(--rail);color:var(--gold)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr));gap:18px;align-items:start}
+.grid3c{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:18px;align-items:start}
+.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.filters .field{flex:1 1 170px}
+.crow{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--hair);padding:4px 0}
+.crow:first-of-type{border-top:0}
+.crow .main{flex:1;min-width:0;display:flex;flex-direction:column}
+.crow .main span{font-size:13px;color:var(--ink2)}
+.switch{flex:none;width:46px;height:28px;border-radius:14px;border:0;background:var(--line);position:relative;padding:0}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s var(--ease)}
+.switch[aria-checked="true"]{background:var(--ok)}
+.switch[aria-checked="true"]::after{transform:translateX(18px)}
+.codes{display:grid;grid-template-columns:repeat(2,1fr);gap:6px 18px;font:500 15px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--sunk);padding:14px 16px;border-radius:var(--r)}
+.otp{font:600 26px/1 var(--display)!important;letter-spacing:.5em;text-align:center;height:60px!important;padding-left:.5em!important}
+.mini{display:flex;flex-direction:column;gap:2px}
+.mini b{font:var(--dw) 26px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.saldo b.big{font:var(--dw) 40px/1.05 var(--display);color:var(--gold);font-variant-numeric:tabular-nums}
+.saldo .bar{margin-top:6px}
+.saldo .bar i.low{background:#f3a59d}
+tfoot td{border-top:2px solid var(--ink);font-weight:700}
+.side{flex:1 1 360px;padding:22px;display:flex;flex-direction:column;gap:16px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px}
+.kv dt{color:var(--ink2)} .kv dd{margin:0;text-align:right;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13.5px}
+.chips button[aria-pressed="true"]{background:var(--brand);color:var(--on-brand);border-color:var(--brand)}
+.form-grid{flex:2 1 480px;padding:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px}
+.form-grid .full{grid-column:1/-1}
+.drop{display:flex;gap:14px;align-items:center;padding:16px;border-radius:var(--r);background:var(--sunk);cursor:pointer;font-weight:400}
+.drop .ic{width:44px;height:44px;border-radius:var(--r);background:var(--surface);display:grid;place-items:center;flex:none}
+.summary{flex:1 1 280px;padding:20px;border-radius:var(--r-l);background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:12px}
+.summary .m{color:var(--rail-mute)}
+.bar{height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:4px;transform-origin:left;animation:grow .9s .1s var(--ease) both}
+@keyframes grow{from{transform:scaleX(0)}}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);font-weight:600;padding:10px 14px}
+td{padding:12px 14px;border-top:1px solid var(--hair);vertical-align:middle}
+td.r,th.r{text-align:right}
+.receipt{max-width:640px;width:100%;padding:28px;display:flex;flex-direction:column;gap:18px}
+.receipt .top{display:flex;gap:14px;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hair);padding-bottom:16px}
+.receipt .top img{width:64px;height:64px;object-fit:contain}
+.verif{display:flex;gap:14px;align-items:center;padding:14px;border-radius:var(--r);background:var(--ok-bg);color:var(--ok)}
+.qr{flex:none;width:76px;height:76px;background:#fff;border-radius:6px;padding:6px;display:grid;grid-template-columns:repeat(9,1fr);gap:1px}
+.qr i{background:#111;border-radius:1px}.qr i.o{background:transparent}
+.verify-box{display:flex;gap:10px;flex-wrap:wrap}
+.verify-box .inp{flex:1 1 220px}
+
+/* insured / phone */
+.mwrap{display:flex;flex-wrap:wrap;gap:36px;justify-content:center;align-items:flex-start;padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.guide{flex:0 1 320px;display:flex;flex-direction:column;gap:14px;padding-top:24px}
+.guide h2{font-size:24px;font-weight:var(--dw)}
+.guide ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px}
+.guide li::marker{font-weight:700;color:var(--link)}
+.guide .note{padding:12px 14px;border-radius:var(--r);background:var(--sunk);font-size:14px}
+.phone{position:relative;width:390px;max-width:100%;height:844px;max-height:calc(100vh - 110px);min-height:640px;border-radius:52px;border:11px solid var(--device);background:var(--bg);overflow:hidden;box-shadow:var(--shadow-lg);flex:none}
+.phone .notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:30px;border-radius:20px;background:var(--device);z-index:30}
+.scr{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg)}
+.scr.fwd{animation:pushIn .28s var(--ease)}
+.scr.back{animation:popIn .28s var(--ease)}
+@keyframes pushIn{from{transform:translateX(60%);opacity:.2}}
+@keyframes popIn{from{transform:translateX(-30%);opacity:.2}}
+.mtop{display:flex;align-items:center;gap:10px;padding:50px 16px 8px 20px}
+.mtop h1{flex:1;font-size:22px;font-weight:700}
+.mtop.sub{padding-left:8px}
+.ibtn{flex:none;width:44px;height:44px;border:0;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;position:relative}
+.ibtn svg{width:21px;height:21px}
+.ibtn.plain{background:transparent;box-shadow:none}
+.ibtn .dot{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
+.mbody{flex:1;overflow-y:auto;padding:10px 16px 20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
+.mbody::-webkit-scrollbar{display:none}
+.hero{padding:18px;border-radius:var(--r-l);background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:6px;animation:fadeUp .4s var(--ease) both}
+.hero .m{color:var(--rail-mute);font-size:14px}
+.hero b.big{font:var(--dw) 36px/1.1 var(--display);color:var(--gold);font-variant-numeric:tabular-nums}
+.hero .acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.hero .acts button{height:48px;border-radius:var(--r);font-weight:700;font-size:15px}
+.hero .gold{border:0;background:var(--gold);color:var(--on-gold)}
+.hero .line{border:1px solid rgba(255,255,255,.3);background:transparent;color:var(--rail-ink);font-weight:600}
+.note-m{display:flex;gap:10px;padding:14px 16px;border-radius:var(--r-l);animation:fadeUp .4s var(--ease) both}
+.note-m svg{flex:none;width:20px;height:20px}
+.note-m b{display:block}
+.note-m span{font-size:14px}
+.note-m button{border:0;background:none;padding:0;margin-top:6px;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:3px}
+.pol{display:flex;align-items:center;gap:12px;padding:12px 8px 12px 12px;border:0;width:100%;text-align:left;background:var(--surface);border-radius:var(--r-l);box-shadow:var(--shadow);min-height:68px}
+.pol .ic{width:44px;height:44px;border-radius:var(--r);background:var(--sunk);display:grid;place-items:center;flex:none;color:var(--link)}
+.pol .ic svg{width:22px;height:22px}
+.pol .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pol .main span{font-size:14px;color:var(--ink2)}
+.pol .chev{width:20px;height:20px;color:var(--ink2);flex:none}
+.h2m{font-size:18px;font-weight:700;margin-top:4px}
+.mnav{position:relative;display:grid;grid-template-columns:repeat(4,1fr);height:78px;padding-bottom:16px;background:var(--surface);box-shadow:0 -2px 14px rgba(0,0,0,.06);flex:none}
+.mnav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;color:var(--ink2)}
+.mnav button svg{width:22px;height:22px}
+.mnav button[aria-current="page"]{color:var(--link);font-weight:700}
+.mfoot{padding:12px 16px 26px;background:var(--surface);box-shadow:0 -2px 14px rgba(0,0,0,.06);display:flex;flex-direction:column;gap:10px;flex:none}
+.mfoot .tot{display:flex;justify-content:space-between;align-items:baseline}
+.mfoot .tot b{font:var(--dw) 24px var(--display);font-variant-numeric:tabular-nums}
+.cuota{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);min-height:60px}
+label.cuota{cursor:pointer}
+.cuota input{width:22px;height:22px;accent-color:var(--brand);flex:none}
+.cuota .main{flex:1;display:flex;flex-direction:column}
+.cuota .main span{font-size:13.5px;color:var(--ink2)}
+.cuota.sel{box-shadow:inset 0 0 0 2px var(--brand),var(--shadow)}
+.sumbox{padding:16px;display:flex;flex-direction:column;gap:10px}
+.prog{height:10px;border-radius:5px;background:var(--sunk);overflow:hidden}
+.prog i{display:block;height:100%;border-radius:5px;background:var(--brand);transform-origin:left;animation:grow .9s .1s var(--ease) both}
+.overlay{position:absolute;inset:0;z-index:40;background:rgba(20,16,12,.55);display:grid;place-items:center;animation:fade .2s ease}
+.overlay .box{background:var(--surface);border-radius:var(--r-l);padding:26px 24px;width:260px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:fadeUp .3s var(--ease)}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--sunk);border-top-color:var(--brand);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fade{from{opacity:0}}
+.done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
+.done svg.big{width:112px;height:112px}
+.done .ring{stroke-dasharray:302;stroke-dashoffset:302;animation:draw .7s .1s var(--ease) forwards}
+.done .tick{stroke-dasharray:60;stroke-dashoffset:60;animation:draw .45s .65s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.done h1{font-size:26px;font-weight:var(--dw)}
+.done .amt-big{font:var(--dw) 40px var(--display);font-variant-numeric:tabular-nums}
+.burst{animation:burst .6s .55s var(--ease) both}
+@keyframes burst{from{transform:scale(.6);opacity:0}}
+.mrec{padding:18px;display:flex;flex-direction:column;gap:12px}
+.mrec .kv{font-size:14.5px}
+.listrow{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);width:100%;border:0;text-align:left;min-height:64px}
+.listrow .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.listrow .main span{font-size:13.5px;color:var(--ink2)}
+
+/* Claroscuro accents: metallic gold actions, gold-lit dark panels */
+.btn-p,
+.hero .gold{background:var(--metal);color:var(--on-gold);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 6px rgba(26,20,12,.16)}
+.btn-p:hover{background:var(--metal);filter:brightness(1.06)}
+.btn-p[style*="--bad"]{background:var(--bad)!important;color:#fff;box-shadow:none}
+.kpi.dark,
+.hero,
+.summary{background:var(--glow),var(--rail);color:var(--rail-ink);box-shadow:inset 0 0 0 1px rgba(240,200,120,.25),0 10px 28px rgba(20,17,13,.18)}
+.kpi.dark b{color:var(--gold)}
+.kpi.dark .t{color:var(--rail-mute)}
+.prog i{background:var(--metal)}
+.mnav,
+.mfoot{box-shadow:inset 0 1px 0 var(--hair)}
+@media (max-width:760px){
+  .staff{flex-direction:column}
+  .rail{position:sticky;top:48px;z-index:20;width:auto;height:auto;flex-direction:row;overflow-x:auto;padding:8px;gap:4px}
+  .rail img{width:40px;height:40px;margin:0 6px 0 0}
+  .rail button{min-width:72px;min-height:52px}
+  .rail .me{margin:0 0 0 auto;flex:none}
+  .work{padding:18px 16px 40px}
+}
+@media (max-width:480px){
+  .guide{display:none}
+  .mwrap{padding:0}
+  .phone{width:100%;height:calc(100vh - 48px);max-height:none;min-height:600px;border:0;border-radius:0;box-shadow:none}
+  .phone .notch{display:none}
+  .mtop{padding-top:16px}
+  .login .photo{min-height:420px;padding:40px 16px 48px}
+  .welcome img{width:132px}
+  .welcome h2{margin-top:22px;font-size:28px}
+  .welcome::before{left:-8%;right:-8%;top:34%;bottom:-36%;background:radial-gradient(closest-side,rgba(15,13,10,.82),rgba(15,13,10,.62) 65%,rgba(15,13,10,0))}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+</style>
+
+<div class="pbar" role="region" aria-label="Controles del prototipo">
+  <b>SRPP · prototipo</b>
+  <span class="grp"><span class="lbl">Ver como</span><span class="seg" id="roleSeg"><button type="button" data-role="login" aria-pressed="true">Inicio de sesión</button><button type="button" data-role="admin" aria-pressed="false">Administración</button><button type="button" data-role="staff" aria-pressed="false">Operación</button><button type="button" data-role="client" aria-pressed="false">Asegurado</button></span></span>
+  <span class="grow"></span>
+  <button type="button" class="ghost" id="resetBtn">Reiniciar datos</button>
+</div>
+<div id="app"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=n=>{const[i,d]=Math.abs(n).toFixed(2).split('.');return (n<0?'-':'')+'$'+i.replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+d};
+const pad=n=>String(n).padStart(2,'0');
+const dstr=d=>pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear();
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const TODAY=new Date(2026,9,6);
+const I={
+ home:'<path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/>',
+ card:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/>',
+ cal:'<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>',
+ user:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c.8-3.5 3.2-5 6-5s5.2 1.5 6 5"/>',
+ person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+ doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>',
+ rec:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+ check:'<path d="M20 6 9 17l-5-5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ warn:'<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>',
+ x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ void:'<circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
+ bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ back:'<path d="m15 6-6 6 6 6"/>',
+ chev:'<path d="m9 6 6 6-6 6"/>',
+ up:'<path d="M12 15V4M8 8l4-4 4 4M5 13v7h14v-7"/>',
+ shield:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/>',
+ car:'<path d="M5 16l1.5-5h11L19 16M5 16h14v3H5zM7.5 19v1.5M16.5 19v1.5"/>',
+ heart:'<path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+ eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ out:'<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>',
+ send:'<path d="M4 12 20 4l-6 16-3-7z"/>',
+ chart:'<path d="M4 20V11M10 20V5M16 20v-7M21 20H3"/>',
+ gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
+ dl:'<path d="M12 4v11M8 11l4 4 4-4M5 20h14"/>'
+};
+const ic=(n,w=22,sw=1.9,extra='')=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]}</svg>`;
+const ST={por:['s-info','clock','Por validar'],val:['s-ok','check','Validado'],verif:['s-ok','shield','Verificable'],lista:['s-ok','check','Lista para registrar'],rech:['s-bad','x','Rechazado'],aten:['s-warn','warn','Requiere atención'],anul:['s-void','void','Anulado'],
+  proc:['s-info','clock','En proceso'],activo:['s-ok','check','Activo'],inactivo:['s-void','void','Desactivado'],pend1:['s-info','clock','Pendiente de primer ingreso'],sincta:['s-void','void','Sin cuenta'],activa:['s-ok','check','Activa'],tfa:['s-ok','shield','Activo'],notfa:['s-warn','warn','Por activar'],
+  pagada:['s-ok','check','Pagada'],validacion:['s-info','clock','En validación'],vencida:['s-bad','warn','Vencida'],pendiente:['s-void','clock','Pendiente'],vigente:['s-ok','check','Vigente'],mora:['s-bad','warn','En mora']};
+const pill=k=>{const s=ST[k];return `<span class="pill ${s[0]}">${ic(s[1],14,2.4)}${s[2]}</span>`};
+
+/* ---------- data ---------- */
+function mkCuotas(n,monto,y,m,d,states){const a=[];for(let i=0;i<n;i++){const dt=new Date(y,m+i,d);a.push({n:i+1,monto,vence:dt,estado:states[i]||'pendiente'})}return a}
+function seed(){
+  const veh={id:'veh',code:'VEH-2025-01127',ramo:'Vehículo',icon:'car',detalle:'Chevrolet Onix 2023 · PDJ-4821',aseg:'Seguros Unidos',cuotas:mkCuotas(12,86.40,2026,2,30,['pagada','pagada','pagada','pagada','pagada','pagada','validacion'])};
+  const vida={id:'vida',code:'VID-2026-00052',ramo:'Vida',icon:'heart',detalle:'Plan cobertura $15.000',aseg:'Seguros Unidos',cuotas:mkCuotas(12,42.50,2026,4,15,['pagada','pagada','pagada','pagada','vencida'])};
+  return {
+    consent:false,
+    pols:{veh,vida},
+    seq:215,
+    pays:[
+      {id:'p1',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[7],monto:86.40,fecha:'03/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004518772',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'hace 3 días'},
+      {id:'p2',cli:'Gabriela Estefanía Loor',ini:'GL',code:'VEH-2026-00088',cuotas:[1],monto:118.75,fecha:'29/09/2026',metodo:'Depósito',banco:'Banco Guayaquil',ref:'77120934',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'por',hace:'hace 7 días',old:true},
+      {id:'p3',cli:'Patricio Salazar Mena',ini:'PS',code:'VEH-2026-00131',cuotas:[4],monto:97.20,fecha:'04/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310044587',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'hace 2 días'},
+      {id:'p4',cli:'Rosa Elena Quishpe',ini:'RQ',code:'MED-2025-00488',cuotas:[9],monto:156.00,fecha:'05/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004601239',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'ayer'},
+      {id:'p5',cli:'Transportes Ilaló S.A.',ini:'TI',code:'VEH-2025-00907',cuotas:[6],monto:412.35,fecha:'06/10/2026',metodo:'Cheque',banco:'Banco Internacional',ref:'CH-000871',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'por',hace:'hoy'},
+      {id:'p6',cli:'Andrés Felipe Mora',ini:'AM',code:'VEH-2025-01212',cuotas:[4],monto:74.80,fecha:'06/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004599120',origen:'Comprobante del cliente',por:'cliente',estado:'val',hace:'hoy',rec:'OAS-2026-000212',hoy:true},
+      {id:'p7',cli:'Comercial Andina Cía. Ltda.',ini:'CA',code:'MED-2026-00211',cuotas:[2],monto:1245.90,fecha:'06/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310041002',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000213',hoy:true},
+      {id:'p8',cli:'Lucía Fernanda Benítez',ini:'LB',code:'VID-2025-00398',cuotas:[7],monto:38.25,fecha:'05/10/2026',metodo:'Débito bancario',banco:'Seguros Unidos',ref:'SU-261005-0412',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000214',hoy:true,deb:true,arch:'cobros-seguros-unidos-octubre.xlsx',fila:12},
+      {id:'p9',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[6],monto:86.40,fecha:'28/08/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004390551',origen:'Comprobante del cliente',por:'cliente',estado:'val',hace:'28/08',rec:'OAS-2026-000187'},
+      {id:'p10',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'vida',code:'VID-2026-00052',cuotas:[4],monto:42.50,fecha:'14/08/2026',metodo:'Débito bancario',banco:'Seguros Unidos',ref:'SU-260814-0388',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'14/08',rec:'OAS-2026-000176',deb:true,arch:'cobros-seguros-unidos-agosto.xlsx',fila:31},
+      {id:'p11',cli:'Andrés Felipe Mora',ini:'AM',code:'VEH-2025-01212',cuotas:[3],monto:74.80,fecha:'02/09/2026',metodo:'Depósito',banco:'Banco Pichincha',ref:'5521',origen:'Comprobante del cliente',por:'cliente',estado:'rech',motivo:'El comprobante no es legible.',hace:'02/09'},
+      {id:'p13',cli:'Daniela Sofía Cevallos',ini:'DC',code:'VID-2025-00342',cuotas:[1],monto:540.00,fecha:'01/10/2026',metodo:'Débito bancario',banco:'Interoceánica',ref:'IN-261001-0044',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'01/10',rec:'OAS-2026-000209',anc:'fall',deb:true,arch:'cobros-interoceanica-octubre.xlsx',fila:4},
+      {id:'p14',cli:'Jorge Luis Andrade',ini:'JA',code:'VEH-2024-00751',cuotas:[12],monto:92.30,fecha:'06/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310045120',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000215',anc:'proc',hoy:true},
+      {id:'p15',cli:'Luis Enrique Tapia',ini:'LT',code:'VEH-2025-01002',cuotas:[10],monto:64.15,fecha:'15/09/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004410983',origen:'Registrado por Andrea Villacís',por:'Andrea Villacís',estado:'val',hace:'15/09',rec:'OAS-2026-000195',anc:'anul',motivoAnul:'El pago se registró dos veces; se conserva el recibo OAS-2026-000194.'},
+      {id:'p12',cli:'Héctor Mauricio Vela',ini:'HV',code:'VID-2026-00057',cuotas:[2],monto:48.90,fecha:'03/10/2026',metodo:'Débito bancario',banco:'Sweaden',ref:'SW-261003-1187',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'por',hace:'hoy',deb:true,arch:'cobros-sweaden-octubre.xlsx',fila:7}
+    ],
+    cartera:[
+      {id:'c1',cli:'María Fernanda Guamán',ini:'MG',code:'VID-2026-00052',cuota:5,monto:42.50,vence:'15/09/2026',dias:21,mine:true},
+      {id:'c2',cli:'Cooperativa San Pedro',ini:'SP',code:'VEH-2025-00680',cuota:8,monto:302.40,vence:'01/09/2026',dias:35},
+      {id:'c3',cli:'Jorge Luis Paredes',ini:'JP',code:'VEH-2025-00744',cuota:5,monto:92.10,vence:'12/09/2026',dias:24},
+      {id:'c4',cli:'Gabriela Estefanía Loor',ini:'GL',code:'VEH-2026-00088',cuota:2,monto:118.75,vence:'28/09/2026',dias:8},
+      {id:'c5',cli:'Martha Cecilia Toapanta',ini:'MT',code:'MED-2025-00352',cuota:6,monto:131.60,vence:'30/09/2026',dias:6}
+    ],
+    semana:[
+      {d:'07',m:'mañana',cli:'Rosa Elena Quishpe',code:'MED-2025-00488',cuota:10,monto:156.00,urg:true},
+      {d:'08',m:'oct',cli:'Andrés Felipe Mora',code:'VEH-2025-01212',cuota:5,monto:74.80},
+      {d:'09',m:'oct',cli:'Comercial Andina Cía. Ltda.',code:'MED-2026-00211',cuota:3,monto:1245.90},
+      {d:'10',m:'oct',cli:'Lucía Fernanda Benítez',code:'VID-2025-00398',cuota:8,monto:38.25}
+    ],
+    recaudado:5135.10,
+    anc:{saldo:0.84,umbral:1.00,anclados:45},
+    users:[
+      {id:'u1',n:'Diego Andrade',ini:'DA',c:'diego.andrade@oasisseguros.ec',rol:'ADMIN',cargo:'Gerente',tfa:true,act:true,ult:'06/10/2026 09:12'},
+      {id:'u2',n:'Mateo Cevallos',ini:'MC',c:'mateo.cevallos@oasisseguros.ec',rol:'ADMIN',cargo:'Administrador técnico',tfa:true,act:true,ult:'05/10/2026 18:12'},
+      {id:'u3',n:'Andrea Villacís',ini:'AV',c:'andrea.villacis@oasisseguros.ec',rol:'OPERADOR',cargo:'Coordinadora comercial',act:true,ult:'06/10/2026 08:02'},
+      {id:'u4',n:'Esteban Ortiz',ini:'EO',c:'esteban.ortiz@oasisseguros.ec',rol:'OPERADOR',cargo:'Coordinador administrativo',act:true,ult:'05/10/2026 17:30'},
+      {id:'u5',n:'Gabriela Haro',ini:'GH',c:'gabriela.haro@oasisseguros.ec',rol:'OPERADOR',cargo:'Ejecutiva comercial',act:true,ult:'03/10/2026 12:15'}],
+    ctas:[
+      {cli:'María Fernanda Guamán',c:'mf.guaman@correo.ec',st:'activa',ult:'03/10/2026'},
+      {cli:'Andrés Felipe Mora',c:'afmora@correo.ec',st:'activa',ult:'29/09/2026'},
+      {cli:'Lucía Fernanda Benítez',c:'lucia.benitez@correo.ec',st:'pend1',ult:'—'},
+      {cli:'Patricio Salazar Mena',c:'psalazar@correo.ec',st:'sincta',ult:'—'},
+      {cli:'Rosa Elena Quishpe',c:'rquishpe@correo.ec',st:'sincta',ult:'—'}],
+    asegs:[
+      {n:'Aseguradora del Sur',ruc:'1790000001001',act:true},{n:'Seguros Unidos',ruc:'1790000002001',act:true},{n:'Sweaden',ruc:'1790000003001',act:true},
+      {n:'Interoceánica',ruc:'1790000004001',act:true},{n:'Prestasalud',ruc:'1790000005001',act:true},{n:'Ecuasanitas',ruc:'1790000006001',act:true}],
+    ramos:[{n:'Vida',act:true,uso:true},{n:'Asistencia médica',act:true,uso:true},{n:'Vehículos',act:true,uso:true},{n:'Equipos electrónicos',act:true},{n:'Aéreo (drones)',act:true},{n:'Equipos y maquinaria',act:false}],
+    metodos:[{n:'Débito bancario',act:true,uso:true},{n:'Transferencia',act:true,uso:true},{n:'Depósito',act:true,uso:true},{n:'Cheque',act:true,uso:true},{n:'Efectivo en oficina',act:true}],
+    log:[
+      ['06/10/2026 09:12','Diego Andrade','INICIAR_SESION','Inició sesión con segundo factor','Sesión','186.4.12.33'],
+      ['06/10/2026 08:47','Andrea Villacís','VALIDAR','Validó un pago','Pago VEH-2025-01212 · cuota 4','186.4.12.40'],
+      ['06/10/2026 08:30','Diego Andrade','IMPORTAR','Cargó la notificación de cobros','Seguros Unidos · 12 filas','186.4.12.33'],
+      ['05/10/2026 17:02','Andrea Villacís','RECHAZAR','Rechazó un pago','Pago VEH-2025-01002 · cuota 11','186.4.12.40'],
+      ['05/10/2026 16:05','Sistema','ANCLAR','Ancló un recibo','Recibo OAS-2026-000213','—'],
+      ['04/10/2026 11:20','Mateo Cevallos','CAMBIAR_ROL','Cambió el rol de un usuario','Gabriela Haro → OPERADOR','190.95.4.18'],
+      ['03/10/2026 08:14','María Fernanda Guamán','REPORTAR','Reportó un pago con comprobante','Pago VEH-2025-01127 · cuota 7','190.95.7.21'],
+      ['01/10/2026 16:12','Sistema','ANCLAR_FALLIDO','El anclaje falló tras 5 intentos','Recibo OAS-2026-000209','—']],
+    notes:[]
+  };
+}
+let D=seed();
+const UI={who:'op',totp:null,adm:'usuarios',rp:'conc',repF:{aseg:'',desde:'2026-09-01',hasta:'2026-10-06'},bit:{u:'',a:''},newUser:false,anular:false,codes:null,role:'login',staff:{v:'inicio',p:null},m:{stack:[{s:'inicio'}],dir:null},tab:'por',rej:{open:false,chip:null},rep:{},carga:{step:'form',aseg:'Sweaden',ids:[]},regErr:null,logErr:false,verify:null};
+
+/* ---------- role ---------- */
+function setRole(r){
+  const sel=r;
+  if(r==='admin'){UI.who='admin';r='staff'}else if(r==='staff'){UI.who='op'}
+  UI.role=r;UI.totp=null;UI.totpErr=false;
+  if(r==='client'){UI.m={stack:[{s:D.consent?'inicio':'datos'}],dir:null}}
+  if(r==='staff'){UI.staff={v:'inicio',p:null}}
+  document.querySelectorAll('#roleSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.role===sel)));
+  render();window.scrollTo(0,0);
+}
+
+/* ---------- toast ---------- */
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.innerHTML=ic('check',20,2.4)+'<span>'+msg+'</span>';
+  $('#toasts').appendChild(t);setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),300)},3400);
+}
+
+/* ---------- derived ---------- */
+const porList=()=>D.pays.filter(p=>p.estado==='por');
+const myPays=()=>D.pays.filter(p=>p.mine);
+function saldo(pol){return pol.cuotas.filter(c=>c.estado!=='pagada').reduce((s,c)=>s+c.monto,0)}
+function pagado(pol){return pol.cuotas.filter(c=>c.estado==='pagada').reduce((s,c)=>s+c.monto,0)}
+function prima(pol){return pol.cuotas.reduce((s,c)=>s+c.monto,0)}
+function polEstado(pol){return pol.cuotas.some(c=>c.estado==='vencida')?'mora':'vigente'}
+function nextDue(pol){return pol.cuotas.find(c=>c.estado==='vencida'||c.estado==='pendiente')}
+function payable(pol){return pol.cuotas.filter(c=>c.estado==='vencida'||c.estado==='pendiente')}
+function findRec(code){return D.pays.find(p=>p.rec&&p.rec.toUpperCase()===String(code).trim().toUpperCase())}
+function newRec(){D.seq++;return 'OAS-2026-000'+D.seq}
+function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return (h>>>0).toString(16).padStart(8,'0')}
+function huella(code){return '0x'+hash(code)+hash(code+'a')+'…'+hash(code+'z').slice(0,6)}
+function qr(code){let h=parseInt(hash(code),16),out='';for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;const fin=(r<3&&c<3)||(r<3&&c>5)||(r>5&&c<3);const on=fin?!(r%2===1&&c%2===1&&(r===1||r===7)&&(c===1||c===7)):((h>>(i%29))&1)^(i%3===0);out+=`<i class="${on?'':'o'}"></i>`}return `<span class="qr" aria-hidden="true">${out}</span>`}
+
+/* ---------- LOGIN ---------- */
+function vLogin(){
+  return `<div class="login">
+  <section class="photo" aria-label="Oasis Seguros">
+    <div class="welcome"><img src="logo.png" alt="Oasis Seguros"><h2>Bienvenido a Oasis Seguros</h2><p>Sus pólizas, cuotas y recibos en un solo lugar.</p><i></i></div>
+  </section>
+  <main>
+    ${UI.totp?totpForm():`<form class="lform" id="loginForm" novalidate>
+      <div style="display:flex;flex-direction:column;gap:8px"><h1>Iniciar sesión</h1><span class="muted lead">Personal de Oasis Seguros y clientes asegurados.</span></div>
+      ${UI.logErr?`<div class="alert s-bad" role="alert" style="border:1px solid var(--bad)">${ic('warn',20,2)}<span>El correo o la contraseña no son correctos. Revise los datos e intente de nuevo.</span></div>`:''}
+      <label class="field" for="lEmail">Correo electrónico<input class="inp" id="lEmail" type="email" autocomplete="username" placeholder="nombre@correo.ec"></label>
+      <label class="field" for="lPass">Contraseña<span class="pw"><input id="lPass" type="password" autocomplete="current-password" placeholder="Su contraseña"><button type="button" id="pwToggle">${ic('eye',18)}<span>Mostrar</span></button></span></label>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><label style="display:flex;gap:10px;align-items:center;min-height:44px" for="lRem"><input id="lRem" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--brand);margin:0">Recordar este equipo</label><a href="#" id="forgot" style="font-weight:600;font-size:14px;text-underline-offset:3px">¿Olvidó su contraseña?</a></div>
+      <button class="btn btn-p btn-lg" type="submit" id="loginBtn">Ingresar</button>
+      <span class="muted fine" title="Prototipo: diego.andrade@oasisseguros.ec entra como administrador (con cualquier código de 6 dígitos); otro correo @oasisseguros.ec, como operador; cualquier otro, como asegurado.">Después de 5 intentos fallidos en un minuto deberá esperar antes de volver a intentarlo. ¿Problemas para ingresar? Comuníquese con el administrador de Oasis Seguros.</span>
+    </form>`}
+  </main></div>`;
+}
+function totpForm(){return `<form class="lform" id="totpForm" novalidate>
+      <div style="display:flex;flex-direction:column;gap:8px"><h1>Verificación en dos pasos</h1><span class="muted lead">Escriba el código de 6 dígitos que muestra su aplicación autenticadora para <b style="color:var(--ink)">${esc(UI.totp)}</b>.</span></div>
+      ${UI.totpErr?`<div class="alert s-bad" role="alert" style="border:1px solid var(--bad)">${ic('warn',20,2)}<span>El código no es válido o ya venció. Escriba el que aparece ahora en su aplicación.</span></div>`:''}
+      <label class="field" for="lTotp">Código de verificación<input class="inp otp" id="lTotp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" ${UI.totpErr?'aria-invalid="true"':''}></label>
+      <button class="btn btn-p btn-lg" type="submit" id="totpBtn">Verificar e ingresar</button>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;min-height:44px"><a href="#" id="useRec" style="font-weight:600;font-size:14px">Usar un código de recuperación</a><a href="#" id="totpBack" style="font-weight:600;font-size:14px">Volver</a></div>
+      <span class="muted fine">El segundo factor es obligatorio para los administradores. El límite de 5 intentos por minuto también se aplica a este código.</span>
+    </form>`}
+function bindLogin(){
+  if(UI.totp){
+    const tf=$('#totpForm');$('#lTotp').focus();
+    tf.addEventListener('submit',e=>{e.preventDefault();const v=$('#lTotp').value.trim();
+      if(!/^\d{6}$/.test(v)){UI.totpErr=true;render();return}
+      const b=$('#totpBtn');b.disabled=true;b.innerHTML='<span class="spin" style="width:20px;height:20px;border-width:3px;border-color:rgba(26,20,12,.25);border-top-color:#1a140c"></span>Verificando';
+      setTimeout(()=>{logA('INICIAR_SESION','Inició sesión con segundo factor','Sesión','Diego Andrade');setRole('admin')},650)});
+    $('#useRec').onclick=e=>{e.preventDefault();toast('Escribiría uno de sus códigos de recuperación; cada uno sirve una sola vez.')};
+    $('#totpBack').onclick=e=>{e.preventDefault();UI.totp=null;UI.totpErr=false;render()};
+    return;
+  }
+  const f=$('#loginForm');
+  f.addEventListener('submit',e=>{e.preventDefault();
+    const em=$('#lEmail').value.trim(),pw=$('#lPass').value;
+    if(!em||!pw||!em.includes('@')){UI.logErr=true;render();$('#lEmail').value=em;return}
+    if(/^(diego|mateo|admin)[^@]*@oasisseguros\.ec$/i.test(em)){UI.logErr=false;UI.totp=em;UI.totpErr=false;render();return}
+    UI.logErr=false;const b=$('#loginBtn');b.disabled=true;b.innerHTML='<span class="spin" style="width:20px;height:20px;border-width:3px;border-color:rgba(26,20,12,.25);border-top-color:#1a140c"></span>Ingresando';
+    setTimeout(()=>setRole(/@oasisseguros\.ec$/i.test(em)?'staff':'client'),650);
+  });
+  $('#pwToggle').onclick=()=>{const p=$('#lPass');const s=p.type==='password';p.type=s?'text':'password';$('#pwToggle span').textContent=s?'Ocultar':'Mostrar'};
+  $('#forgot').onclick=e=>{e.preventDefault();toast('Le enviaríamos un enlace para crear una contraseña nueva.')};
+}
+
+/* ---------- STAFF ---------- */
+const NAV=[['inicio','home','Inicio'],['pagos','card','Pagos'],['registrar','plus','Registrar'],['cartera','cal','Cartera'],['clientes','user','Clientes'],['recibos','rec','Recibos']];
+function navFor(){return UI.who==='admin'?[...NAV,['reportes','chart','Reportes'],['admin','gear','Admin.']]:[...NAV,['reportes','chart','Reportes']]}
+const recSt=p=>({fall:'aten',proc:'proc',anul:'anul'})[p.anc]||'verif';
+const fmtPol=n=>n.toFixed(2).replace('.',',');
+const ancAlerts=()=>D.pays.filter(p=>p.anc==='fall').length+(D.anc.saldo<D.anc.umbral?1:0);
+let clock=20;
+function logA(code,label,ent,who){clock++;D.log.unshift(['06/10/2026 09:'+String(clock).padStart(2,'0'),who||(UI.who==='admin'?'Diego Andrade':'Andrea Villacís'),code,label,ent,who==='Sistema'?'—':(UI.who==='admin'||who==='Diego Andrade'?'186.4.12.33':'186.4.12.40')])}
+function go(v,p=null){UI.staff={v,p};UI.anular=false;UI.newUser=false;UI.nuErr=null;UI.codes=null;if(v!=='validar')UI.rej={open:false,chip:null};render();window.scrollTo({top:0,behavior:'smooth'})}
+function vStaff(){
+  const v=UI.staff.v,cur=(v==='validar'||v==='cargar'?'pagos':v==='recibo'?'recibos':v==='cliente'?'clientes':v);
+  const n=porList().length;
+  return `<div class="staff"><nav class="rail" aria-label="Principal"><img src="logo.png" alt="Oasis Seguros">
+  ${navFor().map(([k,icn,l])=>`<button type="button" data-go="${k}" ${cur===k?'aria-current="page"':''}>${ic(icn)}${l}${k==='pagos'&&n?`<span class="badge">${n}</span>`:''}${k==='admin'&&ancAlerts()?`<span class="badge">${ancAlerts()}</span>`:''}</button>`).join('')}
+  ${UI.who==='admin'?'<button type="button" class="me" data-logout title="Diego Andrade · cerrar sesión" aria-label="Cerrar sesión de Diego Andrade">DA</button>':'<button type="button" class="me" data-logout title="Andrea Villacís · cerrar sesión" aria-label="Cerrar sesión de Andrea Villacís">AV</button>'}</nav>
+  <main class="work"><div class="view" id="view">${({inicio:sInicio,pagos:sPagos,cargar:sCargar,validar:sValidar,registrar:sRegistrar,cartera:sCartera,clientes:sClientes,cliente:sCliente,recibos:sRecibos,recibo:sRecibo,reportes:sReportes,admin:sAdmin})[v]()}</div></main></div>`;
+}
+function sInicio(){
+  const por=porList(),hoy=D.pays.filter(p=>p.hoy&&p.estado==='val');
+  const sumHoy=hoy.reduce((s,p)=>s+p.monto,0),venc=D.cartera.reduce((s,c)=>s+c.monto,0);
+  const old=[...por].sort((a,b)=>(b.old?1:0)-(a.old?1:0)),fall=D.pays.filter(p=>p.anc==='fall').length;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Buenos días, ${UI.who==='admin'?'Diego':'Andrea'}</h1><span class="muted">${por.length?`Hoy conviene empezar por los ${por.length} pagos que esperan validación.`:'No quedan pagos por validar. Buen trabajo.'}</span></div>
+   <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-go="cartera">Ver cartera</button><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div></div>
+  <div class="kpis">
+    <div class="kpi dark"><span class="t" style="font-size:14px">Por validar</span><b data-count="${por.length}" data-int="1">${por.length}</b><button type="button" data-go="pagos">Abrir la mesa de validación</button></div>
+    ${UI.who==='admin'?`<div class="kpi card"><span class="muted" style="font-size:14px">Validados en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span class="muted" style="font-size:13px">${D.pays.filter(p=>p.estado==='val').length+36} pagos · ${Math.round(D.recaudado/88.5)} % de lo esperado</span></div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos anclados</span><b data-count="${D.anc.anclados}" data-int="1">${D.anc.anclados}</b><span class="muted" style="font-size:13px">en octubre · ${D.pays.filter(p=>p.anc==='proc').length} en proceso</span></div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos que requieren atención</span><b data-count="${fall}" data-int="1" style="color:${fall?'var(--warn)':'var(--ink)'}">${fall}</b><button type="button" class="linkbtn" data-goadm="anclaje" style="align-self:flex-start">Revisar el anclaje</button></div>`:`<div class="kpi card"><span class="muted" style="font-size:14px">Validados hoy</span><b data-count="${sumHoy}">${fmt(sumHoy)}</b><span class="muted" style="font-size:13px">${hoy.length} pagos · ${hoy.filter(p=>p.deb).length} por débito bancario</span></div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Cuotas vencidas</span><b data-count="${venc}" style="color:var(--bad)">${fmt(venc)}</b><span class="muted" style="font-size:13px">${D.cartera.length} cuotas de ${D.cartera.length} clientes</span></div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recaudado en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span style="font-size:13px;color:var(--ok)">${Math.round(D.recaudado/88.5)} % de lo esperado al día 6</span></div>`}
+  </div>
+  <div class="cols">
+    <section class="card panel"><div class="ph"><div><h2>Por validar</h2><span class="muted" style="font-size:13px">Del más antiguo al más reciente</span></div><button class="linkbtn" data-go="pagos">Ver los ${por.length}</button></div>
+      ${old.slice(0,4).map(p=>`<button class="row" data-val="${p.id}"><span class="av" ${p.old?'style="background:var(--warn-bg);color:var(--warn)"':''}>${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${p.old?`<span style="color:var(--warn)">${p.hace}</span>`:p.hace}</span></span><b class="num">${fmt(p.monto)}</b></button>`).join('')||'<p class="muted" style="padding:0 10px 10px">Nada pendiente.</p>'}
+    </section>
+    <section class="card panel"><div class="ph"><div><h2>Vencen esta semana</h2><span class="muted" style="font-size:13px">Un recordatorio a tiempo evita la mora</span></div><button class="linkbtn" data-go="cartera">Ver cartera</button></div>
+      ${D.semana.map(s=>`<div class="row"><span class="date" ${s.urg?'style="background:var(--warn-bg);color:var(--warn)"':''}><b>${s.d}</b><span ${s.urg?'style="color:inherit"':''}>${s.m}</span></span><span class="main"><b>${esc(s.cli)}</b><span>${s.code} · cuota ${s.cuota}</span></span><b class="num">${fmt(s.monto)}</b></div>`).join('')}
+    </section>
+  </div>
+  ${UI.who==='admin'?`<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2 style="font-size:17px">Anclaje de recibos</h2><button class="linkbtn" data-goadm="anclaje">Abrir el anclaje</button></div>${ancHealth()}</div>`:`<div class="strip"><b>Recibos en la red</b><span>${ic('shield',16,2.2,'style="color:var(--ok)"')}${D.pays.filter(p=>p.rec&&!p.anc).length+199} verificables</span><span>${ic('clock',16,2.2,'style="color:var(--info)"')}${D.pays.filter(p=>p.anc==='proc').length} en proceso</span>${fall?`<span style="color:var(--warn)">${ic('warn',16,2.2)}${fall} requiere atención del administrador</span>`:''}</div>`}`;
+}
+function sPagos(){
+  const t=UI.tab,all=D.pays;
+  const tabs=[['todos','Todos',all.length],['por','Por validar',porList().length],['val','Validados',all.filter(p=>p.estado==='val').length],['rech','Rechazados',all.filter(p=>p.estado==='rech').length]];
+  const list=all.filter(p=>t==='todos'||p.estado===t);
+  return `<div class="head"><h1>Pagos</h1><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-go="cargar">${ic('up',17,2)}Cargar notificación</button><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div></div>
+  <div class="tabs" role="tablist">${tabs.map(([k,l,c])=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${t===k}">${l} · ${c}</button>`).join('')}</div>
+  <ul class="plist">${list.map((p,i)=>`<li class="card" style="animation-delay:${i*35}ms"><span class="av">${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><br><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${esc(p.origen)} · ${p.hace}</span></span><span class="amt">${fmt(p.monto)}</span>${pill(p.estado)}${p.estado==='por'?`<button class="btn btn-q" style="min-height:40px" data-val="${p.id}">Revisar</button>`:p.rec?`<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Recibo</button>`:`<span style="width:86px"></span>`}</li>`).join('')||'<li class="card muted">No hay pagos en esta lista.</li>'}</ul>`;
+}
+function notifCard(p){return `<div class="notif"><div class="nh"><b>${esc(p.banco)}</b><span>${esc(p.arch||'archivo de cobros')} · fila ${p.fila||1}</span></div><dl><dt>Póliza</dt><dd>${p.code}</dd><dt>Fecha de cobro</dt><dd>${p.fecha}</dd><dt>Forma de cobro</dt><dd>Débito bancario</dd><dt>Referencia</dt><dd>${esc(p.ref)}</dd><dt>Monto</dt><dd style="font-size:18px">${fmt(p.monto)}</dd></dl></div>`}
+function sValidar(){
+  const p=D.pays.find(x=>x.id===UI.staff.p);if(!p)return sPagos();
+  const chips=['El monto no coincide','El comprobante no es legible','La referencia ya fue usada','Falta el comprobante'];
+  return `<div><span class="crumb"><button data-go="pagos">Pagos</button> / Mesa de validación</span></div>
+  <div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>${esc(p.cli)}</h1><span class="muted">${p.code} · cuota ${p.cuotas.join(', ')} · ${esc(p.origen)}</span></div>${pill(p.estado)}</div>
+  <div class="split">
+    <section class="card voucher"><h2 style="font-size:17px">${p.deb?'Notificación de la aseguradora':'Comprobante'}</h2>
+      ${p.deb?notifCard(p):p.comp===false?`<div class="alert s-warn">${ic('warn',20,2)}<span>No se adjuntó comprobante. Confirme el pago con el banco antes de validarlo.</span></div>`:`<div class="paper"><div class="bk"><span>${esc(p.banco)}</span><span style="font-size:12px;color:#666">${esc(p.metodo)}</span></div><dl><dt>Fecha</dt><dd>${p.fecha}</dd><dt>Referencia</dt><dd>${esc(p.ref)}</dd><dt>Beneficiario</dt><dd>Oasis Seguros</dd><dt>Monto</dt><dd style="font-size:18px">${fmt(p.monto)}</dd></dl>${p.file?`<p style="margin:12px 0 0;font-size:12px;color:#666">Archivo: ${esc(p.file)}</p>`:''}</div>`}
+      <div class="checks">
+        <div style="color:var(--ok)">${ic('check',18,2.4)}El monto coincide con la cuota ${p.cuotas.join(', ')} (${fmt(p.monto)})</div>
+        <div style="color:var(--ok)">${ic('check',18,2.4)}La referencia no se usó en otro pago</div>
+        ${p.deb?`<div style="color:var(--ok)">${ic('check',18,2.4)}La póliza pertenece a ${esc(p.banco)}</div>`:''}
+        ${p.old?`<div style="color:var(--warn)">${ic('warn',18,2.4)}Lleva 7 días esperando validación</div>`:''}
+      </div>
+    </section>
+    <section class="card side">
+      <h2 style="font-size:17px">Decisión</h2>
+      <dl class="kv"><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Póliza</dt><dd>${p.code}</dd><dt>Fecha de pago</dt><dd>${p.fecha}</dd><dt>Método</dt><dd>${esc(p.metodo)}</dd><dt>Monto</dt><dd class="num" style="font-size:18px">${fmt(p.monto)}</dd></dl>
+      ${p.estado!=='por'?'':UI.rej.open?`<div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .3s var(--ease)"><b>¿Por qué se rechaza?</b><div class="chips">${chips.map(c=>`<button type="button" data-chip="${esc(c)}" aria-pressed="${UI.rej.chip===c}">${c}</button>`).join('')}</div>
+        <label class="field" for="rejTxt">Mensaje para el cliente<textarea class="inp" id="rejTxt" rows="3">${esc(UI.rej.chip?UI.rej.chip+' Por favor, reporte el pago de nuevo.':'')}</textarea></label>
+        <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-q" data-rejcancel>Volver</button><button class="btn btn-p" style="background:var(--bad)" data-rejok="${p.id}">Rechazar pago</button></div></div>`
+      :`<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-bad" data-rejopen>Rechazar</button><button class="btn btn-p btn-lg" data-valok="${p.id}">${ic('check',18,2.4)}Validar y emitir recibo</button></div>`}
+      <button class="linkbtn" style="align-self:flex-start" data-cli="${esc(p.cli)}">Ver ficha del cliente</button>
+    </section>
+  </div>`;
+}
+const ASEGS=['Aseguradora del Sur','Seguros Unidos','Sweaden','Interoceánica','Prestasalud','Ecuasanitas'];
+function cargaFilas(aseg){const pre=aseg.normalize('NFD').replace(/[^A-Za-z]/g,'').slice(0,2).toUpperCase();return [
+ {f:2,pol:'VEH-2026-00131',cli:'Patricio Salazar Mena',fecha:'01/10/2026',monto:97.20,ref:pre+'-261001-0091',ok:true},
+ {f:3,pol:'VID-2025-00398',cli:'Lucía Fernanda Benítez',fecha:'01/10/2026',monto:38.25,ref:pre+'-261001-0092',ok:true},
+ {f:4,pol:'MED-2025-00352',cli:'Martha Cecilia Toapanta',fecha:'02/10/2026',monto:131.60,ref:pre+'-261002-0107',ok:true},
+ {f:5,pol:'VEH-2025-00744',cli:'Jorge Luis Paredes',fecha:'02/10/2026',monto:92.10,ref:pre+'-261002-0108',ok:true},
+ {f:6,pol:'VEH-2025-00680',cli:'Cooperativa San Pedro',fecha:'03/10/2026',monto:302.40,ref:pre+'-261003-0115',ok:false,err:'La póliza no pertenece a '+aseg+'.'},
+ {f:7,pol:'VEH-2026-00088',cli:'Gabriela Estefanía Loor',fecha:'03/10/2026',monto:118.75,ref:'77120934',ok:false,err:'Esa referencia ya está registrada para esta póliza.'}]}
+function sCargar(){
+  const c=UI.carga;
+  const head=`<div><span class="crumb"><button data-go="pagos">Pagos</button> / Cargar notificación</span></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:30px;font-weight:var(--dw)">Cargar notificación de cobros</h1><span class="muted">Registre de una vez los pagos por débito bancario que notifica la aseguradora.</span></div>`;
+  if(c.step==='form')return head+`<div class="split"><form class="card form-grid" id="cargaForm" novalidate>
+   <label class="field full" for="cAseg">Aseguradora<select class="inp" id="cAseg">${ASEGS.map(a=>`<option ${a===c.aseg?'selected':''}>${a}</option>`).join('')}</select><span class="hint">Cada fila debe ser de una póliza de esta aseguradora.</span></label>
+   <label class="drop full" for="cFile"><span class="ic">${ic('up',22)}</span><span><b>Archivo de cobros</b><br><span class="muted" style="font-size:13px" id="cFileName">Excel (.xlsx) o CSV con póliza, fecha de cobro, monto y referencia</span></span><input type="file" id="cFile" class="sr" accept=".xlsx,.csv"></label>
+   <div class="full" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="linkbtn" data-plantilla>Descargar plantilla</button><span style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-q" id="cDemo">Usar archivo de ejemplo</button><button type="submit" class="btn btn-p btn-lg">Revisar archivo</button></span></div>
+  </form><aside class="summary"><h2 style="font-size:17px">Cómo funciona</h2><ol style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Elija la aseguradora y cargue su archivo.</li><li>Revise la vista previa: las filas con error no se registran.</li><li>Confirme: los pagos quedan «Por validar» con el método Débito bancario.</li></ol><span class="m" style="font-size:13px">Una referencia repetida en la misma póliza nunca duplica el pago.</span></aside></div>`;
+  const rows=cargaFilas(c.aseg),ok=rows.filter(r=>r.ok),tot=ok.reduce((s,r)=>s+r.monto,0);
+  if(c.step==='preview')return head+`<div class="strip"><span>${ic('doc',16,2)}<b>${esc(c.file)}</b></span><span>${esc(c.aseg)}</span><span style="color:var(--ok)">${ic('check',16,2.4)}${ok.length} filas válidas</span><span style="color:var(--bad)">${ic('warn',16,2.2)}${rows.length-ok.length} con error</span><span style="margin-left:auto"><b class="num">${fmt(tot)}</b>&nbsp;a registrar</span></div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th class="r">Fila</th><th>Póliza / cliente</th><th>Fecha de cobro</th><th>Referencia</th><th class="r">Monto</th><th>Resultado</th></tr></thead><tbody>${rows.map(r=>`<tr${r.ok?'':' style="background:var(--bad-bg)"'}><td class="r num">${r.f}</td><td><b>${r.pol}</b><br><span class="muted" style="font-size:13px">${esc(r.cli)}</span></td><td class="num">${r.fecha}</td><td class="num">${r.ref}</td><td class="r num"><b>${fmt(r.monto)}</b></td><td>${r.ok?pill('lista'):`<span style="color:var(--bad);font-size:13.5px;display:flex;gap:6px;align-items:flex-start">${ic('warn',16,2.2,'style="flex:none;margin-top:2px"')}${esc(r.err)}</span>`}</td></tr>`).join('')}</tbody></table></div></section>
+  <div style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap"><button class="btn btn-q" data-cargareset>Cargar otro archivo</button><button class="btn btn-p btn-lg" data-cargaok>Registrar ${ok.length} pagos</button></div>`;
+  const reg=D.pays.filter(p=>c.ids.includes(p.id)),pend=reg.filter(p=>p.estado==='por');
+  return head+`<section class="card" style="padding:24px;display:flex;flex-direction:column;gap:14px;max-width:720px"><div class="verif">${ic('check',28,2.4)}<div><b>${reg.length} pagos registrados por débito bancario</b><br><span style="font-size:14px">${esc(c.aseg)} · ${esc(c.file)} · ${fmt(reg.reduce((s,p)=>s+p.monto,0))}. La carga quedó en la bitácora.</span></div></div>
+   <span class="muted">${pend.length?'Puede validarlos de uno en uno en la mesa o todos los de esta carga con una sola confirmación.':'Todos los pagos de esta carga ya están validados y sus recibos emitidos.'}</span>
+   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-s" data-go="pagos">Ir a la mesa de validación</button>${pend.length?(c.confirm?`<button class="btn btn-q" data-cargano>Cancelar</button><button class="btn btn-p btn-lg" data-cargaval>Sí, validar los ${pend.length} y emitir recibos</button>`:`<button class="btn btn-p btn-lg" data-cargaask>Validar los ${pend.length} pagos</button>`):''}</div></section>`;
+}
+function bindCargar(){
+  const f=$('#cargaForm');if(!f)return;
+  $('#cAseg').onchange=e=>{UI.carga.aseg=e.target.value};
+  $('#cFile').onchange=e=>{const x=e.target.files[0];if(x){UI.carga.file=x.name;$('#cFileName').textContent=x.name}};
+  $('#cDemo').onclick=()=>{UI.carga.file='cobros-'+UI.carga.aseg.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'-')+'-octubre.xlsx';UI.carga.step='preview';render()};
+  f.onsubmit=e=>{e.preventDefault();if(!UI.carga.file){const n=$('#cFileName');n.textContent='Elija el archivo de cobros o use el de ejemplo.';n.style.color='var(--bad)';return}UI.carga.step='preview';render()};
+}
+function polOptions(){return Object.values(D.pols).map(p=>`<option value="${p.id}">${p.code} · María Fernanda Guamán</option>`).join('')+`<option value="x-gel">VEH-2026-00088 · Gabriela Estefanía Loor</option><option value="x-jlp">VEH-2025-00744 · Jorge Luis Paredes</option>`}
+function sRegistrar(){
+  const e=UI.regErr||{};
+  return `<div><span class="crumb"><button data-go="pagos">Pagos</button> / Registrar pago</span></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:30px;font-weight:var(--dw)">Registrar pago</h1><span class="muted">Queda «Por validar» hasta que otra persona del personal lo confirme.</span></div>
+  <div class="split">
+    <form class="card form-grid" id="regForm" novalidate>
+      <label class="field full" for="rPol">¿De qué póliza es el pago?<select class="inp" id="rPol">${polOptions()}</select></label>
+      <label class="field full" for="rCuota">¿Qué cuota cubre?<select class="inp" id="rCuota"></select></label>
+      <label class="field" for="rFecha">Fecha de pago<input class="inp" id="rFecha" type="date" value="2026-10-06"></label>
+      <label class="field" for="rMet">Método<select class="inp" id="rMet"><option>Débito bancario</option><option>Transferencia</option><option>Depósito</option><option>Cheque</option><option>Efectivo en oficina</option></select></label>
+      <label class="field" for="rMonto">Monto (USD)<input class="inp num" id="rMonto" inputmode="decimal" ${e.monto?'aria-invalid="true"':''}>${e.monto?`<span class="err" role="alert">${e.monto}</span>`:''}</label>
+      <label class="field" for="rRef">Referencia<input class="inp" id="rRef" placeholder="Número del comprobante" ${e.ref?'aria-invalid="true"':''}>${e.ref?`<span class="err" role="alert">${e.ref}</span>`:''}</label>
+      <label class="drop full" for="rFile"><span class="ic">${ic('up',22)}</span><span><b>Adjuntar comprobante</b> <span class="muted">(opcional)</span><br><span class="muted" style="font-size:13px" id="rFileName">PDF, JPG o PNG de hasta 5 MB</span></span><input type="file" id="rFile" class="sr" accept=".pdf,.jpg,.jpeg,.png"></label>
+      <div class="full" style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-q" data-go="pagos">Cancelar</button><button type="submit" class="btn btn-p btn-lg">Registrar pago</button></div>
+    </form>
+    <aside class="summary" id="regSum"></aside>
+  </div>`;
+}
+function regSync(){
+  const pid=$('#rPol').value,pol=D.pols[pid];
+  const cs=pol?payable(pol):[{n:pid==='x-gel'?2:5,monto:pid==='x-gel'?118.75:92.10,vence:new Date(2026,8,pid==='x-gel'?28:12),estado:'vencida'}];
+  const sel=$('#rCuota'),prev=sel.value;
+  sel.innerHTML=cs.map(c=>`<option value="${c.n}">Cuota ${c.n} · vence ${dstr(c.vence)} · ${fmt(c.monto)}${c.estado==='vencida'?' · vencida':''}</option>`).join('');
+  if(prev&&cs.some(c=>String(c.n)===prev))sel.value=prev;
+  const c=cs.find(x=>String(x.n)===sel.value)||cs[0];
+  if(!$('#rMonto').value)$('#rMonto').value=c.monto.toFixed(2).replace('.',',');
+  const pr=pol?prima(pol):1425,pg=pol?pagado(pol):pr-cs.reduce((s,x)=>s+x.monto,0)*6,sd=pol?saldo(pol):pr-pg;
+  $('#regSum').innerHTML=`<h2 style="font-size:17px">Resumen de la póliza</h2><div style="display:flex;justify-content:space-between"><span class="m">Prima total</span><b class="num">${fmt(pr)}</b></div><div style="display:flex;justify-content:space-between"><span class="m">Pagado y validado</span><b class="num">${fmt(pg)}</b></div><span class="bar"><i style="width:${Math.round(pg/pr*100)}%"></i></span><div style="display:flex;flex-direction:column;gap:2px;padding-top:10px;border-top:1px solid var(--rail-2)"><span class="m">Saldo pendiente</span><b class="num" style="font:var(--dw) 30px var(--display);color:var(--gold)">${fmt(sd)}</b></div>`;
+  return {pol,cs,c,sd};
+}
+function bindRegistrar(){
+  const ctx=()=>regSync();ctx();
+  $('#rPol').onchange=()=>{$('#rMonto').value='';ctx()};
+  $('#rCuota').onchange=()=>{$('#rMonto').value='';ctx()};
+  $('#rFile').onchange=e=>{const f=e.target.files[0];$('#rFileName').textContent=f?f.name:'PDF, JPG o PNG de hasta 5 MB'};
+  $('#regForm').onsubmit=e=>{e.preventDefault();
+    const {pol,c,sd}=ctx();const m=parseFloat($('#rMonto').value.replace(/\./g,'').replace(',','.'));const ref=$('#rRef').value.trim();const err={};
+    if(!(m>0))err.monto='Escriba el monto pagado.';else if(m>sd+0.001)err.monto=`Supera el saldo pendiente (${fmt(sd)}).`;
+    if(!ref)err.ref='Escriba la referencia del comprobante.';else if(D.pays.some(p=>p.ref===ref))err.ref='Esa referencia ya está registrada en otro pago.';
+    if(Object.keys(err).length){const keep={pol:$('#rPol').value,cu:$('#rCuota').value,mo:$('#rMonto').value,ref,fe:$('#rFecha').value,me:$('#rMet').value};UI.regErr=err;render();$('#rPol').value=keep.pol;regSync();$('#rCuota').value=keep.cu;$('#rMonto').value=keep.mo;$('#rRef').value=keep.ref;$('#rFecha').value=keep.fe;$('#rMet').value=keep.me;$(err.monto?'#rMonto':'#rRef').focus();return}
+    UI.regErr=null;const f=$('#rFile').files[0];const fd=$('#rFecha').value.split('-');
+    const cli=pol?'María Fernanda Guamán':($('#rPol').value==='x-gel'?'Gabriela Estefanía Loor':'Jorge Luis Paredes');
+    const np={id:'n'+Date.now(),cli,ini:cli.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''),mine:!!pol,pol:pol?pol.id:null,code:pol?pol.code:$('#rPol').selectedOptions[0].text.split(' · ')[0],cuotas:[c.n],monto:m,fecha:fd[2]+'/'+fd[1]+'/'+fd[0],metodo:$('#rMet').value,banco:$('#rMet').value==='Débito bancario'?'Seguros Unidos':'Banco Pichincha',deb:$('#rMet').value==='Débito bancario',ref,origen:'Registrado por Andrea Villacís',por:'Andrea Villacís',estado:'por',hace:'ahora',file:f?f.name:null,comp:!!f||null};
+    D.pays.unshift(np);if(pol){const q=pol.cuotas.find(x=>x.n===c.n);if(q)q.estado='validacion';D.cartera=D.cartera.filter(x=>!(x.mine&&x.code===pol.code&&x.cuota===c.n))}
+    toast(`Pago de ${fmt(m)} registrado. Queda por validar.`);UI.tab='por';go('pagos');
+  };
+}
+function sCartera(){
+  return `<div class="head"><h1>Cuotas vencidas</h1><button class="btn btn-s" data-remindall>${ic('send',17)}Recordar a todos</button></div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Póliza</th><th class="r">Cuota</th><th>Venció</th><th class="r">Atraso</th><th class="r">Monto</th><th></th></tr></thead><tbody>
+  ${D.cartera.map(c=>`<tr><td><button class="linkbtn" style="color:var(--ink)" data-cli="${esc(c.cli)}">${esc(c.cli)}</button></td><td class="muted">${c.code}</td><td class="r num">${c.cuota}</td><td class="num">${c.vence}</td><td class="r"><span class="pill ${c.dias>20?'s-bad':'s-warn'}">${ic('warn',14,2.4)}${c.dias} días</span></td><td class="r num"><b>${fmt(c.monto)}</b></td><td class="r">${c.rem?`<span class="muted" style="font-size:13px;white-space:nowrap">Recordado hoy</span>`:`<button class="btn btn-q" style="min-height:38px;white-space:nowrap" data-remind="${c.id}">Recordar</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No hay cuotas vencidas.</td></tr>'}
+  </tbody></table></div></section>
+  <p class="muted" style="margin:0;font-size:14px">El recordatorio llega al correo del cliente con el monto, la fecha y un enlace para pagar en línea.</p>`;
+}
+const CLIS=()=>{const m=new Map();D.pays.forEach(p=>{if(!m.has(p.cli))m.set(p.cli,{cli:p.cli,ini:p.ini,codes:new Set()});m.get(p.cli).codes.add(p.code)});D.cartera.forEach(c=>{if(!m.has(c.cli))m.set(c.cli,{cli:c.cli,ini:c.ini,codes:new Set()});m.get(c.cli).codes.add(c.code)});return [...m.values()]};
+function sClientes(){
+  return `<div class="head"><h1>Clientes</h1></div>
+  <ul class="plist">${CLIS().map((c,i)=>`<li class="card" style="animation-delay:${i*30}ms"><span class="av">${c.ini}</span><span class="main"><b>${esc(c.cli)}</b><br><span>${[...c.codes].join(' · ')}</span></span>${D.cartera.some(x=>x.cli===c.cli)?pill('mora'):pill('vigente')}<button class="btn btn-q" style="min-height:40px" data-cli="${esc(c.cli)}">Ver ficha</button></li>`).join('')}</ul>`;
+}
+function sCliente(){
+  const name=UI.staff.p,pays=D.pays.filter(p=>p.cli===name),mine=name==='María Fernanda Guamán';
+  const c=CLIS().find(x=>x.cli===name)||{ini:'?',codes:new Set()};
+  const pols=mine?Object.values(D.pols):[...c.codes].map(code=>({code,ramo:code.startsWith('VEH')?'Vehículo':code.startsWith('VID')?'Vida':'Asistencia médica'}));
+  return `<div><span class="crumb"><button data-go="clientes">Clientes</button> / Ficha</span></div>
+  <div class="head"><div style="display:flex;gap:14px;align-items:center"><span class="av" style="width:56px;height:56px;font-size:17px;background:var(--gold);color:var(--on-gold)">${c.ini}</span><div><h1>${esc(name)}</h1><span class="muted">${mine?'mf.guaman@correo.ec · cliente desde 2025':'Cliente de Oasis Seguros'}</span></div></div><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div>
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pólizas</h2></div><div class="tbl-wrap"><table><thead><tr><th>Póliza</th><th>Ramo</th><th>Estado</th><th class="r">Prima</th><th class="r">Saldo</th></tr></thead><tbody>
+  ${pols.map(p=>`<tr><td><b>${p.code}</b></td><td>${p.ramo}</td><td>${p.cuotas?pill(polEstado(p)):D.cartera.some(x=>x.code===p.code)?pill('mora'):pill('vigente')}</td><td class="r num">${p.cuotas?fmt(prima(p)):'—'}</td><td class="r num"><b>${p.cuotas?fmt(saldo(p)):'—'}</b></td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pagos</h2></div><div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th class="r">Cuota</th><th>Estado</th><th class="r">Monto</th><th></th></tr></thead><tbody>
+  ${pays.map(p=>`<tr><td class="num">${p.fecha}</td><td>${p.code}</td><td class="r num">${p.cuotas.join(', ')}</td><td>${pill(p.estado)}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td class="r">${p.estado==='por'?`<button class="linkbtn" data-val="${p.id}">Revisar</button>`:p.rec?`<button class="linkbtn" data-rec="${p.rec}">Recibo</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin pagos registrados.</td></tr>'}
+  </tbody></table></div></section>`;
+}
+function verifRes(p){
+  if(p.anc==='anul')return `<div class="alert s-void" style="animation:fadeUp .3s var(--ease)">${ic('void',20,2)}<span><b>Recibo anulado.</b> ${p.rec} · ${esc(p.cli)} · ${fmt(p.monto)}. Motivo: ${esc(p.motivoAnul)}</span></div>`;
+  if(p.anc==='proc'||p.anc==='fall')return `<div class="alert s-info" style="animation:fadeUp .3s var(--ease)">${ic('clock',20,2)}<span><b>En proceso.</b> El recibo ${p.rec} existe y todavía se está registrando en la red. Vuelva a verificarlo en unos minutos.</span></div>`;
+  return `<div class="verif" style="animation:fadeUp .3s var(--ease)">${ic('shield',28,2)}<div><b>Recibo auténtico</b><br><span style="font-size:14px">${p.rec} · ${esc(p.cli)} · ${fmt(p.monto)} · ${p.fecha}</span></div></div>`}
+function verifyBlock(id){
+  const r=UI.verify;let res='';
+  if(r){const p=findRec(r);res=p?verifRes(p):`<div class="alert s-bad" style="animation:fadeUp .3s var(--ease)">${ic('warn',20,2)}<span><b>No encontramos ese recibo.</b> Revise el código; si es correcto, el documento no fue emitido por Oasis Seguros.</span></div>`}
+  return `<form class="verify-box" id="${id}"><label class="sr" for="${id}-in">Código del recibo</label><input class="inp" id="${id}-in" placeholder="Ej. OAS-2026-000212" value="${esc(r||'')}"><button class="btn btn-p" type="submit">Verificar</button></form>${res}`;
+}
+function sRecibos(){
+  const recs=D.pays.filter(p=>p.rec).sort((a,b)=>b.rec.localeCompare(a.rec));
+  return `<div class="head"><h1>Recibos emitidos</h1></div>
+  <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px">Verificar un recibo</h2>${verifyBlock('vS')}</section>
+  <ul class="plist">${recs.map((p,i)=>`<li class="card" style="animation-delay:${i*30}ms"><span class="av">${p.ini}</span><span class="main"><b>${p.rec}</b><br><span>${esc(p.cli)} · ${p.code} · ${p.fecha}</span></span><span class="amt">${fmt(p.monto)}</span>${pill(recSt(p))}<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Abrir</button></li>`).join('')}</ul>`;
+}
+function receiptDoc(p,compact){
+  return `<div class="top"><img src="logo.png" alt="Oasis Seguros"><div style="text-align:right"><span class="muted" style="font-size:13px">Recibo de pago</span><br><b style="font:var(--dw) ${compact?19:22}px var(--display)">${p.rec}</b></div></div>
+  <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><span class="muted">Monto recibido</span><b class="num" style="font:var(--dw) ${compact?30:36}px var(--display)">${fmt(p.monto)}</b></div>
+  <dl class="kv"><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Póliza</dt><dd>${p.code}</dd><dt>Cuota</dt><dd>${p.cuotas.join(', ')}</dd><dt>Fecha de pago</dt><dd>${p.fecha}</dd><dt>Método</dt><dd>${esc(p.metodo)}</dd><dt>Estado</dt><dd>${p.anc==='anul'?'Anulado':'Validado'}</dd></dl>
+  <div class="verif" ${p.anc==='anul'?'style="background:var(--void-bg);color:var(--void)"':p.anc==='proc'||p.anc==='fall'?'style="background:var(--info-bg);color:var(--info)"':''}>${qr(p.rec)}<div style="min-width:0"><b>${p.anc==='anul'?'Anulado':p.anc==='proc'||p.anc==='fall'?'En proceso':'Verificable'}</b><br><span style="font-size:13px;word-break:break-all">Huella ${huella(p.rec)}</span></div></div>`;
+}
+function anclaje(p){const tx='0x'+hash(p.rec+'tx')+hash(p.rec+'ty')+hash(p.rec+'tz')+hash(p.rec+'tw')+hash(p.rec+'tv'),a=p.anc||'verif';
+  const st=[['Creado','al validar el pago','16:05:12','ok'],a==='fall'?['Envío fallido','5 intentos con espera creciente','16:12:40','bad']:['Enviado','transacción firmada','16:05:19','ok'],a==='verif'||a==='anul'?['Anclado','bloque 12.345.678','16:05:41','ok']:a==='proc'?['Anclado','esperando la confirmación de la red','—','wait']:['Anclado','pendiente','—','off']];
+  if(a==='anul')st.push(['Anulado','anulación registrada en el contrato','17:20:03','void']);
+  const icn={ok:'check',bad:'x',wait:'clock',off:'clock',void:'void'};
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="font-size:17px">Registro en la red</h2>${pill(recSt(p))}</div><span class="muted" style="font-size:13px;margin-top:-8px">Polygon PoS · red de pruebas Amoy</span>
+  <ol class="tl">${st.map(([t,d,h,k])=>`<li><span class="dot ${k==='ok'?'':k}">${ic(icn[k],14,3)}</span><div><b>${t}</b><span>${h==='—'?d:p.fecha+' '+h+' · '+d}</span></div></li>`).join('')}</ol>
+  ${a==='fall'||a==='proc'?'':`<dl class="kv" style="font-size:13.5px"><dt>Transacción</dt><dd style="word-break:break-all;font-family:ui-monospace,monospace;font-weight:500">${tx}…</dd><dt>Explorador</dt><dd><a href="#" data-explorer>amoy.polygonscan.com</a></dd></dl>`}`}
+function recActions(p){const a=p.anc||'verif';
+  if(a==='fall')return UI.who==='admin'?`<div class="alert s-warn">${ic('warn',20,2)}<span>El anclaje falló tras 5 intentos. Reintentar lo devuelve a la cola sin intervención técnica.</span></div><button class="btn btn-p" data-retry="${p.rec}" style="align-self:flex-start">${ic('refresh',18,2)}Reintentar anclaje</button>`:`<div class="alert s-warn">${ic('warn',20,2)}<span>El anclaje falló. El administrador puede reintentarlo.</span></div>`;
+  if(a==='anul')return `<div class="alert s-void">${ic('void',20,2)}<span><b>Motivo de la anulación:</b> ${esc(p.motivoAnul)}</span></div>`;
+  if(a!=='verif'||UI.who!=='admin')return '';
+  if(!UI.anular)return `<button class="btn btn-bad" data-anulopen style="align-self:flex-start">Anular recibo…</button>`;
+  return `<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--hair);animation:fadeUp .3s var(--ease)"><b>Anular ${p.rec}</b><span class="muted" style="font-size:13.5px">El recibo no se borra: queda anulado, la anulación se registra en el contrato y la verificación mostrará «Anulado».</span><label class="field" for="anulTxt">Motivo<textarea class="inp" id="anulTxt" rows="3" placeholder="Por ejemplo: el pago se validó dos veces"></textarea></label><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-q" data-anulcancel>Volver</button><button class="btn btn-p" style="background:var(--bad)" data-anulok="${p.rec}">Anular recibo</button></div></div>`}
+function sRecibo(){
+  const p=findRec(UI.staff.p);if(!p)return sRecibos();
+  return `<div><span class="crumb"><button data-go="recibos">Recibos</button> / ${p.rec}</span></div>
+  <div class="split"><section class="card receipt">${receiptDoc(p)}</section>
+  <div style="flex:0 1 380px;display:flex;flex-direction:column;gap:18px;min-width:0"><section class="card side" style="flex:none">${anclaje(p)}${recActions(p)}</section><section class="card side" style="flex:none"><h2 style="font-size:17px">Enviar al cliente</h2><span class="muted">El cliente recibe el PDF y el código para verificarlo.</span><button class="btn ${(p.anc||'verif')==='verif'?'btn-p':'btn-s'}" data-mail="${p.rec}">${ic('mail',18)}Enviar por correo</button><button class="linkbtn" style="align-self:flex-start" data-cli="${esc(p.cli)}">Ver ficha del cliente</button></section></div></div>`;
+}
+function bindStaff(){
+  const v=$('#view');
+  // count-up
+  v.querySelectorAll('[data-count]').forEach(el=>{const to=parseFloat(el.dataset.count),int=el.dataset.int;const t0=performance.now(),dur=700;
+    const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3),val=to*e;el.textContent=int?Math.round(val):fmt(val);if(k<1)requestAnimationFrame(step)};
+    if(!matchMedia('(prefers-reduced-motion: reduce)').matches)requestAnimationFrame(step)});
+  if(UI.staff.v==='registrar')bindRegistrar();
+  if(UI.staff.v==='cargar')bindCargar();
+  if(UI.staff.v==='reportes')bindReportes();
+  if(UI.staff.v==='admin')bindAdmin();
+  ['vS'].forEach(id=>{const f=$('#'+id);if(f)f.onsubmit=e=>{e.preventDefault();UI.verify=$('#'+id+'-in').value.trim()||null;render()}});
+}
+
+/* ---------- REPORTES ---------- */
+const ASEG_PREF={VEH:'Aseguradora del Sur',VID:'Seguros Unidos',MED:'Ecuasanitas'};
+const asegOf=p=>p.deb?p.banco:p.pol?D.pols[p.pol].aseg:ASEG_PREF[p.code.slice(0,3)];
+const asegByCode=c=>ASEG_PREF[c.slice(0,3)];
+const toISO=d=>d.split('/').reverse().join('-');
+function sReportes(){
+  const adm=UI.who==='admin';if(!adm)UI.rp='conc';
+  const tabs=`<div class="tabs" role="tablist">${[['conc','Conciliación por aseguradora'],...(adm?[['cart','Cartera vencida']]:[])].map(([k,l])=>`<button role="tab" type="button" data-rp="${k}" aria-selected="${UI.rp===k}">${l}</button>`).join('')}</div>`;
+  const exp=`<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-exp="CSV">${ic('dl',17,2)}Exportar CSV</button><button class="btn btn-s" data-exp="PDF">${ic('dl',17,2)}Exportar PDF</button></div>`;
+  if(UI.rp==='conc'){const f=UI.repF;
+    const rows=D.pays.filter(p=>p.estado==='val'&&p.rec&&p.anc!=='anul'&&(!f.aseg||asegOf(p)===f.aseg)&&toISO(p.fecha)>=f.desde&&toISO(p.fecha)<=f.hasta).sort((a,b)=>toISO(b.fecha).localeCompare(toISO(a.fecha)));
+    const by={};rows.forEach(p=>{const k=asegOf(p);by[k]=(by[k]||0)+p.monto});const tot=rows.reduce((s,p)=>s+p.monto,0);
+    return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Reportes</h1><span class="muted">Pagos validados del periodo para conciliar las primas con cada aseguradora.</span></div>${exp}</div>${tabs}
+    <section class="card" style="padding:18px"><form class="filters" id="repForm"><label class="field" for="fAseg">Aseguradora<select class="inp" id="fAseg"><option value="">Todas</option>${D.asegs.map(a=>`<option ${a.n===f.aseg?'selected':''}>${a.n}</option>`).join('')}</select></label><label class="field" for="fDesde">Desde<input class="inp" type="date" id="fDesde" value="${f.desde}"></label><label class="field" for="fHasta">Hasta<input class="inp" type="date" id="fHasta" value="${f.hasta}"></label></form></section>
+    <div class="strip">${Object.entries(by).map(([k,v])=>`<span><b>${esc(k)}</b>&nbsp;<span class="num">${fmt(v)}</span></span>`).join('')||'<span class="muted">Sin pagos en el periodo.</span>'}<span style="margin-left:auto">${rows.length} pagos ·&nbsp;<b class="num">${fmt(tot)}</b></span></div>
+    <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th>Cliente</th><th>Aseguradora</th><th class="r">Monto</th><th>Recibo</th></tr></thead><tbody>${rows.map(p=>`<tr><td class="num">${p.fecha}</td><td>${p.code}</td><td>${esc(p.cli)}</td><td>${esc(asegOf(p))}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td><button class="linkbtn" data-rec="${p.rec}">${p.rec}</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No hay pagos validados con estos filtros.</td></tr>'}</tbody>${rows.length?`<tfoot><tr><td colspan="4">Total · ${rows.length} pagos</td><td class="r num">${fmt(tot)}</td><td></td></tr></tfoot>`:''}</table></div></section>
+    <p class="muted" style="margin:0;font-size:13.5px">Los recibos anulados no entran en la conciliación.</p>`}
+  const g={};D.cartera.forEach(c=>{const k=asegByCode(c.code);g[k]=g[k]||{n:k,v:0,q:0,max:0};g[k].v+=c.monto;g[k].q++;g[k].max=Math.max(g[k].max,c.dias)});
+  const tot=D.cartera.reduce((s,c)=>s+c.monto,0);
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Reportes</h1><span class="muted">Cartera vencida por aseguradora y por cliente, al 06/10/2026.</span></div>${exp}</div>${tabs}
+  <div class="grid3c">${Object.values(g).sort((a,b)=>b.v-a.v).map(x=>`<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><span class="muted" style="font-size:14px">${esc(x.n)}</span><b style="font:var(--dw) 28px/1.1 var(--display);font-variant-numeric:tabular-nums;color:var(--bad)">${fmt(x.v)}</b><span class="muted" style="font-size:13px">${x.q} ${x.q===1?'cuota vencida':'cuotas vencidas'} · atraso máximo ${x.max} días</span></section>`).join('')}</div>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Póliza</th><th>Aseguradora</th><th class="r">Cuota</th><th class="r">Atraso</th><th class="r">Valor vencido</th></tr></thead><tbody>${[...D.cartera].sort((a,b)=>b.dias-a.dias).map(c=>`<tr><td><b>${esc(c.cli)}</b></td><td>${c.code}</td><td>${esc(asegByCode(c.code))}</td><td class="r num">${c.cuota}</td><td class="r"><span class="pill ${c.dias>20?'s-bad':'s-warn'}">${ic('warn',14,2.4)}${c.dias} días</span></td><td class="r num"><b>${fmt(c.monto)}</b></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="5">Total · ${D.cartera.length} cuotas</td><td class="r num">${fmt(tot)}</td></tr></tfoot></table></div></section>`;
+}
+function bindReportes(){const f=$('#repForm');if(!f)return;
+  $('#fAseg').onchange=e=>{UI.repF.aseg=e.target.value;render()};
+  $('#fDesde').onchange=e=>{UI.repF.desde=e.target.value;render()};
+  $('#fHasta').onchange=e=>{UI.repF.hasta=e.target.value;render()};
+  f.onsubmit=e=>e.preventDefault();
+}
+
+/* ---------- ADMINISTRACION ---------- */
+const ADM=[['usuarios','Usuarios'],['anclaje','Anclaje de recibos'],['bitacora','Bitácora'],['catalogos','Aseguradoras y catálogos'],['seguridad','Seguridad']];
+function sAdmin(){const t=UI.adm,al=ancAlerts();
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Administración</h1><span class="muted">Cuentas, anclaje de recibos, bitácora y catálogos. Solo para administradores.</span></div></div>
+  <div class="tabs" role="tablist">${ADM.map(([k,l])=>`<button role="tab" type="button" data-adm="${k}" aria-selected="${t===k}">${l}${k==='anclaje'&&al?` · ${al}`:''}</button>`).join('')}</div>
+  ${({usuarios:aUsuarios,anclaje:aAnclaje,bitacora:aBitacora,catalogos:aCatalogos,seguridad:aSeguridad})[t]()}`;
+}
+function ancHealth(){const a=D.anc,low=a.saldo<a.umbral,fall=D.pays.filter(p=>p.anc==='fall').length,proc=D.pays.filter(p=>p.anc==='proc').length;
+  return `<section class="summary saldo" style="flex-direction:row;flex-wrap:wrap;gap:22px 36px;align-items:center"><div style="display:flex;flex-direction:column;gap:4px;flex:1 1 220px"><span class="m">Saldo de la cuenta de anclaje</span><b class="big">${fmtPol(a.saldo)} POL</b><span class="bar"><i class="${low?'low':''}" style="width:${Math.min(100,Math.round(a.saldo/(a.umbral*2)*100))}%"></i></span><span class="m" style="font-size:13px">Umbral de alerta: ${fmtPol(a.umbral)} POL</span></div>
+  <div class="mini"><span class="m">Anclados en octubre</span><b>${a.anclados}</b></div><div class="mini"><span class="m">En proceso</span><b>${proc}</b></div><div class="mini"><span class="m">Requieren atención</span><b style="color:${fall?'#f3a59d':'inherit'}">${fall}</b></div>
+  ${low?`<div role="status" style="flex:1 1 100%;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:var(--r);background:rgba(240,200,120,.12)">${ic('warn',18,2.2,'style="color:var(--gold);flex:none"')}<span>El saldo está bajo el umbral. Recargue la cuenta operadora para que el anclaje no se detenga.</span></div>`:''}</section>`;
+}
+function aUsuarios(){const me='u1';
+  const form=UI.newUser?`<form class="card form-grid" id="userForm" novalidate style="flex:none;animation:fadeUp .3s var(--ease)"><h2 class="full" style="font-size:17px">Nuevo usuario del personal</h2>
+    <label class="field" for="nuN">Nombre<input class="inp" id="nuN" autocomplete="off"></label>
+    <label class="field" for="nuC">Correo<input class="inp" id="nuC" type="email" autocomplete="off" placeholder="nombre@oasisseguros.ec" ${UI.nuErr?'aria-invalid="true"':''}>${UI.nuErr?`<span class="err" role="alert">${UI.nuErr}</span>`:''}</label>
+    <label class="field" for="nuR">Rol<select class="inp" id="nuR"><option value="OPERADOR">Operador</option><option value="ADMIN">Administrador</option></select><span class="hint">Un administrador activa el segundo factor en su primer ingreso.</span></label>
+    <label class="field" for="nuK">Cargo<input class="inp" id="nuK" autocomplete="off" placeholder="Por ejemplo: Ejecutiva comercial"></label>
+    <p class="full muted" style="margin:0;font-size:13.5px">Le llegará una contraseña temporal por correo; deberá cambiarla en su primer ingreso por una de 12 caracteres o más.</p>
+    <div class="full" style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-q" data-nucancel>Cancelar</button><button type="submit" class="btn btn-p">Crear usuario</button></div></form>`:'';
+  return `${form}<section class="card"><div style="padding:16px 18px 4px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="font-size:17px">Personal</h2><span class="muted" style="font-size:13px">«Restablecer» envía una contraseña temporal. Desactivar, cambiar el rol o restablecer cierra todas las sesiones del usuario.</span></div>${UI.newUser?'':`<button class="btn btn-p" data-nuopen>${ic('plus',17,2.2)}Nuevo usuario</button>`}</div>
+  <div class="tbl-wrap"><table><thead><tr><th>Usuario</th><th>Rol</th><th>Segundo factor</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>
+  ${D.users.map(u=>`<tr><td><span style="display:flex;gap:12px;align-items:center"><span class="av" ${u.rol==='ADMIN'?'style="background:var(--rail);color:var(--gold)"':''}>${u.ini}</span><span><b>${esc(u.n)}</b>${u.id===me?' <span class="muted" style="font-size:13px">(usted)</span>':''}<br><span class="muted" style="font-size:13px">${esc(u.cargo)} · ${esc(u.c)}</span></span></span></td><td><span class="tag ${u.rol==='ADMIN'?'adm':''}">${u.rol==='ADMIN'?'Administrador':'Operador'}</span></td><td>${u.rol==='ADMIN'?pill(u.tfa?'tfa':'notfa'):'<span class="muted" style="font-size:13px">No requerido</span>'}</td><td>${pill(u.act?(u.ult==='—'?'pend1':'activo'):'inactivo')}</td><td class="num muted">${u.ult}</td><td class="r" style="white-space:nowrap">${u.id===me?'':`<button class="linkbtn" data-ureset="${u.id}" aria-label="Restablecer la contraseña de ${esc(u.n)}">Restablecer</button> · <button class="linkbtn" data-utoggle="${u.id}" aria-label="${u.act?'Desactivar':'Activar'} a ${esc(u.n)}" ${u.act?'style="color:var(--bad)"':''}>${u.act?'Desactivar':'Activar'}</button>`}</td></tr>`).join('')}
+  </tbody></table></div></section>
+  <section class="card"><div style="padding:16px 18px 4px"><h2 style="font-size:17px">Cuentas de clientes</h2><span class="muted" style="font-size:13px">Una cuenta por cliente, con rol Asegurado y contraseña temporal que se cambia en el primer ingreso.</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Correo</th><th>Cuenta</th><th>Último ingreso</th><th></th></tr></thead><tbody>
+  ${D.ctas.map((c,i)=>`<tr><td><b>${esc(c.cli)}</b></td><td class="muted">${esc(c.c)}</td><td>${pill(c.st)}</td><td class="num muted">${c.ult}</td><td class="r">${c.st==='sincta'?`<button class="btn btn-q" style="min-height:38px" data-cta="${i}">Crear cuenta</button>`:''}</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+}
+function aAnclaje(){const a=D.anc,fall=D.pays.filter(p=>p.anc==='fall'),proc=D.pays.filter(p=>p.anc==='proc');
+  const row=(p,act)=>`<div class="crow"><span class="main"><b>${p.rec}</b><span>${esc(p.cli)} · ${p.code} · ${fmt(p.monto)} · ${p.fecha}</span></span>${pill(recSt(p))}${act}</div>`;
+  return `<div class="grid2"><div style="display:flex;flex-direction:column;gap:18px">${ancHealth()}
+   <form class="card" id="umbralForm" novalidate style="padding:18px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:17px">Umbral de alerta</h2><div class="filters"><label class="field" for="umb">Avisar cuando el saldo baje de (POL)<input class="inp num" id="umb" inputmode="decimal" value="${fmtPol(a.umbral)}" ${UI.umbErr?'aria-invalid="true"':''}>${UI.umbErr?`<span class="err" role="alert">${UI.umbErr}</span>`:''}</label><button class="btn btn-s" type="submit">Guardar umbral</button></div><span class="muted" style="font-size:13px">La alerta aparece aquí y en el inicio del administrador, y queda en los registros del servidor.</span></form></div>
+   <div style="display:flex;flex-direction:column;gap:18px">
+   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">Requieren atención</h2><span class="muted" style="font-size:13px">Recibos cuyo anclaje falló tras 5 intentos. Reintentar los devuelve a la cola.</span>${fall.map(p=>row(p,`<button class="btn btn-p" style="min-height:40px" data-retry="${p.rec}">${ic('refresh',17,2)}Reintentar</button>`)).join('')||'<p class="muted" style="margin:6px 0 0">Ningún recibo requiere atención.</p>'}</section>
+   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">En proceso</h2><span class="muted" style="font-size:13px">Se consultan cada 10 segundos hasta quedar verificables.</span>${proc.map(p=>row(p,`<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Abrir</button>`)).join('')||'<p class="muted" style="margin:6px 0 0">Ninguno en proceso.</p>'}</section>
+   <p class="muted" style="margin:0;font-size:13.5px">Para anular un recibo, ábralo desde Recibos: la anulación pide motivo y queda registrada en el contrato.</p></div></div>`;
+}
+function aBitacora(){const f=UI.bit,us=[...new Set(D.log.map(l=>l[1]))],acs=[...new Set(D.log.map(l=>l[2]))];
+  const rows=D.log.filter(l=>(!f.u||l[1]===f.u)&&(!f.a||l[2]===f.a));
+  return `<section class="card" style="padding:18px"><form class="filters" id="bitForm"><label class="field" for="bU">Usuario<select class="inp" id="bU"><option value="">Todos</option>${us.map(u=>`<option ${u===f.u?'selected':''}>${esc(u)}</option>`).join('')}</select></label><label class="field" for="bA">Acción<select class="inp" id="bA"><option value="">Todas</option>${acs.map(a=>`<option value="${a}" ${a===f.a?'selected':''}>${a}</option>`).join('')}</select></label><label class="field" for="bF">Desde<input class="inp" type="date" id="bF" value="2026-10-01"></label></form></section>
+  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>IP</th></tr></thead><tbody>${rows.map(l=>`<tr><td class="num" style="white-space:nowrap">${l[0]}</td><td>${esc(l[1])}</td><td><b>${esc(l[3])}</b><br><span class="muted" style="font:500 12px ui-monospace,monospace">${l[2]}</span></td><td>${esc(l[4])}</td><td class="num muted">${l[5]}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Ningún registro coincide con los filtros.</td></tr>'}</tbody></table></div></section>
+  <p class="muted" style="margin:0;font-size:13.5px;display:flex;gap:8px;align-items:center">${ic('lock',16,2)}Solo lectura: los registros no se pueden modificar ni eliminar desde la aplicación.</p>`;
+}
+function aCatalogos(){const sw=(kind,i,x)=>`<div class="crow"><span class="main"><b>${esc(x.n)}</b><span>${x.act?(x.uso?'En uso: no se elimina, solo se desactiva':'Activo'):'Desactivado: no aparece en los formularios'}</span></span><button type="button" class="switch" role="switch" aria-checked="${x.act}" aria-label="${esc(x.n)}" data-sw="${kind}:${i}"></button></div>`;
+  const card=(t,sub,body,act='')=>`<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="font-size:17px">${t}</h2>${act}</div><span class="muted" style="font-size:13px">${sub}</span>${body}</section>`;
+  return `<div class="grid3c">${card('Aseguradoras','Son datos de las pólizas; no tienen acceso al sistema.',D.asegs.map((a,i)=>`<div class="crow"><span class="main"><b>${esc(a.n)}</b><span class="num">RUC ${a.ruc}</span></span><button class="linkbtn" data-editaseg="${i}">Editar</button></div>`).join(''),`<button class="btn btn-s" style="min-height:40px" data-newaseg>${ic('plus',16,2.2)}Nueva</button>`)}
+  ${card('Ramos de seguro','Aparecen al registrar una póliza.',D.ramos.map((x,i)=>sw('ramos',i,x)).join(''))}
+  ${card('Métodos de pago','Aparecen al registrar un pago.',D.metodos.map((x,i)=>sw('metodos',i,x)).join(''))}</div>`;
+}
+function aSeguridad(){
+  return `<div class="grid3c"><section class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px">Segundo factor de su cuenta</h2><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span><b>Aplicación autenticadora</b><br><span class="muted" style="font-size:13px">Activa desde el 12/09/2026</span></span>${pill('tfa')}</div><dl class="kv"><dt>Códigos de recuperación</dt><dd>${UI.codes?'10':'8'} de 10 disponibles</dd><dt>Último uso del código</dt><dd>06/10/2026 09:12</dd></dl>
+   ${UI.codes?`<div class="alert s-warn">${ic('warn',20,2)}<span>Guarde estos códigos en un lugar seguro. Cada uno sirve una vez y no se volverán a mostrar.</span></div><div class="codes" aria-label="Códigos de recuperación">${UI.codes.map(c=>`<span>${c}</span>`).join('')}</div>`:`<button class="btn btn-s" data-codes style="align-self:flex-start">Generar códigos nuevos</button>`}</section>
+  <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px">Contraseñas del personal</h2><ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px"><li>Al menos 12 caracteres y una fortaleza de 3 o más, medida con un diccionario en español.</li><li>Segundo factor obligatorio para los administradores.</li><li>El usuario recibe un correo cuando cambian su contraseña, su rol o su segundo factor.</li><li>5 intentos fallidos en un minuto bloquean el ingreso por un momento.</li></ul></section>
+  <section class="card" style="padding:20px;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px">Sus sesiones</h2><dl class="kv"><dt>Cierre por inactividad</dt><dd>30 minutos</dd><dt>Aviso previo</dt><dd>1 minuto</dd><dt>Sesiones abiertas</dt><dd>2 (este equipo y un teléfono)</dd></dl><button class="btn btn-q" data-closeoth style="align-self:flex-start">Cerrar mis otras sesiones</button></section></div>`;
+}
+function bindAdmin(){
+  const uf=$('#userForm');if(uf){$('#nuN').focus();uf.onsubmit=e=>{e.preventDefault();const n=$('#nuN').value.trim(),c=$('#nuC').value.trim().toLowerCase(),r=$('#nuR').value,k=$('#nuK').value.trim()||(r==='ADMIN'?'Administrador':'Operador');
+    let err=null;if(!c.includes('@'))err='Escriba un correo válido.';else if(D.users.some(u=>u.c===c))err='Ese correo ya tiene una cuenta.';
+    if(err||!n){UI.nuErr=err||'Escriba el nombre y el correo.';render();$('#nuN').value=n;$('#nuC').value=c;$('#nuR').value=r;$('#nuK').value=k;$('#nuC').focus();return}
+    const ini=n.split(' ').filter(w=>w.length>1).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+    D.users.push({id:'u'+Date.now(),n,ini,c,rol:r,cargo:k,tfa:false,act:true,ult:'—'});logA('CREAR_USUARIO','Creó un usuario del personal',n+' · '+(r==='ADMIN'?'ADMIN':'OPERADOR'));
+    UI.newUser=false;UI.nuErr=null;toast(`Cuenta creada. La contraseña temporal llegó a ${esc(c)}.`);render()}}
+  const uf2=$('#umbralForm');if(uf2)uf2.onsubmit=e=>{e.preventDefault();const v=parseFloat($('#umb').value.replace(',','.'));
+    if(!(v>0)){UI.umbErr='Escriba un valor mayor que cero.';render();return}UI.umbErr=null;D.anc.umbral=v;logA('CONFIGURAR_UMBRAL','Cambió el umbral de alerta del saldo',fmtPol(v)+' POL');toast(`Umbral guardado: ${fmtPol(v)} POL.`);render()};
+  const bf=$('#bitForm');if(bf){$('#bU').onchange=e=>{UI.bit.u=e.target.value;render()};$('#bA').onchange=e=>{UI.bit.a=e.target.value;render()};bf.onsubmit=e=>e.preventDefault()}
+}
+
+/* ---------- MOBILE (insured) ---------- */
+function mGo(s,p){UI.m.stack.push({s,p});UI.m.dir='fwd';render()}
+function mBack(){if(UI.m.stack.length>1)UI.m.stack.pop();UI.m.dir='back';render()}
+function mTab(s,p){UI.m.stack=[{s,p}];UI.m.dir='fwd';render()}
+const mCur=()=>UI.m.stack[UI.m.stack.length-1];
+function mTop(title,back=true,right=''){return `<div class="mtop ${back?'sub':''}">${back?`<button class="ibtn plain" data-mback aria-label="Volver">${ic('back',24,2.2)}</button>`:''}<h1>${title}</h1>${right}</div>`}
+function mNav(cur){
+  const it=[['inicio','home','Inicio'],['polizas','doc','Pólizas'],['pagos','rec','Recibos'],['cuenta','person','Cuenta']];
+  return `<nav class="mnav" aria-label="Secciones">${it.map(([k,i,l])=>`<button data-mtab="${k}" ${cur===k?'aria-current="page"':''}>${ic(i)}${l}</button>`).join('')}</nav>`;
+}
+function vClient(){
+  const c=mCur(),scr=({datos:mDatos,inicio:mInicio,polizas:mPolizas,poliza:mPoliza,reportar:mReportar,reportado:mReportado,pagos:mPagos,recibo:mRecibo,verificar:mVerificar,cuenta:mCuenta})[c.s](c.p);
+  return `<div class="mwrap"><aside class="guide"><h2>Pruebe el portal del asegurado</h2>
+  <ol><li>En el aviso de la cuota vencida de Vida, use <b>Reportar pago</b> y adjunte un comprobante.</li><li>Cambie a <b>Personal</b> arriba y valide o rechace ese pago en la mesa de validación.</li><li>Vuelva a <b>Asegurado</b>: verá el aviso y, si lo validó, el recibo nuevo en Recibos.</li><li>En Recibos, use <b>Verificar un recibo</b> con el código impreso.</li></ol>
+  <div class="note">Los datos son de ejemplo y se comparten entre las dos vistas mientras la página esté abierta. «Reiniciar datos» los devuelve al inicio.</div></aside>
+  <div class="phone"><span class="notch" aria-hidden="true"></span><div class="scr ${UI.m.dir||''}" id="scr">${scr}</div></div></div>`;
+}
+function mDatos(){
+  return `${mTop('Tratamiento de datos',false)}<div class="mbody"><img src="logo.png" alt="" style="width:96px;height:96px;object-fit:contain;align-self:center;animation:pop .7s var(--ease) both"><p style="margin:0;line-height:1.55">Para mostrarle sus pólizas, cuotas y recibos, Oasis Seguros usa su nombre, cédula, correo y los datos de sus pagos.</p>
+  <div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px;font-size:14.5px"><div style="display:flex;gap:10px">${ic('check',18,2.4,'style="color:var(--ok);flex:none"')}<span>Solo los usamos para administrar sus seguros.</span></div><div style="display:flex;gap:10px">${ic('check',18,2.4,'style="color:var(--ok);flex:none"')}<span>No los compartimos con terceros sin su permiso.</span></div><div style="display:flex;gap:10px">${ic('check',18,2.4,'style="color:var(--ok);flex:none"')}<span>Puede pedir una copia o su eliminación cuando quiera.</span></div></div>
+  <label style="display:flex;gap:12px;align-items:flex-start;font-size:14.5px" for="mOk"><input id="mOk" type="checkbox" style="width:22px;height:22px;accent-color:var(--brand);margin:0;flex:none">Acepto el tratamiento de mis datos personales según la Ley Orgánica de Protección de Datos Personales.</label></div>
+  <div class="mfoot"><button class="btn btn-p btn-lg" id="mAccept" disabled>Aceptar y continuar</button></div>`;
+}
+function mInicio(){
+  const vida=D.pols.vida,venc=vida.cuotas.find(c=>c.estado==='vencida');
+  const notes=myPays().filter(p=>p.notice);
+  const por=myPays().filter(p=>p.estado==='por');
+  return `${mTop('Hola, María Fernanda',false,`<button class="ibtn" aria-label="Notificaciones" data-mtab="pagos">${ic('bell',21,1.8)}${notes.length||por.length?'<span class="dot"></span>':''}</button>`)}
+  <div class="mbody"><span class="muted" style="margin-top:-12px;font-size:14px">Martes, 6 de octubre</span>
+  ${notes.map(p=>p.estado==='rech'?`<div class="note-m s-bad">${ic('x',20,2.2)}<div><b>Pago rechazado</b><span>${fmt(p.monto)} de ${p.code}. ${esc(p.motivo)}</span><br><button data-mgo="reportar" data-mp="${p.pol}">Reportar de nuevo</button></div></div>`:`<div class="note-m s-ok">${ic('check',20,2.4)}<div><b>Pago validado</b><span>${fmt(p.monto)} de ${p.code}. Su recibo ${p.rec} está listo.</span><br><button data-mgo="recibo" data-mp="${p.rec}">Ver recibo</button></div></div>`).join('')}
+  ${venc?`<section class="hero"><span>${pill('vencida')}</span><span class="m" style="margin-top:4px">Seguro de vida · cuota ${venc.n} de 12</span><b class="big">${fmt(venc.monto)}</b><span class="m">Venció el ${dstr(venc.vence)}. La aseguradora aún no notifica el cobro; si ya pagó por otro medio, repórtelo.</span><div class="acts"><button class="gold" data-mgo="reportar" data-mp="vida">Reportar pago</button><button class="line" data-mgo="poliza" data-mp="vida">Ver cuotas</button></div></section>`
+   :`<section class="hero"><span class="m">Próxima cuota</span>${(()=>{const n=nextDue(D.pols.veh);return n?`<b class="big">${fmt(n.monto)}</b><span class="m">Vehículo · cuota ${n.n} · vence ${dstr(n.vence)}</span>`:'<b class="big">Al día</b>'})()}<div class="acts"><button class="gold" data-mgo="poliza" data-mp="veh">Ver póliza</button><button class="line" data-mgo="reportar" data-mp="veh">Reportar pago</button></div></section>`}
+  ${por.map(p=>`<div class="note-m s-info">${ic('clock',20,2)}<div><b>Pago en validación</b><span>Recibimos ${fmt(p.monto)} de ${p.code}. Le avisaremos por correo.</span></div></div>`).join('')}
+  <h2 class="h2m">Mis pólizas</h2>${polCards()}</div>${mNav('inicio')}`;
+}
+function polCards(){return Object.values(D.pols).map(p=>{const e=polEstado(p),n=nextDue(p),v=p.cuotas.filter(c=>c.estado==='vencida').length;
+  return `<button class="pol" data-mgo="poliza" data-mp="${p.id}"><span class="ic">${ic(p.icon)}</span><span class="main"><span style="display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink)"><b>${p.ramo}</b>${pill(e)}</span><span>Saldo ${fmt(saldo(p))} · ${v?v+' cuota vencida':n?'próxima '+dstr(n.vence).slice(0,5):'al día'}</span></span>${ic('chev',20,2,'class="chev"')}</button>`}).join('')}
+function mPolizas(){return `${mTop('Mis pólizas',false)}<div class="mbody">${polCards()}</div>${mNav('polizas')}`}
+function mPoliza(id){
+  const p=D.pols[id],pr=prima(p),pg=pagado(p);
+  return `${mTop(p.ramo)}<div class="mbody">
+  <section class="card sumbox"><div style="display:flex;justify-content:space-between;align-items:center"><b>${p.code}</b>${pill(polEstado(p))}</div><span class="muted" style="font-size:14px">${p.detalle} · ${p.aseg}</span>
+  <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:6px"><span class="muted">Pagado ${fmt(pg)}</span><span class="muted">Prima ${fmt(pr)}</span></div><span class="prog"><i style="width:${Math.round(pg/pr*100)}%"></i></span>
+  <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="muted">Saldo pendiente</span><b class="num" style="font:var(--dw) 26px var(--display)">${fmt(saldo(p))}</b></div></section>
+  <h2 class="h2m">Cuotas</h2>
+  ${p.cuotas.map((c,i)=>`<div class="cuota" style="animation:fadeUp .35s ${i*25}ms var(--ease) both"><span class="main"><b>Cuota ${c.n}</b><span>Vence ${dstr(c.vence)}</span></span><b class="num">${fmt(c.monto)}</b>${pill(c.estado)}</div>`).join('')}
+  </div><div class="mfoot"><span class="muted" style="font-size:13.5px">La aseguradora debita las cuotas de su cuenta. Si pagó una por otro medio, repórtela.</span><button class="btn btn-p btn-lg" data-mgo="reportar" data-mp="${p.id}" ${payable(p).length?'':'disabled'}>Reportar un pago</button></div>`;
+}
+function mReportar(id){
+  id=id||'veh';const p=D.pols[id],cs=payable(p),r=UI.rep;
+  return `${mTop('Reportar pago')}<form class="mbody" id="repForm" novalidate>
+  <span class="muted" style="font-size:14.5px">¿Pagó una cuota por un medio distinto del débito bancario? Envíe el comprobante y el personal lo validará.</span>
+  <label class="field" for="rpPol">Póliza<select class="inp" id="rpPol">${Object.values(D.pols).map(x=>`<option value="${x.id}" ${x.id===id?'selected':''}>${x.ramo} · ${x.code}</option>`).join('')}</select></label>
+  <label class="field" for="rpCu">Cuota<select class="inp" id="rpCu">${cs.map(c=>`<option value="${c.n}">Cuota ${c.n} · ${fmt(c.monto)}${c.estado==='vencida'?' · vencida':''}</option>`).join('')}</select></label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field" for="rpMo">Monto<input class="inp num" id="rpMo" inputmode="decimal" value="${(cs[0]?cs[0].monto:0).toFixed(2).replace('.',',')}"></label><label class="field" for="rpFe">Fecha<input class="inp" id="rpFe" type="date" value="2026-10-06"></label></div>
+  <label class="field" for="rpMet">Medio de pago<select class="inp" id="rpMet"><option>Transferencia</option><option>Depósito</option><option>Efectivo en oficina</option></select></label>
+  <label class="field" for="rpBa">Banco<select class="inp" id="rpBa"><option>Banco Pichincha</option><option>Banco Guayaquil</option><option>Produbanco</option><option>Banco del Pacífico</option><option>Cooperativa JEP</option></select></label>
+  <label class="field" for="rpRef">Número de referencia<input class="inp" id="rpRef" inputmode="numeric" placeholder="Está en su comprobante" ${r.err?'aria-invalid="true"':''}>${r.err?`<span class="err" role="alert">${r.err}</span>`:''}</label>
+  <label class="drop" for="rpFile"><span class="ic">${ic('up',22)}</span><span><b>Adjuntar comprobante</b><br><span class="muted" style="font-size:13px" id="rpFileName">Foto o PDF</span></span><input type="file" id="rpFile" class="sr" accept="image/*,.pdf"></label>
+  <button type="submit" class="sr">Enviar</button></form>
+  <div class="mfoot"><button class="btn btn-p btn-lg" id="repBtn">Enviar reporte</button></div>`;
+}
+function mReportado(id){
+  const p=D.pays.find(x=>x.id===id);
+  return `<div class="done"><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--info)" stroke-width="5"/><path class="tick" d="M50 28v24l14 9" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round"/></svg>
+  <h1>Recibimos su reporte</h1><b class="amt-big burst">${fmt(p.monto)}</b><span class="muted" style="max-width:280px">El personal de Oasis lo revisará y le avisaremos por correo. Mientras tanto la cuota ${p.cuotas.join(', ')} queda «En validación».</span></div>
+  <div class="mfoot"><button class="btn btn-p btn-lg" data-mtab="inicio">Volver al inicio</button></div>`;
+}
+function mPagos(){
+  myPays().forEach(p=>{if(p.notice)p.notice=false});
+  const l=myPays();
+  return `${mTop('Mis pagos',false)}<div class="mbody"><button class="listrow" data-mgo="verificar">${ic('shield',22,2,'style="color:var(--ok);flex:none"')}<span class="main"><b>Verificar un recibo</b><span>Compruebe que un recibo es auténtico</span></span>${ic('chev',20,2,'class="chev" style="color:var(--ink2)"')}</button>
+  ${l.map((p,i)=>`<button class="listrow" style="animation:fadeUp .35s ${i*30}ms var(--ease) both" ${p.rec?`data-mgo="recibo" data-mp="${p.rec}"`:'disabled'}><span class="main"><b>${D.pols[p.pol].ramo} · cuota ${p.cuotas.join(', ')}</b><span>${p.fecha}${p.rec?' · '+p.rec:''}${p.estado==='rech'?' · '+esc(p.motivo):''}</span></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><b class="num">${fmt(p.monto)}</b>${pill(p.estado==='val'?'val':p.estado)}</span></button>`).join('')}</div>${mNav('pagos')}`;
+}
+function mRecibo(code){const p=findRec(code);return `${mTop('Recibo')}<div class="mbody"><section class="card mrec receipt" style="padding:18px">${receiptDoc(p,true)}</section><button class="btn btn-s" data-mmail="${p.rec}">${ic('mail',18)}Enviar a mi correo</button></div>`}
+function mVerifOther(p,st){const anul=st==='anul';return `<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--${anul?'void':'info'})" stroke-width="5"/>${anul?'<path class="tick" d="M31 31l38 38" fill="none" stroke="var(--void)" stroke-width="7" stroke-linecap="round"/>':'<path class="tick" d="M50 28v24l14 9" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round"/>'}</svg><h1 style="font-size:22px">${anul?'Recibo anulado':'En proceso'}</h1><span class="muted">${anul?'Oasis Seguros anuló este recibo. Motivo: '+esc(p.motivoAnul):'El recibo existe y todavía se está registrando. Vuelva a verificarlo en unos minutos.'}</span></div>`}
+function mVerificar(){
+  const r=UI.verify;let p=r?findRec(r):null;if(p&&!p.mine)p=null;const st=p?(p.anc==='anul'?'anul':(p.anc==='proc'||p.anc==='fall')?'proc':'ok'):null;
+  return `${mTop('Verificar recibo')}<div class="mbody">${!r?`<span class="muted" style="font-size:14.5px">Escriba el código que aparece en el recibo, por ejemplo OAS-2026-000212.</span>`:''}
+  ${r&&p&&st!=='ok'?mVerifOther(p,st):''}${r&&p&&st==='ok'?`<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--ok)" stroke-width="5"/><path class="tick" d="M30 52l13 13 27-29" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><h1 style="font-size:22px">Recibo auténtico</h1><span class="muted">Emitido por Oasis Seguros y registrado en la red.</span></div><section class="card mrec"><dl class="kv"><dt>Recibo</dt><dd>${p.rec}</dd><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Monto</dt><dd>${fmt(p.monto)}</dd><dt>Fecha</dt><dd>${p.fecha}</dd></dl></section>`:''}
+  ${r&&!p?`<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--bad)" stroke-width="5"/><path class="tick" d="M36 36l28 28M64 36 36 64" fill="none" stroke="var(--bad)" stroke-width="7" stroke-linecap="round"/></svg><h1 style="font-size:22px">Recibo no encontrado</h1><span class="muted">Revise el código. Solo puede verificar los recibos de sus propias pólizas.</span></div>`:''}
+  <form id="mvForm" style="display:flex;flex-direction:column;gap:10px"><label class="field" for="mvIn">Código del recibo<input class="inp" id="mvIn" placeholder="OAS-2026-000000" value="${esc(r||'')}"></label><button class="btn btn-p btn-lg" type="submit">Verificar</button></form></div>`;
+}
+function mCuenta(){return `${mTop('Mi cuenta',false)}<div class="mbody"><section class="card sumbox" style="align-items:center;text-align:center"><span class="av" style="width:64px;height:64px;font-size:20px;background:var(--gold);color:var(--on-gold)">MG</span><b style="font-size:18px">María Fernanda Guamán</b><span class="muted">mf.guaman@correo.ec</span></section><button class="listrow" data-logout>${ic('out',22,2)}<span class="main"><b>Cerrar sesión</b></span></button></div>${mNav('cuenta')}`}
+
+function bindClient(){
+  const s=mCur().s;
+  if(s==='datos'){const cb=$('#mOk'),b=$('#mAccept');cb.onchange=()=>b.disabled=!cb.checked;b.onclick=()=>{D.consent=true;mTab('inicio');toast('Gracias. Ya puede ver sus pólizas.')}}
+  if(s==='reportar'){
+    $('#rpPol').onchange=e=>{mCur().p=e.target.value;UI.m.dir=null;render()};
+    $('#rpCu').onchange=()=>{const pol=D.pols[$('#rpPol').value],c=payable(pol).find(x=>String(x.n)===$('#rpCu').value);$('#rpMo').value=c.monto.toFixed(2).replace('.',',')};
+    $('#rpFile').onchange=e=>{const f=e.target.files[0];$('#rpFileName').textContent=f?f.name:'Foto o PDF'};
+    const send=e=>{e&&e.preventDefault();const ref=$('#rpRef').value.trim();
+      if(!ref){UI.rep={err:'Escriba el número de referencia de su comprobante.'};const keep=[$('#rpCu').value,$('#rpMo').value];UI.m.dir=null;render();$('#rpCu').value=keep[0];$('#rpMo').value=keep[1];$('#rpRef').focus();return}
+      UI.rep={};const id=$('#rpPol').value,pol=D.pols[id],n=+$('#rpCu').value,m=parseFloat($('#rpMo').value.replace(/\./g,'').replace(',','.'))||0,f=$('#rpFile').files[0],fd=$('#rpFe').value.split('-');
+      const q=pol.cuotas.find(x=>x.n===n);q.estado='validacion';
+      const np={id:'n'+Date.now(),cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:id,code:pol.code,cuotas:[n],monto:m,fecha:fd[2]+'/'+fd[1]+'/'+fd[0],metodo:$('#rpMet').value,banco:$('#rpBa').value,ref,origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'ahora',file:f?f.name:null,comp:f?true:false};
+      D.pays.unshift(np);D.cartera=D.cartera.filter(x=>!(x.mine&&x.code===pol.code&&x.cuota===n));
+      UI.m.stack=[{s:'inicio'},{s:'reportado',p:np.id}];UI.m.dir='fwd';render()};
+    $('#repForm').onsubmit=send;$('#repBtn').onclick=send;
+  }
+  if(s==='verificar'){$('#mvForm').onsubmit=e=>{e.preventDefault();UI.verify=$('#mvIn').value.trim()||null;UI.m.dir=null;render()}}
+}
+
+/* ---------- actions (delegated) ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a');if(!t||!$('#app').contains(t))return;
+  const d=t.dataset;
+  if('logout' in d){UI.logErr=false;setRole('login');return}
+  if(d.go){if(d.go==='registrar')UI.regErr=null;if(d.go==='cargar')UI.carga={step:'form',aseg:UI.carga.aseg,ids:[]};go(d.go);return}
+  if(d.goadm){UI.adm=d.goadm;go('admin');return}
+  if(d.adm){UI.adm=d.adm;UI.newUser=false;UI.codes=null;render();return}
+  if(d.rp){UI.rp=d.rp;render();return}
+  if(d.exp){toast(`Descargaría el reporte en ${d.exp} con los filtros aplicados.`);return}
+  if('nuopen' in d){UI.newUser=true;UI.nuErr=null;render();return}
+  if('nucancel' in d){UI.newUser=false;UI.nuErr=null;render();return}
+  if(d.ureset){const u=D.users.find(x=>x.id===d.ureset);logA('RESTABLECER_CONTRASENA','Restableció una contraseña',u.n);toast(`Enviamos una contraseña temporal a ${esc(u.c)} y cerramos sus sesiones.`);return}
+  if(d.utoggle){const u=D.users.find(x=>x.id===d.utoggle);u.act=!u.act;logA(u.act?'ACTIVAR_USUARIO':'DESACTIVAR_USUARIO',u.act?'Activó un usuario':'Desactivó un usuario',u.n);toast(u.act?`${esc(u.n)} puede volver a ingresar.`:`${esc(u.n)} ya no puede ingresar; cerramos sus sesiones.`);render();return}
+  if(d.cta){const c=D.ctas[+d.cta];c.st='pend1';logA('CREAR_CUENTA_CLIENTE','Creó la cuenta de un cliente',c.cli);toast(`Cuenta creada. La contraseña temporal llegó a ${esc(c.c)}.`);render();return}
+  if(d.retry){const p=findRec(d.retry);p.anc='proc';logA('REINTENTAR_ANCLAJE','Reintentó el anclaje de un recibo','Recibo '+p.rec);toast(`Recibo ${p.rec} devuelto a la cola de anclaje.`);render();
+    setTimeout(()=>{p.anc=undefined;D.anc.anclados++;logA('ANCLAR','Ancló un recibo','Recibo '+p.rec,'Sistema');if(UI.role==='staff')render()},2200);return}
+  if('anulopen' in d){UI.anular=true;render();$('#anulTxt').focus();return}
+  if('anulcancel' in d){UI.anular=false;render();return}
+  if(d.anulok){const p=findRec(d.anulok),msg=($('#anulTxt').value||'').trim();
+    if(!msg){$('#anulTxt').setAttribute('aria-invalid','true');$('#anulTxt').focus();return}
+    p.anc='anul';p.motivoAnul=msg;UI.anular=false;logA('ANULAR','Anuló un recibo','Recibo '+p.rec);toast(`Recibo ${p.rec} anulado. La verificación mostrará «Anulado».`);render();return}
+  if(d.sw){const [k,i]=d.sw.split(':'),x=D[k][+i];x.act=!x.act;logA('EDITAR_CATALOGO',(x.act?'Activó ':'Desactivó ')+(k==='ramos'?'un ramo':'un método de pago'),x.n);render();return}
+  if('newaseg' in d||d.editaseg){toast('Abriría el formulario de la aseguradora: nombre y RUC de 13 dígitos.');return}
+  if('codes' in d){UI.codes=Array.from({length:10},(_,i)=>{const h=hash('rc'+i+Date.now()).toUpperCase();return h.slice(0,4)+'-'+h.slice(4,8)});logA('REGENERAR_CODIGOS','Generó códigos de recuperación','Cuenta propia');render();return}
+  if('closeoth' in d){toast('Cerramos sus otras sesiones.');return}
+  if('explorer' in d){e.preventDefault();toast('Abriría la transacción en el explorador público de Polygon.');return}
+  if('plantilla' in d){toast('Descargaría la plantilla de cobros (.xlsx).');return}
+  if('cargareset' in d){UI.carga={step:'form',aseg:UI.carga.aseg,ids:[]};render();return}
+  if('cargaok' in d){const c=UI.carga,ids=[];cargaFilas(c.aseg).filter(r=>r.ok).forEach((r,i)=>{const id='c'+Date.now()+i;ids.push(id);D.pays.unshift({id,cli:r.cli,ini:r.cli.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''),code:r.pol,cuotas:[1],monto:r.monto,fecha:r.fecha,metodo:'Débito bancario',banco:c.aseg,ref:r.ref,origen:'Archivo de la aseguradora',por:'Andrea Villacís',estado:'por',hace:'ahora',deb:true,arch:c.file,fila:r.f})});c.ids=ids;c.step='done';logA('IMPORTAR','Cargó la notificación de cobros',c.aseg+' · '+ids.length+' filas');toast(`${ids.length} pagos registrados. Quedan por validar.`);render();return}
+  if('cargaask' in d){UI.carga.confirm=true;render();return}
+  if('cargano' in d){UI.carga.confirm=false;render();return}
+  if('cargaval' in d){D.pays.filter(p=>UI.carga.ids.includes(p.id)&&p.estado==='por').forEach(p=>{p.estado='val';p.rec=newRec();p.hoy=true;D.recaudado+=p.monto});UI.carga.confirm=false;toast('Pagos validados. Se emitieron sus recibos.');render();return}
+  if(d.tab){UI.tab=d.tab;render();return}
+  if(d.val){go('validar',d.val);return}
+  if(d.rec){go('recibo',d.rec);return}
+  if(d.cli){go('cliente',d.cli);return}
+  if('rejopen' in d){UI.rej.open=true;render();return}
+  if('rejcancel' in d){UI.rej={open:false,chip:null};render();return}
+  if(d.chip){UI.rej.chip=d.chip;render();return}
+  if(d.valok){const p=D.pays.find(x=>x.id===d.valok);t.disabled=true;t.innerHTML=ic('check',18,2.6)+'Validado';
+    setTimeout(()=>{p.estado='val';p.rec=newRec();p.hoy=true;p.notice=!!p.mine;D.recaudado+=p.monto;logA('VALIDAR','Validó un pago','Pago '+p.code+' · cuota '+p.cuotas.join(', '));
+      if(p.mine){const pol=D.pols[p.pol];p.cuotas.forEach(n=>{const q=pol.cuotas.find(x=>x.n===n);if(q)q.estado='pagada'})}
+      toast(`Pago validado. Recibo ${p.rec} emitido y enviado a ${esc(p.cli.split(' ')[0])}.`);go('recibo',p.rec)},450);return}
+  if(d.rejok){const p=D.pays.find(x=>x.id===d.rejok);const msg=($('#rejTxt').value||'').trim();
+    if(!msg){$('#rejTxt').setAttribute('aria-invalid','true');$('#rejTxt').focus();return}
+    p.estado='rech';p.motivo=msg;p.notice=!!p.mine;logA('RECHAZAR','Rechazó un pago','Pago '+p.code+' · cuota '+p.cuotas.join(', '));
+    if(p.mine){const pol=D.pols[p.pol];p.cuotas.forEach(n=>{const q=pol.cuotas.find(x=>x.n===n);if(q)q.estado=q.vence<TODAY?'vencida':'pendiente'})}
+    UI.rej={open:false,chip:null};toast(`Pago rechazado. Avisamos a ${esc(p.cli.split(' ')[0])} con el motivo.`);UI.tab='por';go('pagos');return}
+  if(d.remind){const c=D.cartera.find(x=>x.id===d.remind);c.rem=true;toast(`Recordatorio enviado a ${esc(c.cli)}.`);render();return}
+  if('remindall' in d){D.cartera.forEach(c=>c.rem=true);toast(`Recordatorios enviados a ${D.cartera.length} clientes.`);render();return}
+  if(d.mail){toast(`Recibo ${d.mail} enviado por correo.`);return}
+  if(d.mmail){toast('Enviamos el recibo a mf.guaman@correo.ec.');return}
+  if('mback' in d){mBack();return}
+  if(d.mtab){if(d.mtab==='verificar')UI.verify=null;mTab(d.mtab);return}
+  if(d.mgo){if(d.mgo==='verificar')UI.verify=null;if(d.mgo==='reportar')UI.rep={};mGo(d.mgo,d.mp);return}
+});
+
+/* ---------- render ---------- */
+function render(){
+  const app=$('#app');
+  if(UI.role==='login'){app.innerHTML=vLogin();bindLogin()}
+  else if(UI.role==='staff'){app.innerHTML=vStaff();bindStaff()}
+  else{app.innerHTML=vClient();bindClient();UI.m.dir=null}
+}
+document.querySelectorAll('#roleSeg button').forEach(b=>b.onclick=()=>setRole(b.dataset.role));
+$('#resetBtn').onclick=()=>{D=seed();UI.verify=null;UI.carga={step:'form',aseg:'Sweaden',ids:[]};UI.tab='por';toast('Datos de ejemplo restablecidos.');setRole(UI.role)};
+document.documentElement.lang='es-EC';
+render();
+})();
+</script>
+
+</body></html>

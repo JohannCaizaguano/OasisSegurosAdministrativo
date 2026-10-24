@@ -7,6 +7,8 @@ pnpm-lock.yaml
 docs/referencia/PRODUCT_BACKLOG.md
 docs/referencia/ARQUITECTURA.md
 docs/referencia/arquitectura_img
+# Prototipo de diseño de un solo archivo: se publica tal cual como artefacto (ADR-019).
+docs/diseno/prototipo
 apps/web/src/components/ui
 packages/shared/src/abi
 packages/contracts/artifacts

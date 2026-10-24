@@ -8,7 +8,7 @@
 
 `RegistroRecibos` es la evidencia pública de los recibos (ADR-003, ADR-004): su valor depende de
 que nadie, ni siquiera el bróker, pueda cambiar sus reglas después de anclar. HT-02 lo despliega en
-Amoy en el Sprint 2, y los sprints siguientes (S7, S8 y S13) usan esa dirección.
+Amoy en el Sprint 1, y los sprints siguientes (S4, S5 y S7) usan esa dirección.
 
 ## Decisión
 

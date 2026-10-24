@@ -8,7 +8,7 @@ cliente verifica sus recibos y paga sus cuotas en línea con PayPhone. Las asegu
 usuarias: son datos de referencia de las pólizas (ADR-015).
 
 La verificación (`GET /api/v1/recibos/:codigo/verificacion`) hoy es solo del personal; HU-28
-(S8) la abre al CLIENTE para sus propios recibos.
+(S5) la abre al CLIENTE para sus propios recibos.
 
 ```mermaid
 flowchart LR
