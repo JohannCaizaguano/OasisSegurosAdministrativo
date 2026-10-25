@@ -62,17 +62,17 @@ técnico en `CLAUDE.md` y las reglas de los módulos del API en `apps/api/src/mo
 
 ### Fuera de alcance (no implementar)
 
-Dependen de historias de S5 o S6; se anotan para su sprint:
+Dependen de historias de otros sprints y ya están incorporadas en su plan:
 
-- Vista previa del saldo y de las cuotas que cubre un pago («Cubre la cuota 2 y abona $X a la 3»):
-  HU-36 (S5) y HU-15 (S6).
-- Días de atraso y prioridad en la cartera: HU-38 (S5).
-- Línea de tiempo del anclaje en el detalle del recibo: HU-24 (S5, D9 de su plan).
-- «Pagado $X de $Y» y próxima cuota en el portal, y la mora con su cuota («venció la cuota 2 el
-  15/10»): HU-15 y HU-29 (S6).
-- Saldo de anclaje expresado en recibos restantes: requiere el costo medio por recibo; se evalúa en
-  HU-30 (S8).
-- Sincronizar todos los filtros de pagos con la URL: D15 de S5. Aquí solo se lee `estado` (M5).
+| Pendiente                                                         | Sprint | Dónde quedó                                    |
+| ----------------------------------------------------------------- | ------ | ---------------------------------------------- |
+| Vista previa de las cuotas que cubre un pago                      | S5     | `sprint-s5-plan.md` D24, T2, T8 y T15 (HU-36)  |
+| Línea de tiempo del anclaje con los pasos de `SeguimientoPago`    | S5     | `sprint-s5-plan.md` D9, D25 y T12 (HU-24)      |
+| Días de atraso en la cartera, con ramo y leyenda                  | S5     | `sprint-s5-plan.md` D16, D25 y T16 (HU-38)     |
+| Todos los filtros de pagos en la URL (aquí solo `estado`, M5)     | S5     | `sprint-s5-plan.md` D15 y D25 (HU-20)          |
+| Saldo pendiente antes de registrar o validar                      | S6     | `sprint-s6-plan.md` D24 y T17 (HU-15)          |
+| «Pagado $X de $Y», próxima cuota y mora con su cuota en el portal | S6     | `sprint-s6-plan.md` D25, T2, T15 y T20 (HU-29) |
+| Saldo de anclaje expresado en recibos restantes                   | S8     | `sprint-s8-plan.md` D26, T2, T9 y T14 (HU-30)  |
 
 ### No se copia del repositorio anterior
 
