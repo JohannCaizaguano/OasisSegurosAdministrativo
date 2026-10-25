@@ -56,8 +56,8 @@ export function ValidarPagoDialog({
         <DialogHeader>
           <DialogTitle>Validar pago</DialogTitle>
           <DialogDescription>
-            Se emitirá el recibo y el worker iniciará el anclaje en Polygon. La acción no se puede
-            deshacer.
+            Se emitirá el recibo y se registrará para que cualquiera pueda verificarlo. El cliente
+            lo verá en su portal. La acción no se puede deshacer.
           </DialogDescription>
         </DialogHeader>
 

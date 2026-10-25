@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
-import { AvisoError, EsqueletoTabla } from '@/components/DataState';
+import { AvisoError, AvisoVacio, EsqueletoTabla } from '@/components/DataState';
 import { EstadoInsignia } from '@/components/EstadoInsignia';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
   TableCell,
-  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -60,7 +59,7 @@ export function PanelPersonal() {
             {porValidar.data?.meta.total ?? '…'}
           </p>
           <Link
-            to="/pagos"
+            to="/pagos?estado=REGISTRADO"
             className="mt-auto inline-flex min-h-control items-center self-start font-semibold text-sidebar-primary underline underline-offset-3"
           >
             Revisar los pagos
@@ -92,6 +91,20 @@ export function PanelPersonal() {
             <EsqueletoTabla />
           ) : recibos.isError ? (
             <AvisoError error={recibos.error} alReintentar={() => void recibos.refetch()} />
+          ) : recibos.data?.data.length === 0 ? (
+            <AvisoVacio
+              descripcion="Cada pago validado emite un recibo."
+              accion={
+                <Link
+                  to="/pagos"
+                  className="inline-flex min-h-control items-center font-semibold text-link underline underline-offset-3"
+                >
+                  Ir a Pagos
+                </Link>
+              }
+            >
+              Sin recibos todavía
+            </AvisoVacio>
           ) : (
             <Table>
               <TableHeader>
@@ -103,7 +116,6 @@ export function PanelPersonal() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recibos.data?.data.length === 0 && <TableEmpty mensaje="Sin recibos todavía" />}
                 {recibos.data?.data.map((recibo) => (
                   <TableRow key={recibo.id}>
                     <TableCell className="cifra font-semibold">{recibo.codigo}</TableCell>

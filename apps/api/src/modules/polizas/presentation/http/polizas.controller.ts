@@ -34,6 +34,7 @@ function aRespuesta(poliza: Poliza): PolizaRespuesta {
     aseguradoraId: poliza.aseguradoraId,
     ramoId: poliza.ramoId,
     ramo: poliza.ramo,
+    ramoCodigo: poliza.ramoCodigo,
     primaTotal: poliza.primaTotal,
     fechaInicio: poliza.fechaInicio,
     fechaFin: poliza.fechaFin,

@@ -23,6 +23,7 @@ Planes de los sprints de dos semanas, acordados el 23/10/2026 (HT-13, deuda de S
 
 Los registros nuevos se escriben por sprint de dos semanas (`sprint-s3.md`, `sprint-s4.md`, …), con la asignación de la tabla 6-1 de [PRODUCT_BACKLOG.md](../referencia/PRODUCT_BACKLOG.md).
 
-| Informe        | Plan                | Fechas             | Estado                                       |
-| -------------- | ------------------- | ------------------ | -------------------------------------------- |
-| `sprint-s4.md` | `sprint-s4-plan.md` | 19/10 – 30/10/2026 | Cerrado; HT-15.1 pendiente del autor en Amoy |
+| Informe            | Plan                        | Fechas             | Estado                                                                  |
+| ------------------ | --------------------------- | ------------------ | ----------------------------------------------------------------------- |
+| `sprint-s4.md`     | `sprint-s4-plan.md`         | 19/10 – 30/10/2026 | Cerrado; HT-15.1 pendiente del autor en Amoy                            |
+| `sprint-s4.md` §13 | `sprint-s4-etapa-c-plan.md` | 26/10 – 30/10/2026 | Etapa C (claridad de la interfaz); pendiente de la aprobación del autor |

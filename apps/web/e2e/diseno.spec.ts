@@ -46,6 +46,13 @@ const PANTALLAS: Pantalla[] = [
   { nombre: 'inicio del personal', ruta: '/', rol: 'OPERADOR', lista: titulo(/Hola,/) },
   { nombre: 'inicio del cliente', ruta: '/', rol: 'CLIENTE', lista: titulo(/Hola,/) },
   { nombre: 'pagos', ruta: '/pagos', rol: 'OPERADOR', lista: titulo('Pagos') },
+  {
+    nombre: 'pagos con la leyenda de estados abierta',
+    ruta: '/pagos',
+    rol: 'OPERADOR',
+    preparar: (page) => page.getByTestId('leyenda-estados').locator('summary').click(),
+    lista: (page) => page.getByTestId('leyenda-estados').locator('dd').first(),
+  },
   { nombre: 'recibos', ruta: '/recibos', rol: 'OPERADOR', lista: titulo('Recibos') },
   {
     nombre: 'detalle del recibo',

@@ -10,6 +10,7 @@ interface TablaDatosProps {
   error: unknown;
   alReintentar: () => void;
   vacio: string;
+  vacioDescripcion?: string;
   hayDatos: boolean;
   children: ReactNode;
 }
@@ -21,6 +22,7 @@ export function TablaDatos({
   error,
   alReintentar,
   vacio,
+  vacioDescripcion,
   hayDatos,
   children,
 }: TablaDatosProps) {
@@ -37,7 +39,7 @@ export function TablaDatos({
         ) : hayDatos ? (
           children
         ) : (
-          <AvisoVacio>{vacio}</AvisoVacio>
+          <AvisoVacio descripcion={vacioDescripcion}>{vacio}</AvisoVacio>
         )}
       </CardContent>
     </Card>

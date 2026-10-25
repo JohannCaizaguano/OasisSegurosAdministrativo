@@ -29,6 +29,7 @@ function crearPoliza(parcial: Partial<Parameters<typeof Poliza.reconstituir>[0]>
     aseguradoraId: ASEGURADORA_ID,
     ramoId: RAMO_ID,
     ramo: 'Vida',
+    ramoCodigo: 'VIDA',
     primaTotal: '1500.5',
     fechaInicio: '2026-01-01',
     fechaFin: '2026-12-31',

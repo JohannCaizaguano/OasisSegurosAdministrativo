@@ -42,6 +42,7 @@ const POLIZA: Poliza = {
   aseguradoraId: ASEGURADORA_ID,
   ramoId: RAMO_ID,
   ramo: 'Vehículos',
+  ramoCodigo: 'VEHICULOS',
   primaTotal: '1500.50',
   fechaInicio: '2026-01-01',
   fechaFin: '2026-12-31',
@@ -259,8 +260,8 @@ describe('PolizasPage', () => {
 
   it('una póliza al día no muestra «En mora»', async () => {
     montar();
-    await screen.findByText('POL-0001');
-    expect(screen.queryByText('En mora')).not.toBeInTheDocument();
+    const fila = (await screen.findByText('POL-0001')).closest('tr') as HTMLElement;
+    expect(within(fila).queryByText('En mora')).not.toBeInTheDocument();
   });
 
   it('el botón Cuotas abre el plan de la póliza, también si ya no está vigente', async () => {
@@ -281,6 +282,21 @@ describe('PolizasPage', () => {
     await screen.findByText('POL-0001');
 
     expect(screen.queryByTestId(`menu-poliza-${POLIZA_ID}`)).not.toBeInTheDocument();
+  });
+
+  it('una póliza no vigente explica que es de solo lectura; la vigente no', async () => {
+    listar.mockResolvedValue(paginada([{ ...POLIZA, estado: 'VENCIDA' }]));
+    const { unmount } = montar();
+    const fila = (await screen.findByText('POL-0001')).closest('tr') as HTMLElement;
+    expect(
+      within(fila).getByText('Solo lectura: la póliza ya no está vigente'),
+    ).toBeInTheDocument();
+    unmount();
+
+    listar.mockResolvedValue(paginada([POLIZA]));
+    montar();
+    await screen.findByText('POL-0001');
+    expect(screen.queryByText(/solo lectura/i)).not.toBeInTheDocument();
   });
 
   it('el combobox de Nueva póliza nace vacío cada vez que se abre el diálogo', async () => {

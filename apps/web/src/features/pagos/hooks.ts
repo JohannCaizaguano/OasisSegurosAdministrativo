@@ -34,7 +34,7 @@ export function useValidarPago() {
       pagosApi.validar(id, entrada),
     onSuccess: (respuesta) => {
       toast.success(`Recibo ${respuesta.recibo.codigo} emitido`, {
-        description: 'El anclaje en Polygon Amoy comenzó en segundo plano.',
+        description: 'El recibo se está registrando para que pueda verificarse.',
         action: { label: 'Ver recibo', onClick: () => navegar(`/recibos/${respuesta.recibo.id}`) },
       });
       void queryClient.invalidateQueries({ queryKey: ['pagos'] });

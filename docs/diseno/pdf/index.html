@@ -1,0 +1,4491 @@
+<!doctype html>
+<html lang="es-EC">
+  <head>
+    <meta charset="utf-8" />
+    <title>Diseño final del SRPP: Claroscuro</title>
+    <!-- Fuente del PDF docs/diseno/SRPP-diseno-final-claroscuro.pdf; se imprime con imprimir.mjs. -->
+    <style>
+      @font-face {
+        font-family: Outfit;
+        font-weight: 100 900;
+        font-display: block;
+        src: url(../../../apps/web/node_modules/@fontsource-variable/outfit/files/outfit-latin-wght-normal.woff2)
+          format('woff2');
+      }
+      @font-face {
+        font-family: Figtree;
+        font-weight: 300 900;
+        font-display: block;
+        src: url(../../../apps/web/node_modules/@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2)
+          format('woff2');
+      }
+      :root {
+        /* Espaciado de DESIGN.md: 6 · 10 · 16 · 22 · 30 px. */
+        --e-xs: 6px;
+        --e-sm: 10px;
+        --e-md: 16px;
+        --e-lg: 22px;
+        --e-xl: 30px;
+        --lienzo: #f6f4f0;
+        --papel: #fff;
+        --hundida: #efebe4;
+        --tinta: #1a1714;
+        --tierra: #5e564b;
+        --borde: #8c8478;
+        --hilo: #e9e4db;
+        --cafe: #8a6122;
+        --noche: #14110d;
+        --noche-alta: #26201a;
+        --luna: #f3ece0;
+        --tenue: #a59985;
+        --oro: #f0c878;
+        --sobre-oro: #1a140c;
+        --degradado: linear-gradient(135deg, #f6d592 0%, #e2ad5b 55%, #c98f3e 100%);
+        --exito: #2f6b3a;
+        --exito-f: #eaf4e4;
+        --proceso: #2b5c87;
+        --proceso-f: #e6f0f7;
+        --aviso: #8c4f0a;
+        --aviso-f: #fcefd9;
+        --error: #a2332b;
+        --error-f: #fbe8e4;
+        --neutro: #5e564b;
+        --neutro-f: #efebe4;
+        --tarjeta: 0 0 0 1px #ebe6dd, 0 4px 16px rgb(26 23 20/0.05);
+        --lampara: inset 0 0 0 1px rgb(240 200 120/0.25), 0 10px 28px rgb(20 17 13/0.18);
+        --brillo: radial-gradient(120% 130% at 0% 0%, rgb(240 200 120/0.22), transparent 60%);
+        --display: Outfit, system-ui, sans-serif;
+        --cuerpo: Figtree, system-ui, sans-serif;
+      }
+      @page {
+        size: 297mm 210mm;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      body {
+        margin: 0;
+        background: #8c8478;
+        color: var(--tinta);
+        font: 9.5pt/1.45 var(--cuerpo);
+        font-variant-numeric: tabular-nums;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--display);
+        font-weight: 700;
+        text-wrap: balance;
+      }
+      code {
+        font:
+          500 0.92em ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        background: var(--hundida);
+        border-radius: 4px;
+        padding: 0 3px;
+      }
+      .hoja {
+        width: 297mm;
+        height: 210mm;
+        overflow: hidden;
+        break-after: page;
+        background: var(--lienzo);
+        padding: var(--e-xl) var(--e-xl) var(--e-xl);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-md);
+        position: relative;
+      }
+      @media screen {
+        .hoja {
+          margin: var(--e-sm) auto;
+          box-shadow: 0 8px 30px rgb(0 0 0/0.25);
+        }
+      }
+      .cab {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: var(--e-xl);
+        border-bottom: 1px solid var(--hilo);
+        padding-bottom: var(--e-sm);
+      }
+      .cab h2 {
+        font-size: 19pt;
+        letter-spacing: -0.01em;
+      }
+      .folio {
+        font-size: 8.5pt;
+        color: var(--tierra);
+        white-space: nowrap;
+      }
+      .folio b {
+        color: var(--tinta);
+      }
+      .cuerpo {
+        flex: 1;
+        min-height: 0;
+      }
+      .muted {
+        color: var(--tierra);
+      }
+      .fino {
+        font-size: 8pt;
+        color: var(--tierra);
+      }
+      .kicker {
+        font: 600 7.5pt var(--cuerpo);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tierra);
+      }
+
+      /* Superficies */
+      .tarjeta {
+        background: var(--papel);
+        border-radius: 12px;
+        box-shadow: var(--tarjeta);
+        padding: var(--e-lg);
+      }
+      .noche {
+        background-color: var(--noche);
+        background-image: var(--brillo);
+        color: var(--luna);
+        border-radius: 12px;
+        box-shadow: var(--lampara);
+        padding: var(--e-lg);
+      }
+      .noche .muted {
+        color: var(--tenue);
+      }
+      .noche .oro {
+        color: var(--oro);
+      }
+      .tarjeta h3,
+      .noche h3 {
+        font-size: 11pt;
+        margin-bottom: var(--e-sm);
+      }
+
+      /* Insignias e iconos */
+      svg.i {
+        width: 1em;
+        height: 1em;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex: none;
+        vertical-align: -0.12em;
+      }
+      .ins {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e-xs);
+        border-radius: 999px;
+        padding: 2px 8px 2px 6px;
+        font-weight: 600;
+        font-size: 8pt;
+        white-space: nowrap;
+      }
+      .ins.exito {
+        background: var(--exito-f);
+        color: var(--exito);
+      }
+      .ins.proceso {
+        background: var(--proceso-f);
+        color: var(--proceso);
+      }
+      .ins.aviso {
+        background: var(--aviso-f);
+        color: var(--aviso);
+      }
+      .ins.error {
+        background: var(--error-f);
+        color: var(--error);
+      }
+      .ins.neutro {
+        background: var(--neutro-f);
+        color: var(--neutro);
+      }
+      .pila {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--e-xs);
+      }
+
+      /* Capturas */
+      .marco {
+        position: relative;
+        margin: 0;
+        background: var(--papel);
+        border-radius: 9px;
+        box-shadow:
+          0 0 0 1px #ddd6ca,
+          0 8px 22px rgb(26 23 20/0.12);
+        overflow: hidden;
+        align-self: start;
+      }
+      .barra {
+        min-height: 6.5mm;
+        background: var(--hundida);
+        display: flex;
+        align-items: center;
+        gap: var(--e-xs);
+        padding: var(--e-xs) var(--e-sm);
+        font-size: 7.5pt;
+        color: var(--tierra);
+      }
+      .barra > i {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #cdc5b8;
+      }
+      .barra > span {
+        margin-left: var(--e-sm);
+        background: var(--papel);
+        border-radius: 4px;
+        padding: 0 var(--e-sm);
+        line-height: 1.5;
+      }
+      .etq {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--e-xs);
+        border-radius: 999px;
+        padding: 1px 9px;
+        font: 600 7.5pt/1.6 var(--cuerpo);
+        white-space: nowrap;
+      }
+      .etq.actual {
+        background: var(--exito-f);
+        color: var(--exito);
+      }
+      .etq.diseno {
+        background: var(--noche);
+        color: var(--oro);
+      }
+      .vista {
+        position: relative;
+      }
+      .vista > img {
+        display: block;
+        width: 100%;
+      }
+      .m {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--noche);
+        color: var(--oro);
+        font: 700 7.6pt/16px var(--display);
+        text-align: center;
+        box-shadow:
+          0 0 0 2px var(--oro),
+          0 2px 6px rgb(0 0 0/0.3);
+      }
+      .pie {
+        font-size: 7.5pt;
+        color: var(--tierra);
+        margin-top: var(--e-xs);
+      }
+
+      /* Notas */
+      .notas {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-xs);
+        counter-reset: n;
+        align-self: start;
+      }
+      .notas li {
+        background: var(--papel);
+        border-radius: 10px;
+        box-shadow: var(--tarjeta);
+        padding: var(--e-sm) var(--e-sm) var(--e-sm) 38px;
+        position: relative;
+        font-size: 8pt;
+        line-height: 1.38;
+      }
+      .notas li::before {
+        counter-increment: n;
+        content: counter(n);
+        position: absolute;
+        left: var(--e-sm);
+        top: var(--e-sm);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--noche);
+        color: var(--oro);
+        font: 700 8.5pt/18px var(--display);
+        text-align: center;
+      }
+      .notas li.mas::before {
+        counter-increment: none;
+        content: '+';
+        background: var(--hundida);
+        color: var(--tinta);
+      }
+      .notas b {
+        display: block;
+        font: 700 9pt/1.3 var(--display);
+        margin-bottom: 0.6mm;
+      }
+      .notas small {
+        display: block;
+        color: var(--cafe);
+        font-weight: 600;
+        font-size: 7.2pt;
+        margin-top: 0.8mm;
+      }
+
+      /* Composiciones */
+      .pantalla {
+        display: grid;
+        grid-template-columns: 1fr 66mm;
+        gap: var(--e-lg);
+      }
+      .doble {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr;
+        gap: var(--e-md);
+      }
+      .doble > .notas {
+        grid-column: 1/-1;
+        display: grid;
+        grid-template-columns: repeat(var(--c, 4), 1fr);
+        align-content: start;
+      }
+      .telefonos {
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-md);
+      }
+      .telefonos > .notas {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        align-content: start;
+      }
+      .fila-tel {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: var(--e-lg);
+      }
+      .tel {
+        margin: 0;
+        width: var(--w, 48mm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-sm);
+        align-items: center;
+      }
+      .tel .pantallita {
+        position: relative;
+        width: 100%;
+        border: 2mm solid var(--noche);
+        border-radius: 6mm;
+        overflow: hidden;
+        background: var(--lienzo);
+        box-shadow: 0 10px 24px rgb(20 17 13/0.22);
+      }
+      .tel .pantallita > img {
+        display: block;
+        width: 100%;
+      }
+      .tel figcaption {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--e-xs);
+        font: 700 9pt var(--display);
+        text-align: center;
+      }
+      .tel figcaption .etq {
+        margin: 0;
+      }
+
+      /* Tablas */
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      th {
+        font: 600 7pt var(--cuerpo);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--tierra);
+        text-align: left;
+        padding: var(--e-xs) var(--e-sm);
+        border-bottom: 1px solid var(--hilo);
+      }
+      td {
+        padding: var(--e-xs) var(--e-sm);
+        border-bottom: 1px solid var(--hilo);
+        vertical-align: top;
+        font-size: 8.2pt;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      /* Portada */
+      .portada {
+        padding: 0;
+        flex-direction: row;
+        gap: 0;
+      }
+      .portada .izq {
+        flex: 1;
+        padding: var(--e-xl) var(--e-xl) var(--e-xl);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-lg);
+      }
+      .portada .der {
+        width: 46%;
+        background:
+          radial-gradient(60% 50% at 50% 45%, rgb(255 255 255/0.35), transparent 70%), #f0c878;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: var(--e-xl);
+      }
+      .portada h1 {
+        font-size: 40pt;
+        line-height: 1.02;
+        letter-spacing: -0.02em;
+      }
+      .portada h1 span {
+        display: inline-block;
+        background: var(--noche);
+        color: var(--oro);
+        border-radius: 10px;
+        padding: 0 var(--e-md) var(--e-xs);
+        margin-top: var(--e-sm);
+      }
+      .chip {
+        display: inline-block;
+        border: 1px solid var(--borde);
+        border-radius: 999px;
+        padding: var(--e-xs) var(--e-sm);
+        font-size: 8pt;
+        font-weight: 600;
+        margin: 0 var(--e-xs) var(--e-xs) 0;
+        background: var(--papel);
+      }
+      .muestras {
+        display: flex;
+        gap: var(--e-sm);
+      }
+      .muestras span {
+        font:
+          600 8pt ui-monospace,
+          monospace;
+        border-radius: 6px;
+        padding: var(--e-xs) var(--e-sm);
+      }
+
+      /* Grillas de texto */
+      .reglas {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--e-sm);
+      }
+      .regla {
+        background: var(--papel);
+        border-radius: 12px;
+        box-shadow: var(--tarjeta);
+        padding: var(--e-md) var(--e-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-xs);
+      }
+      .regla h3 {
+        font-size: 10.5pt;
+        display: flex;
+        gap: var(--e-sm);
+        align-items: baseline;
+      }
+      .regla h3 i {
+        font-style: normal;
+        color: var(--oro);
+        background: var(--noche);
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        font-size: 8.5pt;
+      }
+      .regla p {
+        font-size: 8.4pt;
+      }
+      .regla small {
+        color: var(--cafe);
+        font-weight: 600;
+        font-size: 7.4pt;
+        margin-top: auto;
+      }
+      .tres {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: var(--e-md);
+        align-items: start;
+      }
+      .dos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--e-md);
+        align-items: start;
+      }
+      ul.lista {
+        margin: 0;
+        padding-left: var(--e-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-xs);
+        font-size: 8.6pt;
+      }
+
+      /* Color */
+      .muestra {
+        display: flex;
+        gap: var(--e-sm);
+        align-items: center;
+        padding: var(--e-xs) 0;
+        border-bottom: 1px solid var(--hilo);
+        font-size: 8pt;
+      }
+      .muestra:last-child {
+        border-bottom: 0;
+      }
+      .muestra i {
+        width: 13mm;
+        height: 9mm;
+        border-radius: 6px;
+        flex: none;
+        box-shadow: inset 0 0 0 1px rgb(0 0 0/0.08);
+      }
+      .muestra b {
+        display: block;
+        font-size: 8.6pt;
+      }
+      .muestra em {
+        margin-left: auto;
+        font-style: normal;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      /* Componentes */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--e-xs);
+        min-height: 30px;
+        padding: 0 var(--e-sm);
+        border-radius: 7px;
+        font: 600 8.4pt var(--cuerpo);
+        border: 0;
+        white-space: nowrap;
+      }
+      .btn.p {
+        background: var(--degradado);
+        color: var(--sobre-oro);
+        box-shadow:
+          inset 0 1px 0 rgb(255 255 255/0.4),
+          0 2px 6px rgb(26 20 12/0.16);
+      }
+      .btn.s {
+        background: var(--papel);
+        box-shadow: var(--tarjeta);
+      }
+      .btn.q {
+        background: var(--hundida);
+      }
+      .btn.dc {
+        background: var(--papel);
+        color: var(--error);
+        box-shadow: inset 0 0 0 1.5px var(--error);
+      }
+      .btn.d {
+        background: var(--error);
+        color: #fff;
+      }
+      .btn.f {
+        outline: 3px solid var(--tinta);
+        outline-offset: 2px;
+      }
+      .btn.x {
+        opacity: 0.45;
+      }
+      .campo {
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-xs);
+        font-size: 8.2pt;
+      }
+      .campo label {
+        font-weight: 600;
+      }
+      .campo .inp {
+        height: 32px;
+        border: 1px solid var(--borde);
+        border-radius: 7px;
+        background: var(--papel);
+        display: flex;
+        align-items: center;
+        padding: 0 var(--e-sm);
+        font-size: 9pt;
+      }
+      .campo .inp.foco {
+        border: 2px solid var(--tinta);
+        box-shadow: 0 0 0 4px rgb(226 173 91/0.38);
+      }
+      .campo .inp.mal {
+        border: 2px solid var(--error);
+      }
+      .campo .ayuda {
+        color: var(--tierra);
+        font-size: 7.6pt;
+      }
+      .campo .err {
+        color: var(--error);
+        font-size: 7.6pt;
+        display: flex;
+        gap: 3px;
+        align-items: center;
+      }
+      .inp .mostrar {
+        margin-left: auto;
+        display: inline-flex;
+        gap: var(--e-xs);
+        align-items: center;
+        background: var(--hundida);
+        border-radius: 5px;
+        padding: 2px 7px;
+        font-weight: 600;
+        font-size: 8pt;
+      }
+      .leyenda {
+        background: var(--hundida);
+        border-radius: 8px;
+        padding: var(--e-sm) var(--e-sm);
+        font-size: 8pt;
+      }
+      .leyenda > b {
+        display: flex;
+        justify-content: space-between;
+        color: var(--cafe);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .leyenda dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: var(--e-xs) var(--e-sm);
+        margin: var(--e-sm) 0 0;
+        align-items: start;
+      }
+      .leyenda dd {
+        margin: 0;
+        color: var(--tierra);
+      }
+      .vacio {
+        background: var(--hundida);
+        border-radius: 8px;
+        padding: var(--e-md);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--e-xs);
+        font-size: 8.2pt;
+      }
+      .pasos {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-xs);
+        font-size: 8pt;
+      }
+      .pasos li {
+        display: flex;
+        gap: var(--e-sm);
+        align-items: flex-start;
+      }
+      .pasos .pt {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        flex: none;
+        font-size: 10px;
+      }
+      .pasos b {
+        display: block;
+      }
+      .ramo {
+        display: inline-flex;
+        gap: var(--e-xs);
+        align-items: center;
+        font-size: 8.4pt;
+        margin-right: var(--e-sm);
+      }
+      .comp h3 {
+        font-size: 10pt;
+        margin-bottom: var(--e-xs);
+        display: flex;
+        justify-content: space-between;
+        gap: var(--e-sm);
+        align-items: baseline;
+      }
+      .comp h3 small {
+        font: 600 7pt var(--cuerpo);
+        color: var(--cafe);
+      }
+      .comp {
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-sm);
+      }
+
+      /* Recibo y correo */
+      .recibo {
+        background: var(--papel);
+        border-radius: 8px;
+        box-shadow:
+          0 0 0 1px #e1dbd0,
+          0 10px 26px rgb(26 23 20/0.12);
+        padding: var(--e-lg);
+        font-size: 8.2pt;
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-sm);
+      }
+      .recibo dl,
+      .correo dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 0.8mm var(--e-md);
+        margin: 0;
+      }
+      .recibo dt,
+      .correo dt {
+        color: var(--tierra);
+      }
+      .recibo dd,
+      .correo dd {
+        margin: 0;
+        font-weight: 600;
+      }
+      .correo {
+        background: var(--papel);
+        border-radius: 8px;
+        box-shadow:
+          0 0 0 1px #e1dbd0,
+          0 10px 26px rgb(26 23 20/0.12);
+        font:
+          8.4pt/1.5 Arial,
+          Helvetica,
+          sans-serif;
+        overflow: hidden;
+      }
+      .correo .cab-c {
+        background: #14110d;
+        color: #f3ece0;
+        padding: var(--e-sm) var(--e-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--e-sm);
+        font-weight: 700;
+      }
+      .correo .cuerpo-c {
+        padding: var(--e-md) var(--e-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--e-sm);
+      }
+      .qr {
+        width: 22mm;
+        height: 22mm;
+        flex: none;
+        fill: #1a1714;
+        outline: 1px solid var(--hilo);
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+      </symbol>
+      <symbol id="i-circle-check" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m16 9-5.5 5.5L8 12" />
+      </symbol>
+      <symbol id="i-circle-x" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="m15 9-6 6" />
+        <path d="m9 9 6 6" />
+      </symbol>
+      <symbol id="i-hourglass" viewBox="0 0 24 24">
+        <path d="M5 22h14" />
+        <path d="M5 2h14" />
+        <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22" />
+        <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2" />
+      </symbol>
+      <symbol id="i-shield-check" viewBox="0 0 24 24">
+        <path
+          d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        />
+        <path d="m9 12 2 2 4-4" />
+      </symbol>
+      <symbol id="i-triangle-alert" viewBox="0 0 24 24">
+        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+        <path d="M12 9v4" />
+        <path d="M12 17h.01" />
+      </symbol>
+      <symbol id="i-ban" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M4.929 4.929 19.07 19.071" />
+      </symbol>
+      <symbol id="i-circle-dashed" viewBox="0 0 24 24">
+        <path d="M10.1 2.182a10 10 0 0 1 3.8 0" />
+        <path d="M13.9 21.818a10 10 0 0 1-3.8 0" />
+        <path d="M17.609 3.721a10 10 0 0 1 2.69 2.7" />
+        <path d="M2.182 13.9a10 10 0 0 1 0-3.8" />
+        <path d="M20.279 17.609a10 10 0 0 1-2.7 2.69" />
+        <path d="M21.818 10.1a10 10 0 0 1 0 3.8" />
+        <path d="M3.721 6.391a10 10 0 0 1 2.7-2.69" />
+        <path d="M6.391 20.279a10 10 0 0 1-2.69-2.7" />
+      </symbol>
+      <symbol id="i-circle-dot-dashed" viewBox="0 0 24 24">
+        <path d="M10.1 2.18a9.93 9.93 0 0 1 3.8 0" />
+        <path d="M17.6 3.71a9.95 9.95 0 0 1 2.69 2.7" />
+        <path d="M21.82 10.1a9.93 9.93 0 0 1 0 3.8" />
+        <path d="M20.29 17.6a9.95 9.95 0 0 1-2.7 2.69" />
+        <path d="M13.9 21.82a9.94 9.94 0 0 1-3.8 0" />
+        <path d="M6.4 20.29a9.95 9.95 0 0 1-2.69-2.7" />
+        <path d="M2.18 13.9a9.93 9.93 0 0 1 0-3.8" />
+        <path d="M3.71 6.4a9.95 9.95 0 0 1 2.7-2.69" />
+        <circle cx="12" cy="12" r="1" />
+      </symbol>
+      <symbol id="i-calendar-x" viewBox="0 0 24 24">
+        <path d="M8 2v3" />
+        <path d="M16 2v3" />
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <path d="M3 9h18" />
+        <path d="m14 13-4 4" />
+        <path d="m10 13 4 4" />
+      </symbol>
+      <symbol id="i-circle-alert" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" x2="12" y1="8" y2="12" />
+        <line x1="12" x2="12.01" y1="16" y2="16" />
+      </symbol>
+      <symbol id="i-user-check" viewBox="0 0 24 24">
+        <path d="m16 11 2 2 4-4" />
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+      </symbol>
+      <symbol id="i-user-x" viewBox="0 0 24 24">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <line x1="17" x2="22" y1="8" y2="13" />
+        <line x1="22" x2="17" y1="8" y2="13" />
+      </symbol>
+      <symbol id="i-shield-x" viewBox="0 0 24 24">
+        <path
+          d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        />
+        <path d="m14.5 9.5-5 5" />
+        <path d="m9.5 9.5 5 5" />
+      </symbol>
+      <symbol id="i-search-x" viewBox="0 0 24 24">
+        <path d="m13.5 8.5-5 5" />
+        <path d="m8.5 8.5 5 5" />
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </symbol>
+      <symbol id="i-inbox" viewBox="0 0 24 24">
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+        <path
+          d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
+        />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path
+          d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"
+        />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24">
+        <path
+          d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"
+        />
+        <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+        <path
+          d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"
+        />
+        <path d="m2 2 20 20" />
+      </symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18" />
+        <path d="m6 6 12 12" />
+      </symbol>
+      <symbol id="i-heart-pulse" viewBox="0 0 24 24">
+        <path
+          d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+        />
+        <path d="M3.22 13H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" />
+      </symbol>
+      <symbol id="i-car" viewBox="0 0 24 24">
+        <path
+          d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"
+        />
+        <circle cx="7" cy="17" r="2" />
+        <path d="M9 17h6" />
+        <circle cx="17" cy="17" r="2" />
+      </symbol>
+      <symbol id="i-stethoscope" viewBox="0 0 24 24">
+        <path d="M11 2v2" />
+        <path d="M5 2v2" />
+        <path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1" />
+        <path d="M8 15a6 6 0 0 0 12 0v-3" />
+        <circle cx="20" cy="10" r="2" />
+      </symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24">
+        <path
+          d="M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4"
+        />
+      </symbol>
+      <symbol id="i-file-signature" viewBox="0 0 24 24">
+        <path
+          d="M14.364 13.634a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506l4.013-4.009a1 1 0 0 0-3.004-3.004z"
+        />
+        <path d="M14.487 7.858A1 1 0 0 1 14 7V2" />
+        <path
+          d="M20 19.645V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l2.516 2.516"
+        />
+        <path d="M8 18h1" />
+      </symbol>
+      <symbol id="i-laptop" viewBox="0 0 24 24">
+        <path
+          d="M18 5a2 2 0 0 1 2 2v8.526a2 2 0 0 0 .212.897l1.068 2.127a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45l1.068-2.127A2 2 0 0 0 4 15.526V7a2 2 0 0 1 2-2z"
+        />
+        <path d="M20.054 15.987H3.946" />
+      </symbol>
+      <symbol id="i-plane" viewBox="0 0 24 24">
+        <path
+          d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"
+        />
+      </symbol>
+      <symbol id="i-cog" viewBox="0 0 24 24">
+        <path d="M11 10.27 7 3.34" />
+        <path d="m11 13.73-4 6.93" />
+        <path d="M12 22v-2" />
+        <path d="M12 2v2" />
+        <path d="M14 12h8" />
+        <path d="m17 20.66-1-1.73" />
+        <path d="m17 3.34-1 1.73" />
+        <path d="M2 12h2" />
+        <path d="m20.66 17-1.73-1" />
+        <path d="m20.66 7-1.73 1" />
+        <path d="m3.34 17 1.73-1" />
+        <path d="m3.34 7 1.73 1" />
+        <circle cx="12" cy="12" r="2" />
+        <circle cx="12" cy="12" r="8" />
+      </symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24">
+        <path
+          d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+        />
+      </symbol>
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <path d="m21 21-4.34-4.34" />
+        <circle cx="11" cy="11" r="8" />
+      </symbol>
+      <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></symbol>
+    </svg>
+
+    <!-- 01 · Portada -->
+    <section class="hoja portada">
+      <div class="izq">
+        <span class="kicker">SRPP · Oasis Seguros</span>
+        <h1>Diseño final<br />del SRPP:<br /><span>Claroscuro</span></h1>
+        <p style="font-size: 10.5pt; max-width: 150mm">
+          Sistema de Registro de Pagos de Primas de Oasis Seguros. Interfaz del personal
+          (administración y operación) en escritorio y del asegurado en el teléfono: lo que la SPA
+          ya muestra al cierre del Sprint S4 y el diseño de las pantallas de los sprints S5 a S9.
+        </p>
+        <div>
+          <span class="chip">Escritorio · administración</span
+          ><span class="chip">Escritorio · operación</span
+          ><span class="chip">Teléfono · asegurado</span><span class="chip">DESIGN.md</span
+          ><span class="chip">Prototipo navegable</span>
+        </div>
+        <div
+          style="margin-top: auto; display: flex; flex-direction: column; gap: var(--e-xs)"
+          class="fino"
+        >
+          <span
+            >Basado en la ERS, el Documento de Arquitectura y el Product Backlog v1.5 (fuente de
+            verdad) · versión del 25/10/2026.</span
+          >
+          <span
+            >Capturas «Interfaz actual»: SPA real con el seed y los datos de las pruebas e2e.
+            Capturas «Diseño»: prototipo navegable, con datos ficticios. Contrastes calculados con
+            la fórmula de WCAG 2.2.</span
+          >
+        </div>
+      </div>
+      <div class="der">
+        <img src="../prototipo/logo.png" alt="Oasis Seguros" style="width: 78mm" />
+        <div class="muestras">
+          <span style="background: #14110d; color: #f0c878">#14110d</span
+          ><span style="background: var(--degradado); color: #1a140c">oro del oasis</span
+          ><span style="background: #f6f4f0; color: #1a1714">#f6f4f0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 · Decisión -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>La decisión: qué es Claroscuro</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 1.05fr 1fr 1fr">
+        <div
+          class="noche"
+          style="display: flex; flex-direction: column; gap: var(--e-sm); min-height: 100%"
+        >
+          <span class="kicker" style="color: var(--oro)">Diseño aprobado · ADR-019</span>
+          <h3 style="font-size: 17pt; line-height: 1.15">
+            Claroscuro: la estructura de C · Cercano con el negro y el oro del manual.
+          </h3>
+          <p>
+            Oasis Seguros eligió el riel de iconos, la mesa de validación y el portal móvil de C,
+            con la sobriedad cromática de A · Sello: negro de tinta, arena cálida y el degradado
+            dorado del isologo como única luz.
+          </p>
+          <p class="muted">
+            Las pantallas nuevas parten de este documento, de
+            <code style="background: var(--noche-alta); color: var(--luna)"
+              >apps/web/DESIGN.md</code
+            >
+            y del prototipo de
+            <code style="background: var(--noche-alta); color: var(--luna)"
+              >docs/diseno/prototipo/</code
+            >. Si discrepan, gana DESIGN.md.
+          </p>
+        </div>
+        <div class="tarjeta">
+          <h3>Qué toma de cada propuesta</h3>
+          <table>
+            <tr>
+              <th>De</th>
+              <th>Toma</th>
+            </tr>
+            <tr>
+              <td><b>C · Cercano</b></td>
+              <td>
+                Riel de iconos con etiqueta, cifras del día, mesa de validación en dos paneles,
+                portal móvil con héroe y tarjetas, filas de 56 px y controles de 44 px.
+              </td>
+            </tr>
+            <tr>
+              <td><b>A · Sello</b></td>
+              <td>
+                Negro de tinta y la autoridad del recibo; contraste de texto alto (mínimo 5,0:1).
+              </td>
+            </tr>
+            <tr>
+              <td><b>Manual de marca</b></td>
+              <td>
+                Negro, café y el degradado dorado del isologo; la fotografía del oasis en la
+                bienvenida.
+              </td>
+            </tr>
+            <tr>
+              <td><b>B · Claro</b></td>
+              <td>Superficies limpias de papel y separación por espacio, sin líneas duras.</td>
+            </tr>
+          </table>
+        </div>
+        <div class="tarjeta">
+          <h3>Qué cambió en esta versión</h3>
+          <ul class="lista">
+            <li>
+              <b>Interfaz actual con capturas reales</b> de la SPA al cierre del S4: ingreso,
+              inicio, pagos, registrar, validar y rechazar, pólizas, recibos, verificación y portal.
+            </li>
+            <li>
+              <b>Etapa C · claridad (M1–M8):</b> ícono por ramo, qué significa cada estado, estados
+              vacíos con acción, ayudas de campo, cifra que filtra, seguimiento del pago, «En mora»
+              en el portal y lenguaje llano.
+            </li>
+            <li>
+              <b>Pantallas futuras</b> desde el prototipo actualizado, con la etiqueta del sprint
+              que las implementa (S5–S9).
+            </li>
+            <li><b>Medición del bundle</b> y su optimización (ADR-029).</li>
+            <li>
+              El cliente reporta con comprobante lo que pagó por un medio distinto del débito
+              (HU-17); las aseguradoras notifican los cobros (HU-50).
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 · Reglas -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Reglas comunes</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo" style="display: flex; flex-direction: column; gap: var(--e-sm)">
+        <div class="reglas">
+          <div class="regla">
+            <h3><i>1</i>Estado = texto + icono + color</h3>
+            <p>
+              Ningún estado depende solo del color. Cinco tonos para todo el sistema; cada estado
+              lleva siempre el mismo icono y una frase que lo explica.
+            </p>
+            <small>WCAG 1.4.1 · ERS 6.1 · M2</small>
+          </div>
+          <div class="regla">
+            <h3><i>2</i>Contraste calculado</h3>
+            <p>
+              Texto ≥ 4,5:1; texto grande ≥ 3:1; bordes de campo y foco ≥ 3:1. El texto sobre la
+              foto se mide en el peor píxel.
+            </p>
+            <small>WCAG 1.4.3 · 1.4.11 · RNF-26</small>
+          </div>
+          <div class="regla">
+            <h3><i>3</i>Validar en tres acciones</h3>
+            <p>
+              «Validar» en la fila, casilla de confirmación y «Validar y emitir recibo». Rechazar
+              siempre pide un motivo de 5 a 300 caracteres, que ve el cliente.
+            </p>
+            <small>RNF-21 · HU-18 · HU-19</small>
+          </div>
+          <div class="regla">
+            <h3><i>4</i>Todo con sesión</h3>
+            <p>
+              Una sola pantalla de ingreso; la verificación de recibos también exige sesión y el
+              cliente solo ve lo suyo.
+            </p>
+            <small>RF-01 · RF-33 · RN-07 · ADR-015</small>
+          </div>
+          <div class="regla">
+            <h3><i>5</i>Formatos de Ecuador</h3>
+            <p>
+              Fechas dd/mm/aaaa; USD con dos decimales ($1.234,50) y cifras tabulares; hora de
+              Ecuador.
+            </p>
+            <small>RN-10</small>
+          </div>
+          <div class="regla">
+            <h3><i>6</i>Lenguaje llano</h3>
+            <p>
+              El cliente y los avisos leen «recibo verificable» y «se está registrando», no
+              «blockchain» ni «hash». Antes de lo que no se deshace, la consecuencia: «El cliente lo
+              verá en su portal».
+            </p>
+            <small>Nielsen 2 · M8</small>
+          </div>
+          <div class="regla">
+            <h3><i>7</i>Desde 360 px</h3>
+            <p>
+              Una columna, cuerpo de 16 px, objetivos de 44 px o más y navegación inferior en el
+              teléfono.
+            </p>
+            <small>RNF-20 · WCAG 2.5.8</small>
+          </div>
+          <div class="regla">
+            <h3><i>8</i>Una sola luz dorada</h3>
+            <p>
+              El degradado del isologo solo rellena la acción principal de cada vista. Sin cristal,
+              halos ni brillos animados; se respeta <code>prefers-reduced-motion</code>.
+            </p>
+            <small>Manual de marca · WCAG 2.3.3</small>
+          </div>
+          <div class="regla">
+            <h3><i>9</i>Explicar antes del error</h3>
+            <p>
+              Ayuda visible bajo cada campo con la regla que aplica; cada lista vacía dice por qué y
+              ofrece la acción («Quitar filtro», «Ir a Pagos»).
+            </p>
+            <small>WCAG 3.3.2 · Nielsen 5 · M3 · M4</small>
+          </div>
+        </div>
+        <p class="fino">
+          En cada pantalla, los círculos numerados remiten a las notas, que citan el requisito de la
+          ERS, la historia del backlog, el criterio WCAG o la heurística de Nielsen que justifica la
+          decisión. La etiqueta
+          <span class="etq actual" style="margin: 0">Interfaz actual · S4</span> marca una captura
+          de la SPA; <span class="etq diseno" style="margin: 0">Diseño · se implementa en S7</span>,
+          una captura del prototipo (<code>docs/diseno/prototipo/index.html</code>) para el sprint
+          indicado.
+        </p>
+      </div>
+    </section>
+
+    <!-- 04 · Movimiento -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Movimiento e interacción</h2>
+        <span class="folio"></span>
+      </header>
+      <div
+        class="cuerpo"
+        style="display: grid; grid-template-columns: 1fr 72mm; gap: var(--e-lg); align-items: start"
+      >
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <table>
+            <tr>
+              <th>Elemento</th>
+              <th>Qué se anima</th>
+              <th>Duración</th>
+              <th>Curva</th>
+              <th>Por qué</th>
+            </tr>
+            <tr>
+              <td>Botones al presionar</td>
+              <td><code>scale(0,97)</code></td>
+              <td>120–150 ms</td>
+              <td>cajón</td>
+              <td>Confirma la pulsación al instante; nunca desde <code>scale(0)</code>.</td>
+            </tr>
+            <tr>
+              <td>Hover en filas, enlaces y botones</td>
+              <td>fondo · brillo +6 % en el oro</td>
+              <td>150 ms</td>
+              <td>ease</td>
+              <td>Solo con <code>(hover: hover) and (pointer: fine)</code>.</td>
+            </tr>
+            <tr>
+              <td>Entrada de cada vista</td>
+              <td>opacidad + <code>translateY(12px)</code></td>
+              <td>350 ms</td>
+              <td>cajón</td>
+              <td>
+                Un momento por vista (<code>animate-vista</code>); las filas escalonan 30–35 ms,
+                máximo 8.
+              </td>
+            </tr>
+            <tr>
+              <td>Menús y select</td>
+              <td>opacidad + escala 0,97 → 1</td>
+              <td>160 ms</td>
+              <td>ease-out fuerte</td>
+              <td>Crece desde el control que lo abrió.</td>
+            </tr>
+            <tr>
+              <td>Diálogos de validar y rechazar</td>
+              <td>opacidad + escala 0,97 → 1</td>
+              <td>200 ms · salida 150 ms</td>
+              <td>ease-out fuerte</td>
+              <td>El foco va al primer campo o al botón seguro.</td>
+            </tr>
+            <tr>
+              <td>Notificaciones (sonner)</td>
+              <td><code>translateY</code> desde abajo</td>
+              <td>350 ms · salida 300 ms</td>
+              <td>cajón</td>
+              <td><code>aria-live</code>; el éxito se cierra solo, los errores quedan.</td>
+            </tr>
+            <tr>
+              <td>Leyenda de estados</td>
+              <td>chevron <code>rotate(180°)</code></td>
+              <td>150 ms</td>
+              <td>ease</td>
+              <td>Solo el icono gira; el contenido aparece sin desplazar la tabla.</td>
+            </tr>
+            <tr>
+              <td>Recibo «En proceso» → «Verificable»</td>
+              <td>solo color</td>
+              <td>200 ms</td>
+              <td>ease</td>
+              <td>La lista se actualiza sola; la insignia cambia sin mover la fila.</td>
+            </tr>
+            <tr>
+              <td>Teléfono: avance y retroceso</td>
+              <td><code>translateX(60 %)</code> / <code>(-30 %)</code> + opacidad</td>
+              <td>280 ms</td>
+              <td>cajón</td>
+              <td>La dirección dice si se entra o se vuelve (diseño del portal, S6).</td>
+            </tr>
+            <tr>
+              <td>Bienvenida del ingreso</td>
+              <td>isologo y título (<code>animate-pop</code>, <code>animate-rise</code>)</td>
+              <td>0,6–0,8 s</td>
+              <td>cajón</td>
+              <td>Nunca bloquea el formulario.</td>
+            </tr>
+          </table>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta">
+            <h3>Curvas</h3>
+            <p><b>cajón:</b> <code>cubic-bezier(0.32, 0.72, 0, 1)</code></p>
+            <p><b>ease-out fuerte:</b> <code>cubic-bezier(0.23, 1, 0.32, 1)</code></p>
+            <p class="muted" style="margin-top: var(--e-xs)">
+              ease-in se evita porque retrasa justo el momento que la persona está mirando.
+            </p>
+          </div>
+          <div class="tarjeta">
+            <h3>Solo transform y opacity</h3>
+            <p>
+              Nada de animar <code>width</code>, <code>height</code>, <code>margin</code> ni
+              <code>padding</code>; nada de <code>transition: all</code>. El catálogo vive en las
+              utilidades <code>animate-*</code> de <code>src/index.css</code>.
+            </p>
+          </div>
+          <div class="noche">
+            <h3>prefers-reduced-motion</h3>
+            <p>
+              Se quitan desplazamientos y escalados; se conservan opacidad y color, que ayudan a
+              entender el estado.
+            </p>
+            <p class="oro" style="margin-top: var(--e-xs); font-weight: 600">WCAG 2.3.3</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05 · Mapa de estados -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Mapa de estados y su significado</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo" style="display: flex; flex-direction: column; gap: var(--e-sm)">
+        <div class="dos" style="gap: var(--e-sm)">
+          <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+            <table>
+              <tr>
+                <th style="width: 23mm">Dominio · técnico</th>
+                <th style="width: 30mm">Insignia</th>
+                <th>Descripción (lo que lee la persona)</th>
+              </tr>
+              <tr>
+                <td><b>Pago</b> · REGISTRADO</td>
+                <td>
+                  <span class="ins proceso"
+                    ><svg class="i"><use href="#i-clock" /></svg>Por validar</span
+                  >
+                </td>
+                <td>
+                  Oasis Seguros está revisando este pago con la notificación de la aseguradora o el
+                  comprobante.
+                </td>
+              </tr>
+              <tr>
+                <td>VALIDADO</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-circle-check" /></svg>Validado</span
+                  >
+                </td>
+                <td>El pago fue confirmado y tiene un recibo verificable.</td>
+              </tr>
+              <tr>
+                <td>RECHAZADO</td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-circle-x" /></svg>Rechazado</span
+                  >
+                </td>
+                <td>El pago no se pudo confirmar; el motivo aparece junto a él.</td>
+              </tr>
+              <tr>
+                <td><b>Recibo</b> · PENDIENTE_ANCLAJE, ENVIADO</td>
+                <td>
+                  <span class="ins proceso"
+                    ><svg class="i"><use href="#i-hourglass" /></svg>En proceso</span
+                  >
+                </td>
+                <td>
+                  El recibo se está registrando para que pueda verificarse; suele tardar menos de un
+                  minuto.
+                </td>
+              </tr>
+              <tr>
+                <td>ANCLADO</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-shield-check" /></svg>Verificable</span
+                  >
+                </td>
+                <td>Cualquier persona con sesión puede comprobar que el recibo es auténtico.</td>
+              </tr>
+              <tr>
+                <td>FALLIDO <span class="fino">(solo personal)</span></td>
+                <td>
+                  <span class="ins aviso"
+                    ><svg class="i"><use href="#i-triangle-alert" /></svg>Requiere atención</span
+                  >
+                </td>
+                <td>
+                  No se pudo registrar el recibo; el sistema lo reintenta y, si sigue así, un
+                  administrador lo revisa.
+                </td>
+              </tr>
+              <tr>
+                <td>ANULADO</td>
+                <td>
+                  <span class="ins neutro"
+                    ><svg class="i"><use href="#i-ban" /></svg>Anulado</span
+                  >
+                </td>
+                <td>Oasis Seguros anuló este recibo; ya no vale como comprobante.</td>
+              </tr>
+              <tr>
+                <td><b>Póliza</b> · VIGENTE</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-circle-check" /></svg>Vigente</span
+                  >
+                </td>
+                <td>La póliza está activa y admite pagos.</td>
+              </tr>
+              <tr>
+                <td>VENCIDA</td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-calendar-x" /></svg>Vencida</span
+                  >
+                </td>
+                <td>Terminó su vigencia; ya no admite pagos.</td>
+              </tr>
+              <tr>
+                <td>CANCELADA</td>
+                <td>
+                  <span class="ins neutro"
+                    ><svg class="i"><use href="#i-ban" /></svg>Cancelada</span
+                  >
+                </td>
+                <td>Se canceló antes de terminar; ya no admite pagos.</td>
+              </tr>
+              <tr>
+                <td>en mora <span class="fino">(derivado, RN-16)</span></td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-circle-alert" /></svg>En mora</span
+                  >
+                </td>
+                <td>Tiene al menos una cuota vencida sin pagar.</td>
+              </tr>
+            </table>
+          </div>
+          <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+            <table>
+              <tr>
+                <th style="width: 23mm">Dominio · técnico</th>
+                <th style="width: 30mm">Insignia</th>
+                <th>Descripción (lo que lee la persona)</th>
+              </tr>
+              <tr>
+                <td><b>Cuota</b> · PENDIENTE</td>
+                <td>
+                  <span class="ins neutro"
+                    ><svg class="i"><use href="#i-circle-dashed" /></svg>Pendiente</span
+                  >
+                </td>
+                <td>Aún no vence y no tiene pagos.</td>
+              </tr>
+              <tr>
+                <td>PARCIAL</td>
+                <td>
+                  <span class="ins aviso"
+                    ><svg class="i"><use href="#i-circle-dot-dashed" /></svg>Pago parcial</span
+                  >
+                </td>
+                <td>Tiene un abono, pero falta completar su valor.</td>
+              </tr>
+              <tr>
+                <td>PAGADA</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-circle-check" /></svg>Pagada</span
+                  >
+                </td>
+                <td>Está cubierta por completo.</td>
+              </tr>
+              <tr>
+                <td>VENCIDA</td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-calendar-x" /></svg>Vencida</span
+                  >
+                </td>
+                <td>Pasó su fecha de vencimiento sin cubrirse.</td>
+              </tr>
+              <tr>
+                <td><b>Verificación</b> · VALIDO</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-shield-check" /></svg>Auténtico</span
+                  >
+                </td>
+                <td>El recibo fue emitido por Oasis Seguros y no ha cambiado.</td>
+              </tr>
+              <tr>
+                <td>HASH_INCONSISTENTE</td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-shield-x" /></svg>No coincide</span
+                  >
+                </td>
+                <td>
+                  Los datos del recibo no son los que se registraron. No lo acepte y comuníquese con
+                  Oasis Seguros.
+                </td>
+              </tr>
+              <tr>
+                <td>NO_ANCLADO</td>
+                <td>
+                  <span class="ins proceso"
+                    ><svg class="i"><use href="#i-hourglass" /></svg>En proceso</span
+                  >
+                </td>
+                <td>El recibo existe y se está registrando. Vuelva a intentarlo en un minuto.</td>
+              </tr>
+              <tr>
+                <td>ANULADO</td>
+                <td>
+                  <span class="ins neutro"
+                    ><svg class="i"><use href="#i-ban" /></svg>Anulado</span
+                  >
+                </td>
+                <td>Oasis Seguros anuló este recibo; ya no vale como comprobante.</td>
+              </tr>
+              <tr>
+                <td>NO_ENCONTRADO</td>
+                <td>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-search-x" /></svg>No encontrado</span
+                  >
+                </td>
+                <td>No hay un recibo con ese código. Revise que lo haya escrito bien.</td>
+              </tr>
+              <tr>
+                <td><b>Cliente y cuenta</b> · activo</td>
+                <td>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-user-check" /></svg>Activo · Activa</span
+                  >
+                </td>
+                <td>Puede usar el sistema.</td>
+              </tr>
+              <tr>
+                <td>desactivado</td>
+                <td>
+                  <span class="ins neutro"
+                    ><svg class="i"><use href="#i-user-x" /></svg>Desactivado · Desactivada</span
+                  >
+                </td>
+                <td>No puede iniciar sesión ni operar.</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <p class="fino">
+          El vocabulario vive en <code>apps/web/src/components/estados.ts</code>: el tipo exige
+          texto, icono, tono y descripción, y la leyenda, el portal y la verificación leen esa misma
+          fuente. «Por validar» describe lo que falta, no lo que ya pasó. Del diseño de sprints
+          futuros: «En validación» para la cuota con un pago por validar (portal, S6), «Lista para
+          registrar» y el error por fila de la carga (HU-50, S7) y «Segundo factor activo · por
+          activar» (HU-52, S8).
+        </p>
+      </div>
+    </section>
+
+    <!-- 06 · Idea -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>La idea: el oasis al anochecer</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 1.1fr 1fr 1fr">
+        <div
+          class="noche"
+          style="display: flex; flex-direction: column; gap: var(--e-md); min-height: 100%"
+        >
+          <h3 style="font-size: 17pt; line-height: 1.2">
+            Un lienzo de arena donde se trabaja de día y, sobre él, paneles negros iluminados por
+            una sola luz dorada: la del isologo.
+          </h3>
+          <p>
+            La luz marca lo que la persona tiene que hacer ahora (validar, registrar, reportar) y
+            las cifras que importan. Todo lo demás es tinta, arena y espacio.
+          </p>
+          <span class="kicker" style="color: var(--oro); margin-top: auto">Favorece a</span>
+          <p>
+            Las personas del bróker que validan pagos toda la jornada y el cliente que revisa sus
+            pólizas desde el celular.
+          </p>
+        </div>
+        <div class="tarjeta">
+          <h3>Principios</h3>
+          <ul class="lista">
+            <li>
+              <b>Una sola luz.</b> Una acción dorada por vista; si dos compiten, una pasa a papel.
+            </li>
+            <li>
+              <b>La tarea manda.</b> El inicio abre con lo que hay que hacer, no con gráficos.
+            </li>
+            <li>
+              <b>El oro vive en la noche.</b> Como texto o trazo solo aparece sobre negro (11,9:1);
+              sobre arena da 1,44:1.
+            </li>
+            <li>
+              <b>Explicar en el lugar.</b> Cada estado con su frase y cada campo con su ayuda, sin
+              tooltips.
+            </li>
+            <li>Separar con espacio y sombra, nunca con bordes laterales de color.</li>
+            <li>44 px o más en todo objetivo táctil, también en escritorio.</li>
+          </ul>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-md)">
+          <div class="tarjeta">
+            <h3>Ventajas</h3>
+            <ul class="lista">
+              <li>Fiel al manual: negro, café y el degradado del isologo.</li>
+              <li>El riel deja más ancho a las tablas.</li>
+              <li>Un portal móvil amable para el asegurado.</li>
+            </ul>
+          </div>
+          <div class="tarjeta">
+            <h3>Riesgos y cómo se controlan</h3>
+            <ul class="lista">
+              <li><b>El oro como lujo vacío:</b> regla «Una sola luz» y detector de impeccable.</li>
+              <li>
+                <b>Texto sobre fotografía:</b> velo vertical y radial medido en el peor píxel.
+              </li>
+              <li>
+                <b>Menos filas por pantalla (56 px):</b> filtros por tarea, en la URL, y paginación.
+              </li>
+            </ul>
+          </div>
+          <div class="tarjeta">
+            <h3>Estado</h3>
+            <p>
+              Implementado en la SPA con HT-13 (S3–S4) y pulido por la Etapa C del S4. Las pantallas
+              de S5 a S9 se construyen con este sistema.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 · Color -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Color</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres">
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Paleta por roles · contraste calculado</h3>
+          <div class="muestra">
+            <i style="background: #f6f4f0"></i
+            ><span><b>Lienzo arena</b>#f6f4f0 · fondo de la app y del portal</span><em>16,25:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #fff"></i
+            ><span><b>Papel</b>#ffffff · tarjetas, campos, filas</span><em>17,85:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #efebe4"></i
+            ><span><b>Arena hundida</b>#efebe4 · botón discreto, leyenda, vacío</span
+            ><em>6,08:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #1a1714"></i
+            ><span><b>Tinta noche</b>#1a1714 · texto, filtro activo, foco</span><em>16,25:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #5e564b"></i
+            ><span><b>Tinta tierra</b>#5e564b · texto secundario, ayudas</span><em>6,57:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #8c8478"></i
+            ><span><b>Borde de campo</b>#8c8478 · 1 px en campos</span><em>3,69:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #8a6122"></i
+            ><span><b>Café de enlace</b>#8a6122 · enlaces y migas</span><em>5,01:1</em>
+          </div>
+        </div>
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>La noche y el oro</h3>
+          <div class="muestra">
+            <i style="background: #14110d"></i
+            ><span><b>Noche del oasis</b>#14110d · riel, paneles, héroe</span><em>16,03:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #a59985"></i
+            ><span><b>Arena tenue</b>#a59985 · texto secundario en la noche</span><em>6,72:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #f0c878"></i
+            ><span><b>Oro del oasis</b>#f0c878 · activo del riel, cifras en la noche</span
+            ><em>11,86:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: var(--degradado)"></i
+            ><span><b>Degradado del oasis</b>#f6d592 → #e2ad5b → #c98f3e · solo botón primario</span
+            ><em>6,51–12,92:1</em>
+          </div>
+          <p style="margin-top: var(--e-sm)">
+            <b>Oro sobre arena: 1,44:1.</b> Prohibido para texto, iconos y foco. Por eso el foco es
+            tinta sobre superficies claras (16,25:1) y oro solo dentro de la noche (11,86:1).
+          </p>
+        </div>
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Estados · texto sobre su fondo</h3>
+          <div class="muestra">
+            <i style="background: #eaf4e4; box-shadow: inset 0 0 0 3px #2f6b3a"></i
+            ><span><b>Éxito</b>#2f6b3a / #eaf4e4</span><em>5,65:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #e6f0f7; box-shadow: inset 0 0 0 3px #2b5c87"></i
+            ><span><b>Proceso</b>#2b5c87 / #e6f0f7</span><em>6,09:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #fcefd9; box-shadow: inset 0 0 0 3px #8c4f0a"></i
+            ><span><b>Aviso</b>#8c4f0a / #fcefd9</span><em>5,71:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #fbe8e4; box-shadow: inset 0 0 0 3px #a2332b"></i
+            ><span><b>Error</b>#a2332b / #fbe8e4</span><em>5,83:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #efebe4; box-shadow: inset 0 0 0 3px #5e564b"></i
+            ><span><b>Neutro</b>#5e564b / #efebe4</span><em>6,08:1</em>
+          </div>
+          <div class="muestra">
+            <i style="background: #a2332b"></i
+            ><span><b>Rojo sólido</b>solo para confirmar lo irreversible</span
+            ><em>blanco 6,90:1</em>
+          </div>
+          <p class="fino" style="margin-top: var(--e-sm)">
+            El lienzo deriva del blanco cálido del manual (#f0efed), aclarado para que el papel se
+            distinga. Contraste mínimo de texto del sistema: 5,01:1 (enlace sobre lienzo).
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 08 · Tipografía -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Tipografía, forma y profundidad</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 1.2fr 1fr 1fr">
+        <div class="tarjeta" style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <h3>Tipografía · Outfit + Figtree</h3>
+          <p style="font: 700 28pt/1.05 var(--display); letter-spacing: -0.02em">
+            Recibo verificable
+          </p>
+          <p style="font-size: 11pt">Señora Muñoz, su póliza está al día. Á É Í Ó Ú Ñ ü ¿? ¡!</p>
+          <table>
+            <tr>
+              <td style="font: 700 15pt var(--display)">Iniciar sesión</td>
+              <td class="fino">Display · Outfit 700 · 34–46 px</td>
+            </tr>
+            <tr>
+              <td style="font: 700 13pt var(--display)">Pagos por validar</td>
+              <td class="fino">Título de página · Outfit 700 · 30 px</td>
+            </tr>
+            <tr>
+              <td style="font: 700 10.5pt var(--display)">Pagos por validar</td>
+              <td class="fino">Título de tarjeta · Outfit 700 · 17 px</td>
+            </tr>
+            <tr>
+              <td style="font-size: 9.5pt">Pagos por validar</td>
+              <td class="fino">Cuerpo · Figtree 400 · 15 px (16 en teléfono)</td>
+            </tr>
+            <tr>
+              <td style="font-weight: 600; font-size: 9pt">Pagos por validar</td>
+              <td class="fino">Etiqueta · Figtree 600 · 14 px</td>
+            </tr>
+            <tr>
+              <td style="font-size: 8.2pt">Solo aparecen pólizas vigentes.</td>
+              <td class="fino">Nota y ayuda · Figtree 400 · 13 px</td>
+            </tr>
+            <tr>
+              <td style="font: 700 15pt var(--display); font-variant-numeric: tabular-nums">
+                $1.234,50
+              </td>
+              <td class="fino">Cifra · Outfit 700 · tnum</td>
+            </tr>
+          </table>
+          <p class="fino">
+            Familias libres (OFL), autoalojadas con Fontsource (<code
+              >@fontsource-variable/outfit</code
+            >
+            y <code>figtree</code>). Las cifras tabulares hacen que «111111» y «000000» ocupen el
+            mismo ancho.
+          </p>
+        </div>
+        <div class="tarjeta">
+          <h3>Forma y densidad</h3>
+          <table>
+            <tr>
+              <td><b>Radios</b></td>
+              <td>
+                6 px pequeños · 8 px botones y campos · 12 px tarjetas · 16 px contenedores ·
+                píldora en insignias y filtros
+              </td>
+            </tr>
+            <tr>
+              <td><b>Controles</b></td>
+              <td>44 px (56 px en «Ingresar») · campos de 48 px</td>
+            </tr>
+            <tr>
+              <td><b>Filas</b></td>
+              <td>56 px en listas · 12 px de padding en tablas</td>
+            </tr>
+            <tr>
+              <td><b>Riel</b></td>
+              <td>92 px · ítems de 56 px · barra superior bajo 760 px · avatar de 44 × 44 px</td>
+            </tr>
+            <tr>
+              <td><b>Teléfono</b></td>
+              <td>Cuerpo de 16 px · 4 pestañas · pie fijo con la acción del paso</td>
+            </tr>
+            <tr>
+              <td><b>Espaciado</b></td>
+              <td>6 · 10 · 16 · 22 · 30 px</td>
+            </tr>
+          </table>
+          <div
+            style="display: flex; gap: var(--e-sm); align-items: flex-end; margin-top: var(--e-sm)"
+          >
+            <i style="width: 10mm; height: 10mm; border-radius: 6px; background: var(--hundida)"></i
+            ><i
+              style="width: 10mm; height: 10mm; border-radius: 8px; background: var(--hundida)"
+            ></i
+            ><i
+              style="width: 10mm; height: 10mm; border-radius: 12px; background: var(--hundida)"
+            ></i
+            ><i
+              style="width: 10mm; height: 10mm; border-radius: 16px; background: var(--hundida)"
+            ></i
+            ><i
+              style="width: 16mm; height: 7mm; border-radius: 999px; background: var(--hundida)"
+            ></i>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-md)">
+          <div class="tarjeta">
+            <h3>Tarjeta</h3>
+            <p class="muted">Anillo de 1 px + sombra ambiental del 5 %.</p>
+          </div>
+          <div class="noche">
+            <h3>Panel de noche</h3>
+            <p class="muted">
+              Filo dorado interior + resplandor; solo para lo que resume o dirige.
+            </p>
+          </div>
+          <span class="btn p" style="align-self: flex-start; min-height: 40px">Acción dorada</span>
+          <div class="tarjeta" style="box-shadow: 0 24px 60px rgb(20 17 13/0.28)">
+            <h3>Flotante</h3>
+            <p class="muted">Diálogos y notificaciones.</p>
+          </div>
+          <p class="fino">
+            Las sombras son neutras; el oro está en el relleno, nunca en un halo, y el filo dorado
+            queda reservado a los paneles de noche.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 09 · Inicio de sesión -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Inicio de sesión</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec/login</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-01-ingreso-escritorio.jpg"
+              alt="Ingreso de la SPA con la contraseña visible"
+            />
+            <b class="m" style="--x: 54.5%; --y: 26%">1</b
+            ><b class="m" style="--x: 97.2%; --y: 54%">2</b
+            ><b class="m" style="--x: 54.5%; --y: 63%">3</b
+            ><b class="m" style="--x: 26%; --y: 38.5%">4</b
+            ><b class="m" style="--x: 54.5%; --y: 72%">5</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Una sola puerta para todos</b>Personal y clientes ingresan con correo y contraseña;
+            el sistema abre la vista según el rol.<small>RF-01 · RF-04 · HU-03</small>
+          </li>
+          <li>
+            <b>Mostrar u ocultar la contraseña</b><code>CampoContrasena</code>: botón con texto
+            «Mostrar»/«Ocultar» y <code>aria-pressed</code>; con el ratón el foco se queda en el
+            campo.<small>HU-01 · Nielsen 5</small>
+          </li>
+          <li>
+            <b>Una sola acción dorada</b>«Ingresar», de 56 px. Un error del API llega como
+            notificación genérica.<small>Regla 8 · HU-01</small>
+          </li>
+          <li>
+            <b>Foto de marca con velo medido</b>Velo vertical y radial; título ≥ 3:1 y subtítulo ≥
+            4,5:1 en el peor píxel.<small>WCAG 1.4.3</small>
+          </li>
+          <li>
+            <b>Límite de intentos visible</b>Explica el bloqueo antes de que ocurra.<small
+              >RNF-29 · Nielsen 5</small
+            >
+          </li>
+          <li class="mas">
+            <b>Recuperar la contraseña</b>El enlace «¿Olvidó su contraseña?» llega con HU-31 en el
+            S7.<small>HU-31 · S7</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 10 · Inicio del personal -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Inicio del personal</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-02-inicio-personal-escritorio.jpg" alt="Inicio del operador" />
+            <b class="m" style="--x: 36%; --y: 16%">1</b
+            ><b class="m" style="--x: 23%; --y: 26%">2</b
+            ><b class="m" style="--x: 66%; --y: 16%">3</b
+            ><b class="m" style="--x: 95%; --y: 16%">4</b
+            ><b class="m" style="--x: 23%; --y: 37.4%">5</b
+            ><b class="m" style="--x: 8.3%; --y: 16%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Lo que hay que hacer, primero</b>«Por validar» en el panel de noche, con la cifra en
+            oro.<small>The Task First Rule · RF-35</small>
+          </li>
+          <li>
+            <b>La cifra filtra</b>«Revisar los pagos» abre <code>/pagos?estado=REGISTRADO</code>, ya
+            filtrado.<small>M5 · Nielsen 7</small>
+          </li>
+          <li><b>Pagos registrados</b>Total en todos los estados.<small>HU-20</small></li>
+          <li>
+            <b>Recibos emitidos</b>Con cuántos de los últimos cinco ya son verificables.<small
+              >HU-22 · HU-23</small
+            >
+          </li>
+          <li>
+            <b>Últimos recibos</b>Con su estado; vacío: «Sin recibos todavía» y «Ir a Pagos».<small
+              >M3 · RF-29</small
+            >
+          </li>
+          <li>
+            <b>Riel del personal</b>92 px en la noche, ítem activo en oro y avatar de 44 × 44
+            px.<small>ADR-019 · WCAG 2.5.8</small>
+          </li>
+          <li class="mas">
+            <b>Después</b>Cuatro cifras accionables y «Vencen esta semana» (HU-30, S8; HU-38, S5) y
+            la píldora de pendientes del riel.<small>Diseño en la página 22</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 11 · Pagos -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Pagos: listado por tarea</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 3">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos?estado=REGISTRADO</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-03-pagos-filtrado-desde-panel-escritorio.jpg"
+              alt="Pagos filtrados por Registrados desde el panel"
+            />
+            <b class="m" style="--x: 29.5%; --y: 19%">1</b
+            ><b class="m" style="--x: 83.5%; --y: 7.4%">2</b
+            ><b class="m" style="--x: 76%; --y: 47%">3</b
+            ><b class="m" style="--x: 89%; --y: 47%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos</span><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-04-pagos-leyenda-abierta-escritorio.jpg"
+              alt="Pagos con la leyenda de estados abierta"
+            />
+            <b class="m" style="--x: 28.5%; --y: 28%">5</b
+            ><b class="m" style="--x: 71.3%; --y: 65.5%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>El filtro vive en la URL</b>Llega «Registrados» desde el panel; se puede recargar y
+            compartir, y cambiarlo reemplaza la entrada del historial. Un valor desconocido equivale
+            a «Todos».<small>M5 · D7</small>
+          </li>
+          <li>
+            <b>Registrar pago</b>Única acción dorada. La carga del archivo de la aseguradora suma
+            «Cargar notificación» en papel (S7).<small>HU-16 · HU-50</small>
+          </li>
+          <li><b>Estado del pago</b>Texto, icono y color.<small>WCAG 1.4.1</small></li>
+          <li>
+            <b>La acción en la fila</b>«Validar» discreto y «Rechazar» en contorno rojo; ya
+            resueltos, la fecha.<small>RNF-21 · HU-18 · HU-19</small>
+          </li>
+          <li>
+            <b>¿Qué significa cada estado?</b><code>&lt;details&gt;</code> nativo con cada insignia
+            y su frase; sin tooltips, funciona con teclado y en el teléfono.<small>M2 · D5</small>
+          </li>
+          <li>
+            <b>Método y monto</b>Débito bancario primero; montos con cifras tabulares. Una lista
+            vacía por el filtro ofrece «Quitar filtro».<small>RN-10 · M3</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 12 · Cargar notificación -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Cargar la notificación de la aseguradora</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec/pagos/cargar</span
+            ><b class="etq diseno">Diseño · se implementa en S7</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-cargar.jpg" alt="Vista previa de la carga de cobros" />
+            <b class="m" style="--x: 8.3%; --y: 22%">1</b
+            ><b class="m" style="--x: 65.8%; --y: 70%">2</b
+            ><b class="m" style="--x: 65.8%; --y: 78.7%">3</b
+            ><b class="m" style="--x: 83.6%; --y: 88.6%">4</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Resumen antes de confirmar</b>Archivo, aseguradora, filas válidas, filas con error y
+            total a registrar.<small>HU-50 · ADR-024</small>
+          </li>
+          <li>
+            <b>Error por fila, con la regla</b>Póliza de otra aseguradora: la fila no se registra y
+            dice por qué.<small>RN-23 · WCAG 3.3.1</small>
+          </li>
+          <li>
+            <b>Repetida no duplica</b>La referencia ya usada en la misma póliza se rechaza aunque
+            venga en otro archivo.<small>RN-22</small>
+          </li>
+          <li>
+            <b>Registrar las válidas</b>Quedan «Por validar» con método Débito bancario; la carga
+            entra en la bitácora.<small>HU-50 · RF-50</small>
+          </li>
+          <li class="mas">
+            <b>Resultado y validación de la carga</b>Cuántos pagos se registraron y una sola
+            confirmación para validarlos todos, o de uno en uno en la mesa.<small
+              >HU-50 · RNF-21</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 13 · Validar -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Validar un pago</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 4">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos · Validar pago</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-dialogo-validar.jpg" alt="Diálogo Validar pago" />
+            <b class="m" style="--x: 30.5%; --y: 25%">1</b
+            ><b class="m" style="--x: 30.5%; --y: 37%">2</b
+            ><b class="m" style="--x: 30.5%; --y: 60%">3</b
+            ><b class="m" style="--x: 55%; --y: 72.6%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos/validar · notificación</span
+            ><b class="etq diseno">Diseño · se implementa en S7</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-mesa-notificacion.jpg"
+              alt="Mesa de validación con la notificación de la aseguradora"
+            />
+            <b class="m" style="--x: 10.3%; --y: 30%">5</b
+            ><b class="m" style="--x: 10.3%; --y: 59%">6</b
+            ><b class="m" style="--x: 79%; --y: 75.5%">7</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>La consecuencia, en llano</b>«Se emitirá el recibo y se registrará para que
+            cualquiera pueda verificarlo. El cliente lo verá en su portal. La acción no se puede
+            deshacer.»<small>M8 · Nielsen 2</small>
+          </li>
+          <li>
+            <b>El pago a la vista</b>Póliza, monto, fecha, método y referencia sobre arena
+            hundida.<small>HU-18 · Nielsen 6</small>
+          </li>
+          <li>
+            <b>Confirmación explícita</b>La casilla es obligatoria; la nota de auditoría, opcional.
+            RN-01 y RN-02 se vuelven a exigir al validar.<small>HU-18 · RN-01 · RN-02</small>
+          </li>
+          <li>
+            <b>Tres acciones como máximo</b>«Validar» en la fila, casilla y «Validar y emitir
+            recibo», la única dorada.<small>RNF-21</small>
+          </li>
+          <li>
+            <b>Mesa en dos paneles</b>La notificación de la aseguradora (archivo y fila) a la
+            izquierda, la decisión a la derecha.<small>HU-50 · HU-18</small>
+          </li>
+          <li>
+            <b>El sistema compara</b>Monto contra la cuota, referencia sin uso previo y póliza de la
+            aseguradora.<small>RN-02 · RN-22 · RN-23</small>
+          </li>
+          <li>
+            <b>Rechazar junto a validar</b>Contorno rojo; abre el motivo en el mismo panel.<small
+              >HU-19</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 14 · Rechazar -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Rechazar un pago</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 4">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos · Rechazar pago</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-dialogo-rechazar.jpg"
+              alt="Diálogo Rechazar pago con un motivo elegido"
+            />
+            <b class="m" style="--x: 30.5%; --y: 14.8%">1</b
+            ><b class="m" style="--x: 30.5%; --y: 55%">2</b
+            ><b class="m" style="--x: 30.5%; --y: 75%">3</b
+            ><b class="m" style="--x: 57%; --y: 85.5%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos/validar · comprobante</span
+            ><b class="etq diseno">Diseño · se implementa en S7</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-mesa-comprobante.jpg"
+              alt="Mesa de validación con el comprobante del cliente"
+            />
+            <b class="m" style="--x: 10.3%; --y: 30%">5</b
+            ><b class="m" style="--x: 10.3%; --y: 56%">6</b
+            ><b class="m" style="--x: 84%; --y: 90%">7</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>El cliente lo verá</b>«El cliente verá el motivo en su portal», en negrita.<small
+              >M8 · HU-19</small
+            >
+          </li>
+          <li>
+            <b>Motivos frecuentes en chips</b>Un toque llena el motivo; el elegido se pinta en tinta
+            y se puede editar.<small>Nielsen 7</small>
+          </li>
+          <li>
+            <b>Motivo de 5 a 300 caracteres</b>Contador visible; el botón se habilita dentro del
+            rango.<small>HU-19 · WCAG 3.3.2</small>
+          </li>
+          <li>
+            <b>Rojo sólido solo aquí</b>Rechazar es final: la única acción en rojo sólido.<small
+              >RN-03</small
+            >
+          </li>
+          <li>
+            <b>Comprobante como hoja</b>El documento del cliente (HU-17) se distingue de la interfaz
+            con un giro de -0,6°.<small>HU-17 · Gestalt</small>
+          </li>
+          <li>
+            <b>Comprobaciones visibles</b>Lo que el sistema ya cotejó, con icono y texto.<small
+              >Nielsen 1</small
+            >
+          </li>
+          <li>
+            <b>Mismo rechazo en la mesa</b>Chips, motivo obligatorio y «Rechazar pago» en rojo
+            sólido.<small>HU-19 · HU-39</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 15 · Registrar pago -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Registrar pago</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/pagos · Registrar pago</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-formulario-pago.jpg"
+              alt="Formulario de registro de pago con las ayudas de cada campo"
+            />
+            <b class="m" style="--x: 30.5%; --y: 29%">1</b
+            ><b class="m" style="--x: 30.5%; --y: 43.7%">2</b
+            ><b class="m" style="--x: 50%; --y: 44.5%">3</b
+            ><b class="m" style="--x: 30.5%; --y: 63%">4</b
+            ><b class="m" style="--x: 30.5%; --y: 74.4%">5</b
+            ><b class="m" style="--x: 30.5%; --y: 79.4%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Solo pólizas vigentes</b>Combobox con búsqueda en el servidor; la ayuda lo dice antes
+            de buscar.<small>RN-01 · M4 · Nielsen 6</small>
+          </li>
+          <li>
+            <b>Monto con su regla</b>La ayuda pide dólares con punto decimal y avisa que el monto no
+            puede superar el saldo pendiente de la póliza.<small>RN-02 · M4</small>
+          </li>
+          <li>
+            <b>Fecha</b>«El día en que se hizo el pago; no puede ser posterior a hoy.»<small
+              >D6 · M4</small
+            >
+          </li>
+          <li>
+            <b>Débito bancario primero</b>El medio con el que cobran las aseguradoras.<small
+              >HU-16</small
+            >
+          </li>
+          <li>
+            <b>Referencia única</b>La ayuda avisa que la referencia es única en cada póliza; un
+            duplicado sale como error bajo el campo.<small>RN-22 · WCAG 3.3.1</small>
+          </li>
+          <li>
+            <b>Ayuda y error enlazados</b><code>aria-describedby</code> lee primero la ayuda y luego
+            el error, que trae el valor permitido.<small>WCAG 3.3.3 · 1.3.1</small>
+          </li>
+          <li class="mas">
+            <b>Después</b>Saldo pendiente antes de guardar y cuotas que cubre el pago.<small
+              >HU-15 · S6 · HU-36 · S5</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 16 · Cartera -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Cartera: cuotas vencidas</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec/cartera</span
+            ><b class="etq diseno">Diseño · se implementa en S5</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-cartera.jpg" alt="Cuotas vencidas" />
+            <b class="m" style="--x: 59.5%; --y: 24%">1</b
+            ><b class="m" style="--x: 70%; --y: 31%">2</b
+            ><b class="m" style="--x: 38.3%; --y: 31%">3</b
+            ><b class="m" style="--x: 27.5%; --y: 16.5%">4</b
+            ><b class="m" style="--x: 87.3%; --y: 31%">5</b
+            ><b class="m" style="--x: 82.5%; --y: 8.5%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Antigüedad a la vista</b>Venció, días de atraso y monto en columnas propias.<small
+              >HU-38 · RF-43</small
+            >
+          </li>
+          <li>
+            <b>Atraso en texto y tono</b>Más de 20 días en error; menos, en aviso.<small
+              >WCAG 1.4.1</small
+            >
+          </li>
+          <li>
+            <b>Ramo con su ícono</b><code>RamoEtiqueta</code>, igual que en Pólizas.<small
+              >M1</small
+            >
+          </li>
+          <li><b>Leyenda</b>«¿Qué significa cada estado?» también aquí.<small>M2</small></li>
+          <li>
+            <b>Recordar en la fila</b>Envía el correo con monto y fecha.<small>HU-40 · S9</small>
+          </li>
+          <li>
+            <b>Recordar a todos</b>Botón de papel: la vista no tiene acción dorada que
+            compita.<small>HU-40 · RF-45</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 17 · Pólizas y ficha -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Pólizas y ficha del cliente</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 4">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/polizas</span><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-06-polizas-iconos-escritorio.jpg"
+              alt="Pólizas con el ícono de cada ramo"
+            />
+            <b class="m" style="--x: 8.3%; --y: 19%">1</b
+            ><b class="m" style="--x: 50.3%; --y: 41%">2</b
+            ><b class="m" style="--x: 81%; --y: 37.7%">3</b
+            ><b class="m" style="--x: 90.5%; --y: 37%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/clientes/1718273645</span
+            ><b class="etq diseno">Diseño · se implementa en S6</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-ficha-cliente.jpg" alt="Ficha del cliente" />
+            <b class="m" style="--x: 8.3%; --y: 12%">5</b
+            ><b class="m" style="--x: 53.3%; --y: 38.8%">6</b
+            ><b class="m" style="--x: 62%; --y: 59.5%">7</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Filtros por tarea</b>Cliente, aseguradora y estado; «Limpiar filtros».<small
+              >HU-14</small
+            >
+          </li>
+          <li>
+            <b>Ícono por ramo</b>Sale del código, no del nombre: renombrar un ramo no le quita el
+            suyo. El nombre es el dato accesible.<small>M1 · D1–D3</small>
+          </li>
+          <li>
+            <b>Estado de la póliza</b>Las no vigentes dicen «Solo lectura: la póliza ya no está
+            vigente».<small>M8 · ADR-018</small>
+          </li>
+          <li>
+            <b>Cuotas en la fila</b>Abre el plan de cuotas; la leyenda va al pie de la tabla.<small
+              >HU-35 · ADR-020</small
+            >
+          </li>
+          <li>
+            <b>El cliente en una pantalla</b>Nombre, contacto y «Registrar pago».<small
+              >HU-10 · RF-11</small
+            >
+          </li>
+          <li>
+            <b>Cada póliza con estado y saldo</b>«En mora» si hay una cuota vencida.<small
+              >HU-15 · RN-16</small
+            >
+          </li>
+          <li>
+            <b>Pagos con su resultado</b>El rechazo queda visible; los validados enlazan a su
+            recibo.<small>HU-19 · RF-24</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 18 · Recibos y verificación -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Recibos y verificación (personal)</h2>
+        <span class="folio"></span>
+      </header>
+      <div
+        class="cuerpo"
+        style="
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          grid-template-rows: auto 1fr;
+          gap: var(--e-md);
+        "
+      >
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos</span><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-07-recibos-escritorio.jpg" alt="Lista de recibos" />
+            <b class="m" style="--x: 28%; --y: 16.4%">1</b
+            ><b class="m" style="--x: 27%; --y: 38.7%">2</b
+            ><b class="m" style="--x: 38.6%; --y: 38.6%">3</b
+            ><b class="m" style="--x: 87%; --y: 38.8%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos/verificar/:codigo · los cinco resultados</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: var(--e-xs);
+              padding: var(--e-xs);
+              background: var(--lienzo);
+              position: relative;
+            "
+          >
+            <img
+              src="capturas/spa-10-verificacion-valido-resultado.jpg"
+              alt="Recibo auténtico"
+              style="width: 100%; display: block; border-radius: 6px"
+            />
+            <img
+              src="capturas/spa-10-verificacion-hash_inconsistente-resultado.jpg"
+              alt="El recibo no coincide"
+              style="width: 100%; display: block; border-radius: 6px"
+            />
+            <img
+              src="capturas/spa-10-verificacion-no_anclado-resultado.jpg"
+              alt="Recibo en proceso"
+              style="width: 100%; display: block; border-radius: 6px"
+            />
+            <img
+              src="capturas/spa-10-verificacion-anulado-resultado.jpg"
+              alt="Recibo anulado"
+              style="width: 100%; display: block; border-radius: 6px"
+            />
+            <img
+              src="capturas/spa-10-verificacion-no_encontrado-resultado.jpg"
+              alt="Recibo no encontrado"
+              style="width: 100%; display: block; border-radius: 6px"
+            />
+            <b class="m" style="--x: 4%; --y: 10%">5</b>
+          </div>
+        </figure>
+        <ol
+          class="notas"
+          style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(5, 1fr)"
+        >
+          <li>
+            <b>Leyenda de recibos</b>«En proceso» aparece una vez aunque dos estados la
+            compartan.<small>M2</small>
+          </li>
+          <li>
+            <b>Cada recibo con su estado</b>Del más reciente al más antiguo; la lista se actualiza
+            sola.<small>RF-29 · HU-24</small>
+          </li>
+          <li>
+            <b>Lo técnico, solo para el personal</b>La transacción abreviada vive en su
+            columna.<small>Regla 6</small>
+          </li>
+          <li>
+            <b>Ver detalle</b>Datos, QR y enlace al explorador (página 19). Vacío: «Sin recibos
+            todavía» e «Ir a Pagos».<small>HU-22 · M3</small>
+          </li>
+          <li>
+            <b>Resultado en palabras</b>Título, insignia y la frase de cada estado, sin «hash» ni
+            «blockchain»; el hash y la transacción quedan debajo, en su bloque.<small
+              >RF-34 · M8 · D4</small
+            >
+          </li>
+        </ol>
+        <p class="pie" style="grid-column: 1/-1; margin: 0">
+          Verificación: el primer resultado sale del recibo anclado; los otros cuatro usan
+          respuestas del API simuladas en la captura, porque el seed solo produce recibos
+          auténticos. Para el CLIENTE, la verificación llega en el S5 (HU-28, ADR-015).
+        </p>
+      </div>
+    </section>
+
+    <!-- 19 · Recibo -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Recibo: documento y registro en la red</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 4">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos/:id</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-recibo-detalle.jpg" alt="Detalle del recibo" />
+            <b class="m" style="--x: 26.5%; --y: 3.8%">1</b
+            ><b class="m" style="--x: 23%; --y: 16.7%">2</b
+            ><b class="m" style="--x: 32%; --y: 66.6%">3</b
+            ><b class="m" style="--x: 73.5%; --y: 30%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos/OAS-2026-000212</span
+            ><b class="etq diseno">Diseño · se implementa en S5 y S6</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-recibo-anclaje.jpg"
+              alt="Recibo como documento con la línea de tiempo del anclaje"
+            />
+            <b class="m" style="--x: 8.3%; --y: 12%">5</b
+            ><b class="m" style="--x: 61%; --y: 20.6%">6</b
+            ><b class="m" style="--x: 61%; --y: 72.4%">7</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Migas de pan</b>«Recibos / código»; el estado a la derecha del título.<small
+              >DESIGN.md · Navegación</small
+            >
+          </li>
+          <li>
+            <b>Datos del recibo</b>Póliza, pago, fechas, transacción, bloque y gas: el detalle
+            técnico es del personal.<small>HU-22 · HU-23</small>
+          </li>
+          <li>
+            <b>Al explorador</b>Enlace a la transacción en una pestaña nueva.<small>HU-24</small>
+          </li>
+          <li>
+            <b>QR que exige sesión</b>Lleva a <code>/recibos/verificar/:codigo</code>; «Abrir
+            verificación» es la acción dorada.<small>HU-25 · HU-28</small>
+          </li>
+          <li>
+            <b>El recibo como documento</b>Isologo, código y monto arriba; datos del pago
+            debajo.<small>HU-25 · S5</small>
+          </li>
+          <li>
+            <b>El anclaje como línea de tiempo</b>Creado, enviado y anclado con fecha y bloque, con
+            los puntos de <code>SeguimientoPago</code>.<small>HU-24 · S5</small>
+          </li>
+          <li>
+            <b>Enviar al cliente</b>El correo lleva el PDF y el código para verificarlo.<small
+              >HU-39 · S6</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 20 · Administración -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración: quién es y qué hace</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 0.9fr 1.25fr 0.95fr">
+        <div
+          class="noche"
+          style="display: flex; flex-direction: column; gap: var(--e-sm); min-height: 100%"
+        >
+          <h3 style="font-size: 16pt; line-height: 1.2">
+            Dos administradores: el dueño del negocio y el administrador técnico del sistema.
+          </h3>
+          <p>
+            Hacen todo lo del operador y, además, cuidan lo que mantiene vivo el sistema: quién
+            entra, que cada recibo llegue a la red, qué se cambió y cuánto se debe.
+          </p>
+          <p class="muted">
+            El backlog v1.5 nombra solo al gerente como ADMIN; la segunda cuenta, la del
+            administrador técnico, está registrada en
+            <code style="background: var(--noche-alta); color: var(--luna)"
+              >apps/web/PRODUCT.md</code
+            >.
+          </p>
+        </div>
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Qué ve cada rol y cuándo llega</h3>
+          <table>
+            <tr>
+              <th>Función</th>
+              <th>Operador</th>
+              <th>Admin.</th>
+              <th>Historia · sprint</th>
+            </tr>
+            <tr>
+              <td>Registrar, validar y rechazar pagos</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>HU-16 · HU-18 · HU-19 · S4</td>
+            </tr>
+            <tr>
+              <td>Cargar la notificación de la aseguradora</td>
+              <td>✓</td>
+              <td>✓</td>
+              <td>HU-50 · S7</td>
+            </tr>
+            <tr>
+              <td>Salud del anclaje (saldo de la cuenta)</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-42 · S4</td>
+            </tr>
+            <tr>
+              <td>Usuarios del personal</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-04 · S2</td>
+            </tr>
+            <tr>
+              <td>Bitácora de auditoría</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-45 · S1</td>
+            </tr>
+            <tr>
+              <td>Aseguradoras · catálogos</td>
+              <td>Consulta</td>
+              <td>✓</td>
+              <td>HU-11 · S2 · HU-46 · S9</td>
+            </tr>
+            <tr>
+              <td>Reintentar recibos</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-26 · S5</td>
+            </tr>
+            <tr>
+              <td>Cuentas de clientes · anular recibos</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-05 · HU-27 · S6</td>
+            </tr>
+            <tr>
+              <td>Indicadores · conciliación</td>
+              <td>— · ✓</td>
+              <td>✓</td>
+              <td>HU-30 · HU-43 · S8</td>
+            </tr>
+            <tr>
+              <td>Segundo factor al ingresar</td>
+              <td>—</td>
+              <td>Obligatorio</td>
+              <td>HU-52 · S8</td>
+            </tr>
+            <tr>
+              <td>Cartera vencida</td>
+              <td>—</td>
+              <td>✓</td>
+              <td>HU-44 · S9</td>
+            </tr>
+          </table>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta">
+            <h3>Dónde vive cada función</h3>
+            <ul class="lista">
+              <li>
+                <b>Hoy:</b> el riel del ADMIN suma «Usuarios» y «Bitácora»; el inicio suma la salud
+                del anclaje.
+              </li>
+              <li>
+                <b>Diseño:</b> «Admin.» en el riel abre un hub de cinco pestañas (Usuarios, Anclaje
+                de recibos, Bitácora, Aseguradoras y catálogos, Seguridad); «Reportes» para los dos
+                roles.
+              </li>
+            </ul>
+          </div>
+          <div class="tarjeta">
+            <h3>Mismas reglas</h3>
+            <p>
+              Lo que no corresponde al rol se oculta en lugar de deshabilitarse. Lo irreversible
+              (anular, desactivar) usa rojo y pide confirmación o motivo.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 21 · Segundo factor -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · ingreso con segundo factor</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec/login</span
+            ><b class="etq diseno">Diseño · se implementa en S8</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-segundo-factor.jpg" alt="Verificación en dos pasos" />
+            <b class="m" style="--x: 55.5%; --y: 37%">1</b
+            ><b class="m" style="--x: 55.5%; --y: 57%">2</b
+            ><b class="m" style="--x: 55.5%; --y: 75.3%">3</b
+            ><b class="m" style="--x: 55.5%; --y: 82.8%">4</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Segundo paso solo para el administrador</b>Tras la contraseña, el código de su
+            aplicación autenticadora.<small>HU-52 · ADR-027</small>
+          </li>
+          <li>
+            <b>Campo de un solo uso</b>Teclado numérico, <code>autocomplete="one-time-code"</code> y
+            cifras grandes.<small>WCAG 1.3.5 · 2.5.8</small>
+          </li>
+          <li>
+            <b>Sin quedarse fuera</b>Los códigos de recuperación sirven una vez cada uno.<small
+              >HU-52</small
+            >
+          </li>
+          <li>
+            <b>Error que dice qué hacer</b>No es válido o venció: escribir el que aparece ahora. El
+            límite de 5 intentos también aplica.<small>Nielsen 9 · WCAG 3.3.3</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 22 · Admin inicio -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · inicio</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 3">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/spa-09-inicio-admin-escritorio.jpg"
+              alt="Inicio del administrador con la salud del anclaje"
+            />
+            <b class="m" style="--x: 21.5%; --y: 37%">1</b
+            ><b class="m" style="--x: 20.3%; --y: 49.8%">2</b
+            ><b class="m" style="--x: 6.4%; --y: 68%">3</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>srpp.oasisseguros.ec</span
+            ><b class="etq diseno">Diseño · se implementa en S8</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-admin-inicio.jpg"
+              alt="Inicio del administrador con indicadores"
+            />
+            <b class="m" style="--x: 31.25%; --y: 17%">4</b
+            ><b class="m" style="--x: 75.9%; --y: 17%">5</b
+            ><b class="m" style="--x: 28.5%; --y: 89.7%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Salud del anclaje</b>Saldo de la cuenta operadora en cifra dorada sobre la noche,
+            barra contra el umbral y hora de la lectura; solo el ADMIN la ve.<small
+              >HU-42 · RF-47</small
+            >
+          </li>
+          <li>
+            <b>Umbral y aviso</b>Bajo el umbral, la barra pasa a rojo claro y aparece el aviso con
+            icono.<small>HU-42 · WCAG 1.4.1</small>
+          </li>
+          <li>
+            <b>Usuarios y Bitácora en el riel</b>Solo para el ADMIN; se ocultan al operador.<small
+              >HU-03 · HU-04 · HU-45</small
+            >
+          </li>
+          <li>
+            <b>Indicadores del panel</b>Por validar, validados del mes, recibos verificables y con
+            atención; cada uno abre su lista.<small>HU-30 · RF-35</small>
+          </li>
+          <li>
+            <b>Lo que requiere al administrador</b>Recibos fallidos con enlace directo al
+            anclaje.<small>HU-26</small>
+          </li>
+          <li>
+            <b>Saldo en recibos restantes</b>Anclados del mes, en proceso y con atención junto al
+            saldo.<small>HU-30 · S8 D26</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 23 · Usuarios -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · usuarios y cuentas</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 4">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/usuarios</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-usuarios.jpg" alt="Usuarios del personal" />
+            <b class="m" style="--x: 84%; --y: 7.4%">1</b
+            ><b class="m" style="--x: 64.9%; --y: 42.5%">2</b
+            ><b class="m" style="--x: 73.5%; --y: 37.3%">3</b
+            ><b class="m" style="--x: 89.5%; --y: 28.7%">4</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/admin/usuarios</span
+            ><b class="etq diseno">Diseño · se implementa en S6 y S8</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-admin-usuarios.jpg"
+              alt="Hub de administración, pestaña Usuarios"
+            />
+            <b class="m" style="--x: 8.3%; --y: 16.2%">5</b
+            ><b class="m" style="--x: 60.3%; --y: 41%">6</b
+            ><b class="m" style="--x: 82.6%; --y: 50.7%">7</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li><b>Nuevo usuario</b>Única acción dorada de la vista.<small>HU-04</small></li>
+          <li>
+            <b>Rol como etiqueta</b>«Administrador» en oro sobre la noche; no es un estado y no
+            lleva icono.<small>HU-03 · DESIGN.md</small>
+          </li>
+          <li>
+            <b>Estado de la cuenta</b>«Activa» o «Desactivada», con icono y la frase de la
+            leyenda.<small>M2 · WCAG 1.4.1</small>
+          </li>
+          <li>
+            <b>Acciones en un menú</b>Restablecer, cambiar el rol o desactivar cierran las sesiones
+            del usuario.<small>HU-04 · ADR-016</small>
+          </li>
+          <li>
+            <b>Hub de administración</b>Cinco pestañas; la de anclaje suma sus alertas en el
+            texto.<small>DESIGN.md · Administración</small>
+          </li>
+          <li>
+            <b>Segundo factor por usuario</b>Activo o por activar, solo para administradores.<small
+              >HU-52 · S8</small
+            >
+          </li>
+          <li class="mas">
+            <b>Cuentas de clientes</b>Una por cliente, con contraseña temporal que se cambia en el
+            primer ingreso (debajo de Personal).<small>HU-05 · S6</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 24 · Crear usuario -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · crear un usuario</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 3">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/usuarios · Nuevo usuario</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-usuario-nuevo.jpg" alt="Diálogo Nuevo usuario" />
+            <b class="m" style="--x: 30.5%; --y: 29.6%">1</b
+            ><b class="m" style="--x: 30.5%; --y: 42%">2</b
+            ><b class="m" style="--x: 30.5%; --y: 64.6%">3</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/admin/usuarios</span
+            ><b class="etq diseno">Diseño · se implementa en S8</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-admin-usuario-nuevo.jpg"
+              alt="Formulario de usuario en el hub"
+            />
+            <b class="m" style="--x: 56.9%; --y: 30.3%">4</b
+            ><b class="m" style="--x: 10.3%; --y: 47.2%">5</b
+            ><b class="m" style="--x: 29.5%; --y: 25.6%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Contraseña temporal una sola vez</b>El diálogo lo dice antes de crear; se muestra una
+            vez al terminar.<small>HU-04 · Nielsen 1</small>
+          </li>
+          <li>
+            <b>Correo único</b>Si ya existe una cuenta, el error lo dice bajo el campo.<small
+              >HU-04 · WCAG 3.3.1</small
+            >
+          </li>
+          <li>
+            <b>Rol</b>Operador por defecto; «Crear usuario» es la acción dorada.<small
+              >HU-03 · HU-04</small
+            >
+          </li>
+          <li>
+            <b>Rol y segundo factor</b>Un administrador nuevo activa el segundo factor en su primer
+            ingreso; la ayuda lo dice junto al rol.<small>HU-52 · M4</small>
+          </li>
+          <li>
+            <b>Contraseña por correo</b>Se cambia en el primer ingreso por una de 12 caracteres o
+            más.<small>HU-52 · HT-12</small>
+          </li>
+          <li>
+            <b>En la misma pestaña</b>El formulario se abre sobre la lista, sin perderla de
+            vista.<small>Nielsen 6</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 25 · Anclaje -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · anclaje de recibos</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/admin/anclaje</span
+            ><b class="etq diseno">Diseño · se implementa en S5</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-admin-anclaje.jpg" alt="Anclaje de recibos" />
+            <b class="m" style="--x: 28.5%; --y: 25%">1</b
+            ><b class="m" style="--x: 23%; --y: 66%">2</b
+            ><b class="m" style="--x: 91%; --y: 30.6%">3</b
+            ><b class="m" style="--x: 64%; --y: 47.3%">4</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Saldo de la cuenta de anclaje</b>Cifra dorada sobre la noche y barra contra el
+            umbral; aviso si baja. Hoy se ve en el inicio del ADMIN.<small>HU-42 · S4</small>
+          </li>
+          <li>
+            <b>Umbral visible</b>Hoy se fija en el entorno del worker
+            (<code>UMBRAL_SALDO_OPERADORA_POL</code>); el diseño permite editarlo.<small
+              >HU-42</small
+            >
+          </li>
+          <li>
+            <b>Reintentar sin técnicos</b>Devuelve el recibo FALLIDO a la cola; única acción
+            dorada.<small>HU-26 · S5</small>
+          </li>
+          <li><b>En proceso</b>Se consultan hasta quedar verificables.<small>HU-24 · S5</small></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 26 · Recibo fallido -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Recibo con atención: reintentar el anclaje</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos/OAS-2026-000209</span
+            ><b class="etq diseno">Diseño · se implementa en S5</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-recibo-fallido.jpg" alt="Recibo con anclaje fallido" />
+            <b class="m" style="--x: 73.8%; --y: 27.4%">1</b
+            ><b class="m" style="--x: 74.5%; --y: 59%">2</b
+            ><b class="m" style="--x: 28%; --y: 64%">3</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>El fallo en la línea de tiempo</b>Envío fallido tras 5 intentos con espera creciente;
+            el anclaje queda pendiente.<small>HU-23 · HU-24</small>
+          </li>
+          <li>
+            <b>Reintentar</b>Solo el administrador y solo recibos FALLIDOS, con confirmación; queda
+            quién lo hizo.<small>HU-26 · S5 D10</small>
+          </li>
+          <li>
+            <b>Lo que ve el cliente</b>«En proceso»: el estado fallido nunca se muestra fuera del
+            personal.<small>RN-20 · Nielsen 2</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 27 · Anular -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Anular un recibo</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/recibos/OAS-2026-000212</span
+            ><b class="etq diseno">Diseño · se implementa en S6</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-recibo-anular.jpg" alt="Anulación de un recibo" />
+            <b class="m" style="--x: 79%; --y: 57%">1</b
+            ><b class="m" style="--x: 68%; --y: 69.5%">2</b
+            ><b class="m" style="--x: 90.8%; --y: 87.5%">3</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Solo recibos anclados</b>La acción aparece solo para el administrador y solo si el
+            recibo es verificable.<small>HU-27</small>
+          </li>
+          <li>
+            <b>Motivo obligatorio</b>Se registra también con <code>anular()</code> en el
+            contrato.<small>HU-27 · RF-32</small>
+          </li>
+          <li>
+            <b>Rojo sólido: no se deshace</b>El recibo no se borra; queda «Anulado» y la
+            verificación lo muestra así. El texto dice la consecuencia.<small
+              >RN-05 · RN-09 · M8</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 28 · Bitácora -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · bitácora de auditoría</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/bitacora</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-bitacora.jpg" alt="Bitácora de auditoría" />
+            <b class="m" style="--x: 15%; --y: 13.8%">1</b
+            ><b class="m" style="--x: 33%; --y: 13.8%">2</b
+            ><b class="m" style="--x: 50%; --y: 13.8%">3</b
+            ><b class="m" style="--x: 62.5%; --y: 39.8%">4</b
+            ><b class="m" style="--x: 92%; --y: 39.8%">5</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Filtrar por usuario</b>Personal, clientes y tareas del sistema.<small>HU-45</small>
+          </li>
+          <li>
+            <b>Filtrar por acción</b>Validar, rechazar, anular, iniciar sesión y más.<small
+              >HU-45</small
+            >
+          </li>
+          <li><b>Rango de fechas</b>Desde y hasta, con «Limpiar filtros».<small>HU-45</small></li>
+          <li>
+            <b>Cada registro completo</b>Fecha y hora de Ecuador, usuario, acción en palabras,
+            entidad y registro.<small>HU-45 · RNF-27</small>
+          </li>
+          <li>
+            <b>IP de origen</b>La real detrás de Caddy (<code>trust proxy</code>).<small
+              >RNF-27</small
+            >
+          </li>
+          <li class="mas">
+            <b>Solo lectura</b>Nada se modifica ni elimina: la tabla es de solo inserción. En el
+            diseño pasa a una pestaña del hub.<small>RN-17 · ADR-013</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 29 · Aseguradoras y catálogos -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · aseguradoras y catálogos</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo doble" style="--c: 3">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/aseguradoras</span
+            ><b class="etq actual">Interfaz actual · S4</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/spa-aseguradoras.jpg" alt="Aseguradoras" />
+            <b class="m" style="--x: 36%; --y: 15.8%">1</b
+            ><b class="m" style="--x: 44.7%; --y: 37.3%">2</b
+            ><b class="m" style="--x: 81.8%; --y: 7.4%">3</b>
+          </div>
+        </figure>
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/admin/catalogos</span
+            ><b class="etq diseno">Diseño · se implementa en S9</b>
+          </div>
+          <div class="vista">
+            <img
+              src="capturas/proto-admin-catalogos.jpg"
+              alt="Aseguradoras y catálogos con interruptores"
+            />
+            <b class="m" style="--x: 52.5%; --y: 25.1%">4</b
+            ><b class="m" style="--x: 61.5%; --y: 33.8%">5</b
+            ><b class="m" style="--x: 54%; --y: 83%">6</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Buscar por nombre o RUC</b>Las aseguradoras son datos, no usuarias.<small
+              >HU-11</small
+            >
+          </li>
+          <li>
+            <b>RUC de 13 dígitos</b>Validado (RN-11); cifras tabulares.<small
+              >HU-11 · ADR-017</small
+            >
+          </li>
+          <li><b>Nueva aseguradora</b>Única acción dorada.<small>HU-11</small></li>
+          <li>
+            <b>Ramos con su ícono</b>El mismo mapa por código de <code>RamoEtiqueta</code>.<small
+              >M1</small
+            >
+          </li>
+          <li>
+            <b>Interruptor accesible</b><code>role="switch"</code> con su estado y la regla escrita
+            en la fila.<small>WCAG 4.1.2</small>
+          </li>
+          <li>
+            <b>Desactivar, nunca borrar</b>Lo que está en uso deja de aparecer en los
+            formularios.<small>HU-46 · RN-09</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 30 · Seguridad -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Administración · seguridad de la cuenta</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/admin/seguridad</span
+            ><b class="etq diseno">Diseño · se implementa en S8</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-admin-seguridad.jpg" alt="Seguridad de la cuenta" />
+            <b class="m" style="--x: 10.3%; --y: 38.4%">1</b
+            ><b class="m" style="--x: 58.3%; --y: 25.4%">2</b
+            ><b class="m" style="--x: 80%; --y: 25.4%">3</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Códigos de recuperación</b>Se muestran una sola vez, con aviso para guardarlos.<small
+              >HU-52</small
+            >
+          </li>
+          <li>
+            <b>Política de contraseñas</b>12 caracteres o más, fortaleza 3 o más y correo ante cada
+            cambio.<small>HU-52</small>
+          </li>
+          <li>
+            <b>Sesiones</b>Inactividad de 30 min con aviso de un minuto (ya activo desde S2) y
+            cierre de las otras sesiones.<small>HU-32 · ADR-016</small>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 31 · Conciliación -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Reportes · conciliación por aseguradora</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/reportes</span
+            ><b class="etq diseno">Diseño · se implementa en S8</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-reporte-conciliacion.jpg" alt="Reporte de conciliación" />
+            <b class="m" style="--x: 17.3%; --y: 24.7%">1</b
+            ><b class="m" style="--x: 10.3%; --y: 40.7%">2</b
+            ><b class="m" style="--x: 37.8%; --y: 48.7%">3</b
+            ><b class="m" style="--x: 20%; --y: 97.2%">4</b
+            ><b class="m" style="--x: 71.5%; --y: 8.5%">5</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Aseguradora y periodo</b>Filtros que recalculan al instante.<small>HU-43</small>
+          </li>
+          <li>
+            <b>Total por aseguradora</b>Lo que se concilia con cada compañía, sobre la tabla.<small
+              >HU-43</small
+            >
+          </li>
+          <li><b>Ramo con su ícono</b>Igual que en Pólizas.<small>M1</small></li>
+          <li>
+            <b>Totales al pie</b>Cantidad y monto; los recibos anulados no entran.<small
+              >HU-43 · RN-05</small
+            >
+          </li>
+          <li>
+            <b>Exportar</b>CSV y PDF con los filtros aplicados.<small
+              >HU-43 · HU-21 · ADR-028</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 32 · Cartera vencida -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Reportes · cartera vencida</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo pantalla">
+        <figure class="marco">
+          <div class="barra">
+            <i></i><i></i><i></i><span>/reportes/cartera</span
+            ><b class="etq diseno">Diseño · se implementa en S9</b>
+          </div>
+          <div class="vista">
+            <img src="capturas/proto-reporte-cartera.jpg" alt="Reporte de cartera vencida" />
+            <b class="m" style="--x: 22.7%; --y: 24.7%">1</b
+            ><b class="m" style="--x: 73.8%; --y: 46.6%">2</b
+            ><b class="m" style="--x: 20.2%; --y: 78.8%">3</b>
+          </div>
+        </figure>
+        <ol class="notas">
+          <li>
+            <b>Por aseguradora</b>Valor vencido, cuotas y atraso máximo de cada compañía.<small
+              >HU-44</small
+            >
+          </li>
+          <li>
+            <b>Por cliente</b>Ordenada por días de atraso, en texto, icono y tono.<small
+              >HU-44 · WCAG 1.4.1</small
+            >
+          </li>
+          <li><b>Total vencido</b>Al pie; se exporta a CSV y PDF.<small>HU-44</small></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 33 · Documentos -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Documentos: recibo en PDF y correo</h2>
+        <span class="folio"></span>
+      </header>
+      <div
+        class="cuerpo"
+        style="
+          display: grid;
+          grid-template-columns: 1.15fr 1fr 64mm;
+          gap: var(--e-lg);
+          align-items: start;
+        "
+      >
+        <div class="recibo">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <img src="../prototipo/logo.png" alt="" style="width: 18mm" /><span
+              style="text-align: right"
+              ><span class="fino">Recibo de pago de prima</span><br /><b
+                style="font: 700 12pt var(--display)"
+                >OAS-2026-000187</b
+              ></span
+            >
+          </div>
+          <div class="dos" style="gap: var(--e-lg)">
+            <div>
+              <span class="kicker">Asegurado</span>
+              <dl>
+                <dt>Nombre</dt>
+                <dd>María Fernanda Guamán</dd>
+                <dt>Cédula</dt>
+                <dd>17•••••532</dd>
+              </dl>
+            </div>
+            <div>
+              <span class="kicker">Póliza</span>
+              <dl>
+                <dt>Número</dt>
+                <dd>VEH-2025-01127</dd>
+                <dt>Ramo</dt>
+                <dd>
+                  <span class="ramo" style="margin: 0"
+                    ><svg class="i"><use href="#i-car" /></svg>Vehículos</span
+                  >
+                </dd>
+                <dt>Aseguradora</dt>
+                <dd>Seguros Unidos</dd>
+              </dl>
+            </div>
+          </div>
+          <table>
+            <tr>
+              <th>Concepto</th>
+              <th>Fecha de pago</th>
+              <th style="text-align: right">Valor</th>
+            </tr>
+            <tr>
+              <td>Prima de vehículos, cuota 6</td>
+              <td>28/08/2026</td>
+              <td style="text-align: right">$86,40</td>
+            </tr>
+          </table>
+          <dl>
+            <dt>Forma de pago</dt>
+            <dd>Transferencia · Banco Pichincha</dd>
+            <dt>Estado</dt>
+            <dd>
+              <span class="ins exito"
+                ><svg class="i"><use href="#i-shield-check" /></svg>Verificable</span
+              >
+            </dd>
+          </dl>
+          <div
+            style="
+              display: flex;
+              gap: var(--e-md);
+              align-items: center;
+              background: var(--exito-f);
+              border-radius: 8px;
+              padding: var(--e-sm);
+            "
+          >
+            <svg class="qr" viewBox="-1 -1 23 23" aria-hidden="true">
+              <rect x="-1" y="-1" width="23" height="23" fill="#fff" />
+              <rect x="0" y="0" width="1" height="1" />
+              <rect x="0" y="1" width="1" height="1" />
+              <rect x="0" y="2" width="1" height="1" />
+              <rect x="0" y="3" width="1" height="1" />
+              <rect x="0" y="4" width="1" height="1" />
+              <rect x="0" y="5" width="1" height="1" />
+              <rect x="0" y="6" width="1" height="1" />
+              <rect x="1" y="0" width="1" height="1" />
+              <rect x="1" y="6" width="1" height="1" />
+              <rect x="2" y="0" width="1" height="1" />
+              <rect x="2" y="2" width="1" height="1" />
+              <rect x="2" y="3" width="1" height="1" />
+              <rect x="2" y="4" width="1" height="1" />
+              <rect x="2" y="6" width="1" height="1" />
+              <rect x="3" y="0" width="1" height="1" />
+              <rect x="3" y="2" width="1" height="1" />
+              <rect x="3" y="3" width="1" height="1" />
+              <rect x="3" y="4" width="1" height="1" />
+              <rect x="3" y="6" width="1" height="1" />
+              <rect x="4" y="0" width="1" height="1" />
+              <rect x="4" y="2" width="1" height="1" />
+              <rect x="4" y="3" width="1" height="1" />
+              <rect x="4" y="4" width="1" height="1" />
+              <rect x="4" y="6" width="1" height="1" />
+              <rect x="5" y="0" width="1" height="1" />
+              <rect x="5" y="6" width="1" height="1" />
+              <rect x="6" y="0" width="1" height="1" />
+              <rect x="6" y="1" width="1" height="1" />
+              <rect x="6" y="2" width="1" height="1" />
+              <rect x="6" y="3" width="1" height="1" />
+              <rect x="6" y="4" width="1" height="1" />
+              <rect x="6" y="5" width="1" height="1" />
+              <rect x="6" y="6" width="1" height="1" />
+              <rect x="14" y="0" width="1" height="1" />
+              <rect x="14" y="1" width="1" height="1" />
+              <rect x="14" y="2" width="1" height="1" />
+              <rect x="14" y="3" width="1" height="1" />
+              <rect x="14" y="4" width="1" height="1" />
+              <rect x="14" y="5" width="1" height="1" />
+              <rect x="14" y="6" width="1" height="1" />
+              <rect x="15" y="0" width="1" height="1" />
+              <rect x="15" y="6" width="1" height="1" />
+              <rect x="16" y="0" width="1" height="1" />
+              <rect x="16" y="2" width="1" height="1" />
+              <rect x="16" y="3" width="1" height="1" />
+              <rect x="16" y="4" width="1" height="1" />
+              <rect x="16" y="6" width="1" height="1" />
+              <rect x="17" y="0" width="1" height="1" />
+              <rect x="17" y="2" width="1" height="1" />
+              <rect x="17" y="3" width="1" height="1" />
+              <rect x="17" y="4" width="1" height="1" />
+              <rect x="17" y="6" width="1" height="1" />
+              <rect x="18" y="0" width="1" height="1" />
+              <rect x="18" y="2" width="1" height="1" />
+              <rect x="18" y="3" width="1" height="1" />
+              <rect x="18" y="4" width="1" height="1" />
+              <rect x="18" y="6" width="1" height="1" />
+              <rect x="19" y="0" width="1" height="1" />
+              <rect x="19" y="6" width="1" height="1" />
+              <rect x="20" y="0" width="1" height="1" />
+              <rect x="20" y="1" width="1" height="1" />
+              <rect x="20" y="2" width="1" height="1" />
+              <rect x="20" y="3" width="1" height="1" />
+              <rect x="20" y="4" width="1" height="1" />
+              <rect x="20" y="5" width="1" height="1" />
+              <rect x="20" y="6" width="1" height="1" />
+              <rect x="0" y="14" width="1" height="1" />
+              <rect x="0" y="15" width="1" height="1" />
+              <rect x="0" y="16" width="1" height="1" />
+              <rect x="0" y="17" width="1" height="1" />
+              <rect x="0" y="18" width="1" height="1" />
+              <rect x="0" y="19" width="1" height="1" />
+              <rect x="0" y="20" width="1" height="1" />
+              <rect x="1" y="14" width="1" height="1" />
+              <rect x="1" y="20" width="1" height="1" />
+              <rect x="2" y="14" width="1" height="1" />
+              <rect x="2" y="16" width="1" height="1" />
+              <rect x="2" y="17" width="1" height="1" />
+              <rect x="2" y="18" width="1" height="1" />
+              <rect x="2" y="20" width="1" height="1" />
+              <rect x="3" y="14" width="1" height="1" />
+              <rect x="3" y="16" width="1" height="1" />
+              <rect x="3" y="17" width="1" height="1" />
+              <rect x="3" y="18" width="1" height="1" />
+              <rect x="3" y="20" width="1" height="1" />
+              <rect x="4" y="14" width="1" height="1" />
+              <rect x="4" y="16" width="1" height="1" />
+              <rect x="4" y="17" width="1" height="1" />
+              <rect x="4" y="18" width="1" height="1" />
+              <rect x="4" y="20" width="1" height="1" />
+              <rect x="5" y="14" width="1" height="1" />
+              <rect x="5" y="20" width="1" height="1" />
+              <rect x="6" y="14" width="1" height="1" />
+              <rect x="6" y="15" width="1" height="1" />
+              <rect x="6" y="16" width="1" height="1" />
+              <rect x="6" y="17" width="1" height="1" />
+              <rect x="6" y="18" width="1" height="1" />
+              <rect x="6" y="19" width="1" height="1" />
+              <rect x="6" y="20" width="1" height="1" />
+              <rect x="0" y="8" width="1" height="1" />
+              <rect x="0" y="9" width="1" height="1" />
+              <rect x="0" y="12" width="1" height="1" />
+              <rect x="1" y="9" width="1" height="1" />
+              <rect x="2" y="8" width="1" height="1" />
+              <rect x="2" y="9" width="1" height="1" />
+              <rect x="2" y="10" width="1" height="1" />
+              <rect x="2" y="11" width="1" height="1" />
+              <rect x="2" y="12" width="1" height="1" />
+              <rect x="3" y="11" width="1" height="1" />
+              <rect x="4" y="11" width="1" height="1" />
+              <rect x="5" y="8" width="1" height="1" />
+              <rect x="6" y="11" width="1" height="1" />
+              <rect x="7" y="8" width="1" height="1" />
+              <rect x="7" y="9" width="1" height="1" />
+              <rect x="7" y="10" width="1" height="1" />
+              <rect x="8" y="1" width="1" height="1" />
+              <rect x="8" y="2" width="1" height="1" />
+              <rect x="8" y="3" width="1" height="1" />
+              <rect x="8" y="7" width="1" height="1" />
+              <rect x="8" y="9" width="1" height="1" />
+              <rect x="8" y="13" width="1" height="1" />
+              <rect x="8" y="14" width="1" height="1" />
+              <rect x="8" y="17" width="1" height="1" />
+              <rect x="8" y="20" width="1" height="1" />
+              <rect x="9" y="0" width="1" height="1" />
+              <rect x="9" y="1" width="1" height="1" />
+              <rect x="9" y="2" width="1" height="1" />
+              <rect x="9" y="4" width="1" height="1" />
+              <rect x="9" y="6" width="1" height="1" />
+              <rect x="9" y="7" width="1" height="1" />
+              <rect x="9" y="8" width="1" height="1" />
+              <rect x="9" y="9" width="1" height="1" />
+              <rect x="9" y="10" width="1" height="1" />
+              <rect x="9" y="11" width="1" height="1" />
+              <rect x="9" y="13" width="1" height="1" />
+              <rect x="9" y="15" width="1" height="1" />
+              <rect x="9" y="18" width="1" height="1" />
+              <rect x="9" y="20" width="1" height="1" />
+              <rect x="10" y="0" width="1" height="1" />
+              <rect x="10" y="2" width="1" height="1" />
+              <rect x="10" y="5" width="1" height="1" />
+              <rect x="10" y="7" width="1" height="1" />
+              <rect x="10" y="8" width="1" height="1" />
+              <rect x="10" y="9" width="1" height="1" />
+              <rect x="10" y="12" width="1" height="1" />
+              <rect x="10" y="13" width="1" height="1" />
+              <rect x="10" y="14" width="1" height="1" />
+              <rect x="10" y="17" width="1" height="1" />
+              <rect x="10" y="18" width="1" height="1" />
+              <rect x="10" y="20" width="1" height="1" />
+              <rect x="11" y="2" width="1" height="1" />
+              <rect x="11" y="4" width="1" height="1" />
+              <rect x="11" y="5" width="1" height="1" />
+              <rect x="11" y="7" width="1" height="1" />
+              <rect x="11" y="10" width="1" height="1" />
+              <rect x="11" y="11" width="1" height="1" />
+              <rect x="11" y="15" width="1" height="1" />
+              <rect x="11" y="16" width="1" height="1" />
+              <rect x="11" y="20" width="1" height="1" />
+              <rect x="12" y="2" width="1" height="1" />
+              <rect x="12" y="3" width="1" height="1" />
+              <rect x="12" y="4" width="1" height="1" />
+              <rect x="12" y="5" width="1" height="1" />
+              <rect x="12" y="6" width="1" height="1" />
+              <rect x="12" y="10" width="1" height="1" />
+              <rect x="12" y="13" width="1" height="1" />
+              <rect x="12" y="14" width="1" height="1" />
+              <rect x="12" y="15" width="1" height="1" />
+              <rect x="12" y="16" width="1" height="1" />
+              <rect x="12" y="19" width="1" height="1" />
+              <rect x="12" y="20" width="1" height="1" />
+              <rect x="13" y="10" width="1" height="1" />
+              <rect x="13" y="13" width="1" height="1" />
+              <rect x="13" y="14" width="1" height="1" />
+              <rect x="13" y="16" width="1" height="1" />
+              <rect x="13" y="19" width="1" height="1" />
+              <rect x="13" y="20" width="1" height="1" />
+              <rect x="14" y="8" width="1" height="1" />
+              <rect x="14" y="10" width="1" height="1" />
+              <rect x="14" y="15" width="1" height="1" />
+              <rect x="14" y="18" width="1" height="1" />
+              <rect x="14" y="20" width="1" height="1" />
+              <rect x="15" y="8" width="1" height="1" />
+              <rect x="15" y="10" width="1" height="1" />
+              <rect x="15" y="12" width="1" height="1" />
+              <rect x="15" y="14" width="1" height="1" />
+              <rect x="15" y="16" width="1" height="1" />
+              <rect x="15" y="18" width="1" height="1" />
+              <rect x="15" y="19" width="1" height="1" />
+              <rect x="15" y="20" width="1" height="1" />
+              <rect x="16" y="10" width="1" height="1" />
+              <rect x="16" y="14" width="1" height="1" />
+              <rect x="16" y="15" width="1" height="1" />
+              <rect x="16" y="19" width="1" height="1" />
+              <rect x="17" y="8" width="1" height="1" />
+              <rect x="17" y="9" width="1" height="1" />
+              <rect x="17" y="12" width="1" height="1" />
+              <rect x="17" y="13" width="1" height="1" />
+              <rect x="17" y="14" width="1" height="1" />
+              <rect x="17" y="17" width="1" height="1" />
+              <rect x="17" y="19" width="1" height="1" />
+              <rect x="17" y="20" width="1" height="1" />
+              <rect x="18" y="8" width="1" height="1" />
+              <rect x="18" y="9" width="1" height="1" />
+              <rect x="18" y="10" width="1" height="1" />
+              <rect x="18" y="13" width="1" height="1" />
+              <rect x="18" y="14" width="1" height="1" />
+              <rect x="18" y="15" width="1" height="1" />
+              <rect x="18" y="19" width="1" height="1" />
+              <rect x="18" y="20" width="1" height="1" />
+              <rect x="19" y="8" width="1" height="1" />
+              <rect x="19" y="9" width="1" height="1" />
+              <rect x="19" y="10" width="1" height="1" />
+              <rect x="19" y="13" width="1" height="1" />
+              <rect x="19" y="14" width="1" height="1" />
+              <rect x="19" y="15" width="1" height="1" />
+              <rect x="19" y="16" width="1" height="1" />
+              <rect x="19" y="17" width="1" height="1" />
+              <rect x="19" y="18" width="1" height="1" />
+              <rect x="19" y="19" width="1" height="1" />
+              <rect x="20" y="8" width="1" height="1" />
+              <rect x="20" y="11" width="1" height="1" />
+              <rect x="20" y="14" width="1" height="1" />
+              <rect x="20" y="15" width="1" height="1" />
+              <rect x="20" y="19" width="1" height="1" /></svg
+            ><span hidden></span
+            ><span
+              ><b style="color: var(--exito)">Recibo verificable</b><br />Escanee el código e inicie
+              sesión en el portal de Oasis Seguros, o escriba el código en «Verificar recibo».</span
+            >
+          </div>
+          <span class="fino"
+            >Emitido el 28/08/2026 a las 16:05 (hora de Ecuador) · Página 1 de 1</span
+          >
+        </div>
+        <div class="correo">
+          <div class="cab-c">
+            <img src="../prototipo/logo.png" alt="" style="width: 10mm" />Oasis Seguros
+          </div>
+          <div class="cuerpo-c">
+            <b style="font-size: 11pt">Validamos su pago: su recibo está listo</b>
+            <span>Estimada María Fernanda:</span>
+            <span
+              >Confirmamos el pago de la cuota 6 de su póliza de vehículos. Su recibo ya está
+              disponible y puede verificarlo cuando lo necesite.</span
+            >
+            <dl>
+              <dt>Póliza</dt>
+              <dd>VEH-2025-01127</dd>
+              <dt>Monto pagado</dt>
+              <dd>$86,40</dd>
+              <dt>Fecha de pago</dt>
+              <dd>28/08/2026</dd>
+              <dt>Código</dt>
+              <dd>OAS-2026-000187</dd>
+            </dl>
+            <span
+              style="
+                align-self: flex-start;
+                background: #14110d;
+                color: #fff;
+                border-radius: 6px;
+                padding: var(--e-sm) var(--e-lg);
+                font-weight: 700;
+              "
+              >Ver mi recibo</span
+            >
+            <span style="font-size: 7.5pt; color: #5e564b"
+              >Si el botón no funciona, copie esta dirección:
+              srpp.oasisseguros.ec/recibos/verificar/OAS-2026-000187. Mensaje automático; si no
+              reconoce este pago, comuníquese con Oasis Seguros.</span
+            >
+          </div>
+        </div>
+        <ol class="notas">
+          <li>
+            <b>Recibo con la identidad de Oasis</b>Isologo, asegurado y póliza en dos columnas,
+            detalle y total; sin sal ni datos internos.<small>HU-25 · S5 · HU-41 · S9</small>
+          </li>
+          <li>
+            <b>QR que exige sesión</b>Lleva a <code>/recibos/verificar/:codigo</code>; sin sesión,
+            primero pide ingresar. El código escrito es la alternativa.<small>HU-25 · HU-28</small>
+          </li>
+          <li>
+            <b>Correo de tipografía segura</b>Una columna de 600 px en Arial o Helvetica, cabecera
+            negra con el isologo y contraste AA.<small>HT-12 · HU-39 · S6</small>
+          </li>
+          <li>
+            <b>Un botón y su respaldo</b>Botón de tinta noche con texto blanco (17,9:1; el oro no se
+            garantiza en los clientes de correo) y la dirección en texto plano.<small
+              >Nielsen 6 · ADR-023</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 34 · Componentes -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Componentes base y sus estados</h2>
+        <span class="folio"></span>
+      </header>
+      <div
+        class="cuerpo"
+        style="
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: var(--e-md);
+          align-items: start;
+        "
+      >
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Botones <small>button.tsx</small></h3>
+            <div class="pila" style="gap: var(--e-xs)">
+              <span class="btn p">Validar y emitir recibo</span
+              ><span class="btn s">Ver cartera</span><span class="btn q">Cancelar</span
+              ><span class="btn dc">Rechazar</span><span class="btn d">Rechazar pago</span
+              ><span class="btn p f">Foco</span><span class="btn p x">Deshabilitado</span>
+            </div>
+            <p class="fino">
+              Una acción dorada por vista; rojo sólido solo para lo que no se deshace. Al presionar,
+              0,97 en 120 ms.
+            </p>
+          </div>
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Campo con ayuda <small>Campo.tsx</small></h3>
+            <div class="campo">
+              <label>Fecha de pago</label><span class="inp foco">25/10/2026</span
+              ><span class="ayuda"
+                >El día en que se hizo el pago; no puede ser posterior a hoy.</span
+              >
+            </div>
+            <div class="campo">
+              <label>Monto</label><span class="inp mal">596.40</span
+              ><span class="err"
+                ><svg class="i"><use href="#i-circle-alert" /></svg>Supera el saldo pendiente
+                ($518,40).</span
+              >
+            </div>
+            <p class="fino">
+              Ayuda siempre visible; <code>aria-describedby</code> lee la ayuda y luego el error
+              (<code>role="alert"</code>). M4 · WCAG 3.3.1
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Contraseña <small>CampoContrasena.tsx</small></h3>
+            <div class="campo">
+              <label>Contraseña</label
+              ><span class="inp"
+                >••••••••••••<span class="mostrar"
+                  ><svg class="i"><use href="#i-eye" /></svg>Mostrar</span
+                ></span
+              >
+            </div>
+            <div class="campo">
+              <span class="inp foco"
+                >Operador.Oasis1<span class="mostrar"
+                  ><svg class="i"><use href="#i-eye-off" /></svg>Ocultar</span
+                ></span
+              >
+            </div>
+            <p class="fino">
+              Texto visible y <code>aria-pressed</code>; el nombre sale del texto, sin
+              <code>aria-label</code>. HU-01
+            </p>
+          </div>
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Insignias <small>EstadoInsignia.tsx</small></h3>
+            <div class="pila">
+              <span class="ins proceso"
+                ><svg class="i"><use href="#i-clock" /></svg>Por validar</span
+              ><span class="ins exito"
+                ><svg class="i"><use href="#i-circle-check" /></svg>Validado</span
+              ><span class="ins error"
+                ><svg class="i"><use href="#i-circle-x" /></svg>Rechazado</span
+              ><span class="ins proceso"
+                ><svg class="i"><use href="#i-hourglass" /></svg>En proceso</span
+              ><span class="ins exito"
+                ><svg class="i"><use href="#i-shield-check" /></svg>Verificable</span
+              ><span class="ins aviso"
+                ><svg class="i"><use href="#i-triangle-alert" /></svg>Requiere atención</span
+              ><span class="ins neutro"
+                ><svg class="i"><use href="#i-ban" /></svg>Anulado</span
+              ><span class="ins error"
+                ><svg class="i"><use href="#i-circle-alert" /></svg>En mora</span
+              >
+            </div>
+            <p class="fino">Cinco tonos; cada estado con su icono. Gestalt · semejanza</p>
+          </div>
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Ramo <small>RamoEtiqueta.tsx</small></h3>
+            <div>
+              <span class="ramo"
+                ><svg class="i"><use href="#i-heart-pulse" /></svg>Vida</span
+              ><span class="ramo"
+                ><svg class="i"><use href="#i-car" /></svg>Vehículos</span
+              ><span class="ramo"
+                ><svg class="i"><use href="#i-stethoscope" /></svg>Salud</span
+              ><span class="ramo"
+                ><svg class="i"><use href="#i-file-signature" /></svg>Fianzas</span
+              ><span class="ramo"
+                ><svg class="i"><use href="#i-flame" /></svg>Incendio</span
+              ><span class="ramo"
+                ><svg class="i"><use href="#i-shield" /></svg>Otro código</span
+              >
+            </div>
+            <p class="fino">
+              Ícono de 16 px con <code>aria-hidden</code> + nombre; mapa fijo por código en
+              <code>ramos.ts</code>. M1
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Leyenda <small>LeyendaEstados.tsx</small></h3>
+            <div class="leyenda">
+              <b
+                >¿Qué significa cada estado?
+                <svg class="i" style="transform: rotate(180deg)"><use href="#i-chevron-down" /></svg
+              ></b>
+              <dl>
+                <dt>
+                  <span class="ins proceso"
+                    ><svg class="i"><use href="#i-clock" /></svg>Por validar</span
+                  >
+                </dt>
+                <dd>
+                  Oasis Seguros está revisando este pago con la notificación de la aseguradora o el
+                  comprobante.
+                </dd>
+                <dt>
+                  <span class="ins exito"
+                    ><svg class="i"><use href="#i-circle-check" /></svg>Validado</span
+                  >
+                </dt>
+                <dd>El pago fue confirmado y tiene un recibo verificable.</dd>
+                <dt>
+                  <span class="ins error"
+                    ><svg class="i"><use href="#i-circle-x" /></svg>Rechazado</span
+                  >
+                </dt>
+                <dd>El pago no se pudo confirmar; el motivo aparece junto a él.</dd>
+              </dl>
+            </div>
+            <p class="fino">
+              <code>&lt;details&gt;</code> nativo; sin tooltips sobre la insignia. M2
+            </p>
+          </div>
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Vacío con acción <small>DataState.tsx</small></h3>
+            <div class="vacio">
+              <svg class="i" style="font-size: 16pt; color: var(--tierra)">
+                <use href="#i-inbox" /></svg
+              ><b>No hay pagos con este filtro</b
+              ><span class="muted">Pruebe con «Todos los estados».</span
+              ><span class="btn s" style="min-height: 26px">Quitar filtro</span>
+            </div>
+            <p class="fino">Título, por qué está vacío y qué hacer. M3</p>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-sm)">
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Seguimiento <small>SeguimientoPago.tsx</small></h3>
+            <ol class="pasos">
+              <li>
+                <span class="pt" style="background: var(--exito-f); color: var(--exito)"
+                  ><svg class="i"><use href="#i-check" /></svg></span
+                ><span><b>Registrado</b><span class="muted">Completado · 25/10/2026</span></span>
+              </li>
+              <li>
+                <span class="pt" style="background: var(--proceso-f); color: var(--proceso)"
+                  ><svg class="i"><use href="#i-clock" /></svg></span
+                ><span
+                  ><b>En revisión por Oasis Seguros</b><span class="muted">En curso</span></span
+                >
+              </li>
+              <li>
+                <span class="pt" style="background: var(--neutro-f); color: var(--neutro)"
+                  ><svg class="i"><use href="#i-circle" /></svg></span
+                ><span><b>Resultado</b><span class="muted">Pendiente</span></span>
+              </li>
+            </ol>
+            <p class="fino">
+              Lista ordenada; cada paso dice su estado en texto y su fecha sin hora. M6
+            </p>
+          </div>
+          <div class="noche comp" style="padding: var(--e-lg)">
+            <h3 style="margin: 0">Panel de noche</h3>
+            <span class="muted">Por validar</span
+            ><b style="font: 700 22pt/1 var(--display); color: var(--oro)">32</b
+            ><span
+              style="
+                color: var(--oro);
+                text-decoration: underline;
+                text-underline-offset: 3px;
+                font-weight: 600;
+              "
+              >Revisar los pagos</span
+            >
+            <p class="fino" style="color: var(--tenue)">
+              La cifra lleva a la lista ya filtrada. M5
+            </p>
+          </div>
+          <div class="tarjeta comp" style="padding: var(--e-md)">
+            <h3>Diálogo de inactividad</h3>
+            <p style="font-size: 8pt">
+              Por seguridad, la sesión se cierra tras 30 minutos sin actividad. Queda un minuto.
+            </p>
+            <div class="pila" style="justify-content: flex-end">
+              <span class="btn q">Cerrar sesión</span><span class="btn p">Seguir trabajando</span>
+            </div>
+            <p class="fino">HU-32 · WCAG 2.2.1</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 35 · Teléfono 1 -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Teléfono · ingreso, política de datos e inicio</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo telefonos">
+        <div class="fila-tel">
+          <figure class="tel">
+            <div class="pantallita">
+              <img src="capturas/spa-01-ingreso-360.jpg" alt="Ingreso a 360 px" /><b
+                class="m"
+                style="--x: 82%; --y: 11%"
+                >1</b
+              ><b class="m" style="--x: 64%; --y: 61.8%">2</b
+              ><b class="m" style="--x: 55%; --y: 94.5%">3</b>
+            </div>
+            <figcaption>Ingreso<span class="etq actual">Interfaz actual · S4</span></figcaption>
+          </figure>
+          <figure class="tel">
+            <div class="pantallita">
+              <img src="capturas/proto-tel-datos.jpg" alt="Política de datos" /><b
+                class="m"
+                style="--x: 6.8%; --y: 59.5%"
+                >4</b
+              ><b class="m" style="--x: 14%; --y: 93.8%">5</b>
+            </div>
+            <figcaption>Primer ingreso<span class="etq diseno">Diseño · S6</span></figcaption>
+          </figure>
+          <figure class="tel">
+            <div class="pantallita">
+              <img src="capturas/spa-11-portal-360.jpg" alt="Inicio del portal" /><b
+                class="m"
+                style="--x: 44%; --y: 28.3%"
+                >6</b
+              ><b class="m" style="--x: 61%; --y: 72.4%">7</b
+              ><b class="m" style="--x: 35%; --y: 94.5%">8</b>
+            </div>
+            <figcaption>Inicio<span class="etq actual">Interfaz actual · S4</span></figcaption>
+          </figure>
+        </div>
+        <ol class="notas">
+          <li>
+            <b>Bienvenida de marca</b>Isologo y título sobre la foto con velo medido.<small
+              >WCAG 1.4.3</small
+            >
+          </li>
+          <li>
+            <b>Mismo ingreso que el personal</b>El sistema abre el portal porque el rol es
+            CLIENTE.<small>RF-01 · HU-03</small>
+          </li>
+          <li>
+            <b>Contraseña con «Ocultar»</b>Botón de 44 px dentro del campo.<small>WCAG 2.5.8</small>
+          </li>
+          <li>
+            <b>Consentimiento en el primer ingreso</b>Se acepta antes de usar el portal y se guarda
+            la versión.<small>RF-38 · HU-33 · LOPDP</small>
+          </li>
+          <li>
+            <b>Aceptar se habilita al marcar</b>La acción del paso, abajo, al alcance del
+            pulgar.<small>Nielsen 5</small>
+          </li>
+          <li>
+            <b>Lo más reciente, en el héroe</b>El último pago con su estado, el monto en oro y qué
+            pasa ahora.<small>HU-29 · Nielsen 1</small>
+          </li>
+          <li>
+            <b>Cada póliza con su ramo</b>Ícono, estado y vigencia; la prima con cifras
+            tabulares.<small>M1 · HU-29</small>
+          </li>
+          <li>
+            <b>Cuatro pestañas</b>Inicio, Pólizas, Recibos y Cuenta; la activa en café y 700.<small
+              >DESIGN.md · Navegación</small
+            >
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 36 · Teléfono 2 -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Teléfono · mora, póliza y reporte de pago</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo telefonos">
+        <div class="fila-tel">
+          <figure class="tel">
+            <div class="pantallita">
+              <img
+                src="capturas/spa-12-portal-en-mora-360.jpg"
+                alt="Póliza en mora en el portal"
+              /><b class="m" style="--x: 88%; --y: 72.4%">1</b
+              ><b class="m" style="--x: 93%; --y: 80.3%">2</b>
+            </div>
+            <figcaption>
+              Póliza en mora<span class="etq actual">Interfaz actual · S4</span>
+            </figcaption>
+          </figure>
+          <figure class="tel">
+            <div class="pantallita">
+              <img src="capturas/proto-tel-poliza.jpg" alt="Detalle de póliza" /><b
+                class="m"
+                style="--x: 50%; --y: 36%"
+                >3</b
+              ><b class="m" style="--x: 64%; --y: 55%">4</b
+              ><b class="m" style="--x: 14%; --y: 93.6%">5</b>
+            </div>
+            <figcaption>Póliza<span class="etq diseno">Diseño · S6</span></figcaption>
+          </figure>
+          <figure class="tel">
+            <div class="pantallita">
+              <img src="capturas/proto-tel-reportar.jpg" alt="Reportar pago" /><b
+                class="m"
+                style="--x: 17%; --y: 23.5%"
+                >6</b
+              ><b class="m" style="--x: 82%; --y: 70.2%">7</b
+              ><b class="m" style="--x: 14%; --y: 93.8%">8</b>
+            </div>
+            <figcaption>Reportar pago<span class="etq diseno">Diseño · S7</span></figcaption>
+          </figure>
+        </div>
+        <ol class="notas">
+          <li>
+            <b>«En mora» junto al estado</b>Insignia de error, derivada de una cuota vencida.<small
+              >M7 · RN-16</small
+            >
+          </li>
+          <li>
+            <b>Qué hacer</b>«Tiene una cuota vencida. Comuníquese con Oasis Seguros para ponerse al
+            día.»<small>M7 · Nielsen 9</small>
+          </li>
+          <li>
+            <b>Saldo de la póliza</b>Pagado, prima y saldo con una barra dorada.<small
+              >RF-16 · HU-15</small
+            >
+          </li>
+          <li>
+            <b>Cada cuota con su estado</b>Texto e icono, con la leyenda arriba.<small
+              >M2 · WCAG 1.4.1</small
+            >
+          </li>
+          <li>
+            <b>Reportar desde la póliza</b>Explica que la aseguradora debita las cuotas y cuándo
+            reportar.<small>HU-17</small>
+          </li>
+          <li>
+            <b>Solo pólizas propias y vigentes</b>La póliza y la cuota vienen elegidas desde donde
+            se tocó.<small>RN-07 · RN-01</small>
+          </li>
+          <li>
+            <b>Ayudas como en el personal</b>Monto en dólares y fecha no posterior a hoy;
+            comprobante PDF, JPG o PNG de hasta 5 MB.<small>M4 · RNF-37</small>
+          </li>
+          <li>
+            <b>Enviar reporte</b>El pago queda «Por validar» y aparece en su seguimiento.<small
+              >HU-17 · RN-08</small
+            >
+          </li>
+        </ol>
+        <p class="pie" style="grid-column: 1/-1; margin: 0">
+          «Póliza en mora»: la marca la tarea diaria del worker; en la captura,
+          <code>enMora</code> está simulado en la respuesta del API.
+        </p>
+      </div>
+    </section>
+
+    <!-- 37 · Teléfono 3 -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Teléfono · mis pagos, recibo y verificación</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo telefonos">
+        <div class="fila-tel" style="gap: var(--e-md)">
+          <figure class="tel" style="--w: 44mm">
+            <div class="pantallita">
+              <img src="capturas/spa-portal-pagos-360.jpg" alt="Mis pagos con el seguimiento" /><b
+                class="m"
+                style="--x: 75%; --y: 26.8%"
+                >1</b
+              ><b class="m" style="--x: 93%; --y: 43.5%">2</b>
+            </div>
+            <figcaption>Mis pagos<span class="etq actual">Actual · S4</span></figcaption>
+          </figure>
+          <figure class="tel" style="--w: 44mm">
+            <div class="pantallita">
+              <img src="capturas/spa-13-portal-vacio-360.jpg" alt="Portal sin pólizas" /><b
+                class="m"
+                style="--x: 68%; --y: 72%"
+                >3</b
+              >
+            </div>
+            <figcaption>Sin pólizas<span class="etq actual">Actual · S4</span></figcaption>
+          </figure>
+          <figure class="tel" style="--w: 44mm">
+            <div class="pantallita">
+              <img src="capturas/proto-tel-recibo.jpg" alt="Recibo en el teléfono" /><b
+                class="m"
+                style="--x: 60%; --y: 59.6%"
+                >4</b
+              ><b class="m" style="--x: 25%; --y: 76.8%">5</b>
+            </div>
+            <figcaption>Recibo<span class="etq diseno">Diseño · S6</span></figcaption>
+          </figure>
+          <figure class="tel" style="--w: 44mm">
+            <div class="pantallita">
+              <img src="capturas/proto-tel-verificar.jpg" alt="Recibo auténtico" /><b
+                class="m"
+                style="--x: 68%; --y: 18%"
+                >6</b
+              ><b class="m" style="--x: 93%; --y: 47.5%">7</b>
+            </div>
+            <figcaption>Verificar<span class="etq diseno">Diseño · S5</span></figcaption>
+          </figure>
+        </div>
+        <ol class="notas">
+          <li>
+            <b>¿Qué pasó con mi pago?</b>Registrado, en revisión por Oasis Seguros y el resultado,
+            cada paso con su estado en texto y su fecha.<small>M6 · D8</small>
+          </li>
+          <li>
+            <b>Rechazo con su motivo</b>El paso final en error y el motivo que escribió el
+            personal.<small>HU-19 · M6</small>
+          </li>
+          <li>
+            <b>Vacío que explica</b>«Cuando Oasis Seguros registre una póliza a su nombre, aparecerá
+            aquí.»<small>M3</small>
+          </li>
+          <li>
+            <b>Recibo verificable</b>QR y estado; nunca la palabra «hash» para el cliente.<small
+              >RF-30 · Nielsen 2</small
+            >
+          </li>
+          <li><b>Enviar a mi correo</b>El recibo llega en PDF.<small>HU-41 · S9</small></li>
+          <li>
+            <b>Auténtico, en palabras</b>Resultado grande y la misma frase que ve el personal.<small
+              >RF-33 · RF-34 · HU-28</small
+            >
+          </li>
+          <li>
+            <b>Datos mínimos</b>Recibo, cliente, monto y fecha; solo se verifican recibos
+            propios.<small>RN-07 · ADR-015</small>
+          </li>
+        </ol>
+        <p class="pie" style="grid-column: 1/-1; margin: 0">
+          «Sin pólizas»: respuestas vacías del API simuladas en la captura. «Mis pagos» muestra
+          pagos reales del cliente del seed en los tres estados.
+        </p>
+      </div>
+    </section>
+
+    <!-- 38 · Implementación -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Implementación en la SPA</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 1fr 1.15fr 1fr">
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Tokens en <code>apps/web/src/index.css</code></h3>
+          <table>
+            <tr>
+              <td><code>--background</code></td>
+              <td>#f6f4f0 lienzo arena</td>
+            </tr>
+            <tr>
+              <td><code>--foreground</code> · <code>--card-foreground</code></td>
+              <td>#1a1714 tinta noche</td>
+            </tr>
+            <tr>
+              <td><code>--card</code> · <code>--popover</code></td>
+              <td>#ffffff papel</td>
+            </tr>
+            <tr>
+              <td><code>--primary</code></td>
+              <td>#e2ad5b oro medio (+ <code>--gold-gradient</code>)</td>
+            </tr>
+            <tr>
+              <td><code>--secondary</code> · <code>--muted</code> · <code>--accent</code></td>
+              <td>#efebe4 arena hundida</td>
+            </tr>
+            <tr>
+              <td><code>--muted-foreground</code></td>
+              <td>#5e564b tinta tierra</td>
+            </tr>
+            <tr>
+              <td><code>--input</code> · <code>--ring</code></td>
+              <td>#8c8478 · #1a1714</td>
+            </tr>
+            <tr>
+              <td><code>--destructive</code></td>
+              <td>#a2332b error</td>
+            </tr>
+            <tr>
+              <td><code>--sidebar</code> · <code>--sidebar-primary</code></td>
+              <td>#14110d · #f0c878</td>
+            </tr>
+          </table>
+          <p class="fino" style="margin-top: var(--e-sm)">
+            Más los cinco tonos de estado (<code>--estado-exito</code> y su fondo…) en
+            <code>@theme inline</code>. <code>--color-*: initial</code> anula la paleta de Tailwind:
+            un color fuera de los tokens no genera CSS. Correspondencia completa en
+            <code>docs/diseno/README.md</code>.
+          </p>
+        </div>
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Componentes</h3>
+          <table>
+            <tr>
+              <td><code>components/ui/</code></td>
+              <td>
+                Primitivos de shadcn/ui con las variantes de DESIGN.md: botón de 44 px, campos de 48
+                px, diálogos con sombra flotante.
+              </td>
+            </tr>
+            <tr>
+              <td><code>EstadoInsignia</code> · <code>estados.ts</code></td>
+              <td>
+                Texto, icono, tono y descripción de cada estado; omitir uno rompe el
+                <code>typecheck</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>LeyendaEstados</code></td>
+              <td><code>&lt;details&gt;</code> en Pagos, Recibos y Pólizas (M2).</td>
+            </tr>
+            <tr>
+              <td><code>RamoEtiqueta</code> · <code>ramos.ts</code></td>
+              <td>Nueve íconos importados por nombre (M1).</td>
+            </tr>
+            <tr>
+              <td><code>DataState</code> · <code>TablaDatos</code></td>
+              <td><code>AvisoVacio</code> con descripción y acción (M3).</td>
+            </tr>
+            <tr>
+              <td><code>Campo</code> · <code>CampoContrasena</code></td>
+              <td>Ayuda, error y ARIA; mostrar u ocultar (M4).</td>
+            </tr>
+            <tr>
+              <td><code>SeguimientoPago</code> · <code>PanelCliente</code></td>
+              <td>Tres pasos y «En mora» en el portal (M6, M7).</td>
+            </tr>
+            <tr>
+              <td><code>layout/</code></td>
+              <td>
+                <code>RielPersonal</code>, <code>BarraInferiorCliente</code>,
+                <code>MenuUsuario</code> y <code>Encabezado</code>.
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: var(--e-md)">
+          <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+            <h3>Medición del bundle</h3>
+            <table>
+              <tr>
+                <th>Chunk de la SPA</th>
+                <th style="white-space: nowrap">JS</th>
+                <th style="white-space: nowrap">gzip</th>
+              </tr>
+              <tr>
+                <td><code>main</code> antes de la Etapa C</td>
+                <td style="white-space: nowrap">1.289,18 kB</td>
+                <td style="white-space: nowrap">340,96 kB</td>
+              </tr>
+              <tr>
+                <td>Rama, M1–M8</td>
+                <td style="white-space: nowrap">1.299,58 kB</td>
+                <td style="white-space: nowrap">344,67 kB</td>
+              </tr>
+              <tr>
+                <td><b>M1–M8 + O1</b></td>
+                <td style="white-space: nowrap"><b>825,31 kB</b></td>
+                <td style="white-space: nowrap"><b>253,05 kB</b></td>
+              </tr>
+            </table>
+            <p class="fino" style="margin-top: var(--e-xs)">
+              M1–M8 suman 10,40 kB (+1,1 % con gzip); CSS de 45,22 kB. O1 publica
+              <code>@oasis/shared</code> también en ESM para que Vite elimine el zod que no se usa:
+              −36,5 % de JS. La rama no agrega consultas al API. Fuente:
+              <code>sprint-s4.md</code> §13.3 y <b>ADR-029</b>.
+            </p>
+          </div>
+          <div class="noche" style="padding: var(--e-md)">
+            <h3>Fuentes</h3>
+            <p>
+              <code style="background: var(--noche-alta); color: var(--luna)"
+                >@fontsource-variable/outfit</code
+              >
+              y <code style="background: var(--noche-alta); color: var(--luna)">figtree</code>,
+              servidas desde el mismo origen (lo comprueba
+              <code style="background: var(--noche-alta); color: var(--luna)">diseno.spec.ts</code
+              >).
+            </p>
+          </div>
+          <div class="tarjeta">
+            <h3>Lo que sigue</h3>
+            <p>
+              Las pantallas con la etiqueta «Diseño» se construyen en su sprint con estos
+              componentes, sin colores ni dependencias nuevas.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 39 · Entregables -->
+    <section class="hoja">
+      <header class="cab">
+        <h2>Entregables y verificación</h2>
+        <span class="folio"></span>
+      </header>
+      <div class="cuerpo tres" style="grid-template-columns: 1.45fr 1fr 1fr">
+        <div class="tarjeta" style="padding: var(--e-sm) var(--e-md)">
+          <h3>Dónde vive cada pieza</h3>
+          <table>
+            <tr>
+              <td><code>apps/web/DESIGN.md</code></td>
+              <td>Tokens normativos y reglas del sistema.</td>
+            </tr>
+            <tr>
+              <td><code>apps/web/.impeccable/design.json</code></td>
+              <td>Rampas, sombras, movimiento y componentes de referencia.</td>
+            </tr>
+            <tr>
+              <td><code>apps/web/PRODUCT.md</code></td>
+              <td>Contexto del producto para impeccable.</td>
+            </tr>
+            <tr>
+              <td><code>docs/diseno/prototipo/</code></td>
+              <td>Prototipo navegable de los tres roles, con M1–M8.</td>
+            </tr>
+            <tr>
+              <td><code>docs/diseno/pdf/</code></td>
+              <td>
+                Fuente de este documento: <code>index.html</code>, <code>capturas/</code> e
+                <code>imprimir.mjs</code>.
+              </td>
+            </tr>
+            <tr>
+              <td><code>docs/diseno/README.md</code></td>
+              <td>Guía de tokens y de implementación.</td>
+            </tr>
+            <tr>
+              <td><code>docs/adr/ADR-019</code> · <code>ADR-029</code></td>
+              <td>Decisión de diseño y optimización del bundle.</td>
+            </tr>
+          </table>
+          <p class="fino" style="margin-top: var(--e-sm)">
+            Para regenerar el PDF:
+            <code>pnpm --filter @oasis/web exec node ../../docs/diseno/pdf/imprimir.mjs</code>
+            (<code>--prototipo</code> recaptura el prototipo;
+            <code>--spa &lt;carpeta&gt;</code> importa capturas nuevas de la SPA).
+          </p>
+        </div>
+        <div class="tarjeta">
+          <h3>Lo que se verifica en la SPA</h3>
+          <ul class="lista">
+            <li>
+              <code>diseno.spec.ts</code>: axe WCAG 2 A/AA, foco visible, sin desborde a 360 px,
+              recursos del mismo origen y objetivos de 44 × 44 px en el portal.
+            </li>
+            <li>
+              <code>claridad.spec.ts</code>: leyenda con el teclado, Panel → Pagos filtrado, portal
+              con tres pagos y avatar de 44 × 44 px.
+            </li>
+            <li>
+              Vitest por componente: <code>EstadoInsignia</code>, <code>LeyendaEstados</code>,
+              <code>RamoEtiqueta</code>, <code>DataState</code>, <code>SeguimientoPago</code>,
+              <code>CampoContrasena</code>.
+            </li>
+            <li>
+              <code>VerificacionPage.test.tsx</code>: el resultado no contiene «hash» ni
+              «blockchain».
+            </li>
+          </ul>
+        </div>
+        <div class="tarjeta">
+          <h3>Criterios para aceptar cada pantalla nueva</h3>
+          <ul class="lista">
+            <li>Solo tokens de DESIGN.md; ningún color nuevo.</li>
+            <li>Una acción dorada como máximo.</li>
+            <li>Estados con texto, icono, color y descripción.</li>
+            <li>Ayuda bajo cada campo con regla; vacío con motivo y acción.</li>
+            <li>Objetivos de 44 px; cuerpo de 16 px en el teléfono.</li>
+            <li>Foco visible ≥ 3:1 en superficies claras y oscuras.</li>
+            <li><code>prefers-reduced-motion</code> respetado.</li>
+            <li>Cabe sin desplazamiento horizontal desde 360 px.</li>
+            <li>Fechas y montos con el formato de Ecuador.</li>
+            <li>La pantalla se suma a <code>PANTALLAS</code> de <code>diseno.spec.ts</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      const hojas = document.querySelectorAll('.hoja');
+      hojas.forEach((hoja, i) => {
+        const folio = hoja.querySelector('.folio');
+        if (folio)
+          folio.innerHTML = `<b>SRPP · Claroscuro</b> &nbsp;${String(i + 1).padStart(2, '0')} / ${hojas.length}`;
+      });
+    </script>
+  </body>
+</html>

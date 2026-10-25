@@ -10,6 +10,8 @@ export interface PropsPoliza {
   ramoId: string;
   /** Nombre visible del ramo (catálogo `Ramo`). */
   ramo: string;
+  /** Código estable del ramo: no cambia si el catálogo renombra el ramo. */
+  ramoCodigo: string;
   primaTotal: string;
   fechaInicio: string;
   fechaFin: string;
@@ -51,6 +53,10 @@ export class Poliza extends Entity<PropsPoliza> {
 
   get ramo(): string {
     return this.props.ramo;
+  }
+
+  get ramoCodigo(): string {
+    return this.props.ramoCodigo;
   }
 
   get primaTotal(): string {

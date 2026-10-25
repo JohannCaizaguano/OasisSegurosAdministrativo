@@ -20,7 +20,9 @@ documentación y las decisiones deben ser trazables y estar justificados.
 
 `docs/referencia/` contiene los documentos que **mandan**: `PRODUCT_BACKLOG.md`
 (historias, criterios de aceptación, DoD) y `ARQUITECTURA.md` (arc42 + C4). Si algo los
-contradice, gana el documento y la contradicción se reporta. No se editan.
+contradice, gana el documento y la contradicción se reporta. `PRODUCT_BACKLOG.md` no se edita;
+`ARQUITECTURA.md` se actualiza cuando una decisión aceptada la cambia (por ejemplo, la fila de un
+ADR nuevo en la tabla 11-1).
 
 ## Stack
 
@@ -114,16 +116,16 @@ Los agentes de `.opencode/agents/` son especialistas **del proyecto**, uno por �
 repositorio. No se crean agentes por sprint ni orquestadores a medida: un plan elige entre los de
 esta tabla. Cada uno trae sus skills, sus reglas y su verificación, y edita solo su carpeta.
 
-| Agente                | Úsalo cuando la tarea…                                                                                                   | Edita                                                                     |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `contrato-shared`     | crea o cambia esquemas Zod, constantes, tipos o validadores de `@oasis/shared`                                           | `packages/shared/src/` (salvo `abi/`) y `apps/web/src/contratos/`         |
-| `backend-api`         | vive en el API o el worker: dominio, casos de uso, adaptadores, controladores, migraciones, seed y sus pruebas unitarias | `apps/api/src/` y `apps/api/prisma/`                                      |
-| `frontend-spa`        | es de interfaz: páginas, componentes, hooks, rutas y sus pruebas Vitest                                                  | `apps/web/src/` (salvo `contratos/`)                                      |
-| `contrato-blockchain` | toca `RegistroRecibos.sol`, sus pruebas, su despliegue o su ABI                                                          | `packages/contracts/`                                                     |
-| `infra`               | es de contenedores, CI/CD, despliegue, respaldos, monitoreo o carga                                                      | `infra/`, `compose.*.yaml`, `Dockerfile`, `Caddyfile` y `.github/`        |
-| `verificador`         | pide evidencia de extremo a extremo con Supertest o Playwright                                                           | `apps/api/test/` y `apps/web/e2e/`                                        |
-| `documentacion`       | redacta un ADR, el mapa técnico, un README o un informe                                                                  | `docs/` (salvo `referencia/`), `CLAUDE.md`, `AGENTS.md` y los `README.md` |
-| `revisor`             | es la revisión de un diff contra su encargo y estas reglas                                                               | nada (solo lectura)                                                       |
+| Agente                | Úsalo cuando la tarea…                                                                                                   | Edita                                                                            |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| `contrato-shared`     | crea o cambia esquemas Zod, constantes, tipos o validadores de `@oasis/shared`                                           | `packages/shared/src/` (salvo `abi/`) y `apps/web/src/contratos/`                |
+| `backend-api`         | vive en el API o el worker: dominio, casos de uso, adaptadores, controladores, migraciones, seed y sus pruebas unitarias | `apps/api/src/` y `apps/api/prisma/`                                             |
+| `frontend-spa`        | es de interfaz: páginas, componentes, hooks, rutas y sus pruebas Vitest                                                  | `apps/web/src/` (salvo `contratos/`)                                             |
+| `contrato-blockchain` | toca `RegistroRecibos.sol`, sus pruebas, su despliegue o su ABI                                                          | `packages/contracts/`                                                            |
+| `infra`               | es de contenedores, CI/CD, despliegue, respaldos, monitoreo o carga                                                      | `infra/`, `compose.*.yaml`, `Dockerfile`, `Caddyfile` y `.github/`               |
+| `verificador`         | pide evidencia de extremo a extremo con Supertest o Playwright                                                           | `apps/api/test/` y `apps/web/e2e/`                                               |
+| `documentacion`       | redacta un ADR, el mapa técnico, un README o un informe                                                                  | `docs/` (salvo `PRODUCT_BACKLOG.md`), `CLAUDE.md`, `AGENTS.md` y los `README.md` |
+| `revisor`             | es la revisión de un diff contra su encargo y estas reglas                                                               | nada (solo lectura)                                                              |
 
 - **Elección:** manda la carpeta de los archivos que la tarea toca. Una tarea que cruza dos áreas
   se parte en dos; lo que no cae en ninguna lo hace la sesión principal.
@@ -209,6 +211,5 @@ en el informe, no se implementa.
 ## Decisiones
 
 Toda decisión no trivial se registra como ADR corto en `docs/adr/` (IDs de la tabla
-11-1 de la arquitectura; un ADR nuevo toma el número siguiente y el informe del sprint
-pide al autor agregarlo a la tabla; índice en `docs/adr/README.md`). Los informes de sprint
+11-1 de la arquitectura; un ADR nuevo toma el número siguiente y se agrega a esa tabla; índice en `docs/adr/README.md`). Los informes de sprint
 viven en `docs/sprints/`.

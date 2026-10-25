@@ -114,6 +114,16 @@ describe('PrismaPolizasRepository', () => {
     );
   });
 
+  it('expone el código del ramo desde el include existente, sin otra consulta (D1)', async () => {
+    const prisma = { poliza: { findUnique: jest.fn().mockResolvedValue(FILA) } };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    const poliza = await repositorio.buscarPorId('1');
+
+    expect(poliza?.ramoCodigo).toBe('VIDA');
+    expect(prisma.poliza.findUnique).toHaveBeenCalledTimes(1);
+  });
+
   it('marca VENCIDA toda cuota PENDIENTE o PARCIAL vencida antes de hoy, en un updateMany (D14)', async () => {
     const prisma = { cuota: { updateMany: jest.fn().mockResolvedValue({ count: 2 }) } };
     const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
@@ -181,7 +191,7 @@ const FILA = {
   clienteId: DATOS.clienteId,
   aseguradoraId: DATOS.aseguradoraId,
   ramoId: DATOS.ramoId,
-  ramo: { nombre: 'Vida' },
+  ramo: { nombre: 'Vida', codigo: 'VIDA' },
   primaTotal: '1500.50',
   fechaInicio: new Date('2026-01-01T00:00:00.000Z'),
   fechaFin: new Date('2026-12-31T00:00:00.000Z'),

@@ -482,6 +482,7 @@ describe('polizaSchema de respuesta', () => {
     aseguradoraId: ASEGURADORA_ID,
     ramoId: RAMO_ID,
     ramo: 'Vehículos',
+    ramoCodigo: 'VEHICULOS',
     primaTotal: '480.50',
     fechaInicio: '2026-10-05',
     fechaFin: '2027-10-04',
@@ -509,6 +510,11 @@ describe('polizaSchema de respuesta', () => {
   it('exige clienteId y ramo: la SPA los pinta sin consultas extra', () => {
     expect(polizaSchema.safeParse({ ...respuesta, clienteId: undefined }).success).toBe(false);
     expect(polizaSchema.safeParse({ ...respuesta, ramo: undefined }).success).toBe(false);
+  });
+
+  it('exige ramoCodigo: la SPA elige el ícono del ramo por código (D1)', () => {
+    expect(polizaSchema.safeParse({ ...respuesta, ramoCodigo: undefined }).success).toBe(false);
+    expect(polizaSchema.safeParse(respuesta).success).toBe(true);
   });
 });
 

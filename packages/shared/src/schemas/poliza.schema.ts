@@ -54,6 +54,8 @@ export const polizaSchema = z.object({
   clienteId: z.uuid(),
   // Nombre del ramo ya resuelto por el API, para pintarlo sin otra consulta.
   ramo: z.string(),
+  // Código estable del ramo: la SPA elige el ícono por él, no por el nombre.
+  ramoCodigo: z.string(),
   // La respuesta refleja lo guardado; la prima positiva se exige en la entrada.
   primaTotal: montoDecimalSchema,
   estado: estadoPolizaSchema,

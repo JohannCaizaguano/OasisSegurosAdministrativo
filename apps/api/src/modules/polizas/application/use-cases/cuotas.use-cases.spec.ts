@@ -12,6 +12,7 @@ function poliza(parcial: Partial<PropsPoliza> = {}): Poliza {
     aseguradoraId: 'a',
     ramoId: 'r',
     ramo: 'Vida',
+    ramoCodigo: 'VIDA',
     primaTotal: '100.00',
     fechaInicio: '2026-01-31',
     fechaFin: '2026-12-31',

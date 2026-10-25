@@ -70,6 +70,7 @@ const POLIZA: Poliza = {
   aseguradoraId: ASEGURADORA_ID,
   ramoId: RAMO_ID,
   ramo: 'Vehículos',
+  ramoCodigo: 'VEHICULOS',
   primaTotal: '1500.50',
   fechaInicio: '2026-01-01',
   fechaFin: '2026-12-31',

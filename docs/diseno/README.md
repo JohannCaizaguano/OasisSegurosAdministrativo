@@ -1,15 +1,18 @@
 # Diseño de interfaz · Claroscuro
 
 Diseño final de la SPA, aprobado el 23/10/2026 ([ADR-019](../adr/ADR-019-diseno-interfaz-claroscuro.md)).
-Lo implementa HT-13.
+Lo implementa HT-13; la Etapa C del S4 sumó la leyenda de estados, el ícono por ramo, los estados
+vacíos con acción, las ayudas de campo y el seguimiento del pago
+([`sprint-s4.md`](../sprints/sprint-s4.md) §13).
 
-| Pieza                                                                        | Para qué                                                                                                                                              |
-| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`apps/web/DESIGN.md`](../../apps/web/DESIGN.md)                             | Fuente normativa: tokens, tipografía, forma, componentes y reglas.                                                                                    |
-| [`apps/web/.impeccable/design.json`](../../apps/web/.impeccable/design.json) | Sidecar de impeccable: rampas tonales, sombras, movimiento y componentes de referencia.                                                               |
-| [`apps/web/PRODUCT.md`](../../apps/web/PRODUCT.md)                           | Contexto del producto que lee impeccable.                                                                                                             |
-| [`prototipo/index.html`](prototipo/index.html)                               | Prototipo navegable (administración, operación y asegurado, con datos compartidos). Se abre directo en el navegador.                                  |
-| [`SRPP-diseno-final-claroscuro.pdf`](SRPP-diseno-final-claroscuro.pdf)       | Documento de 39 páginas: reglas, estados, color con contraste calculado y cada pantalla (administración, operación y asegurado) con su justificación. |
+| Pieza                                                                        | Para qué                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`apps/web/DESIGN.md`](../../apps/web/DESIGN.md)                             | Fuente normativa: tokens, tipografía, forma, componentes y reglas.                                                                                                                                                                                                                                          |
+| [`apps/web/.impeccable/design.json`](../../apps/web/.impeccable/design.json) | Sidecar de impeccable: rampas tonales, sombras, movimiento y componentes de referencia.                                                                                                                                                                                                                     |
+| [`apps/web/PRODUCT.md`](../../apps/web/PRODUCT.md)                           | Contexto del producto que lee impeccable.                                                                                                                                                                                                                                                                   |
+| [`prototipo/index.html`](prototipo/index.html)                               | Prototipo navegable (administración, operación y asegurado, con datos compartidos). Las pantallas ya implementadas siguen a la SPA; las de sprints futuros aplican los mismos patrones. Se abre directo en el navegador.                                                                                    |
+| [`SRPP-diseno-final-claroscuro.pdf`](SRPP-diseno-final-claroscuro.pdf)       | Documento de 39 páginas A4 horizontales (25/10/2026): reglas, estados con su descripción, color con contraste calculado, componentes y cada pantalla con su justificación. Las pantallas ya implementadas usan capturas de la SPA; las de sprints futuros, del prototipo, con el sprint que las implementa. |
+| [`pdf/`](pdf/)                                                               | Fuente del PDF: `index.html`, `capturas/` e `imprimir.mjs`. Se regenera con `pnpm --filter @oasis/web exec node ../../docs/diseno/pdf/imprimir.mjs`; `--prototipo` recaptura el prototipo y `--spa <carpeta>` importa capturas PNG nuevas de la SPA.                                                        |
 
 Si DESIGN.md y el prototipo discrepan, gana DESIGN.md. El prototipo no es código de producción:
 sirve de referencia visual y de comportamiento.

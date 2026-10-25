@@ -197,7 +197,7 @@ El SRPP se ve como la fotografía de marca de Oasis Seguros: un lienzo de arena 
 
 Es una herramienta de trabajo (modo Operate) para tres operadores y un gerente que validan pagos toda la jornada, y un portal de consulta para clientes que lo abren desde el celular. Por eso la ambición se expresa en precisión: filas de 56 px, controles de 44 px o más, cifras tabulares, estados que se leen sin color y un único gesto de marca repetido con disciplina. La estructura viene de la propuesta C · Cercano (riel de iconos, resumen del día, mesa de validación en dos paneles); la paleta y la forma, del manual de marca: negro, café y el degradado dorado del logo.
 
-Se rechazan de forma explícita los tecnicismos para el cliente («blockchain», «hash»), los degradados y brillos fuera de la acción principal y del riel, el oro como color de texto sobre fondos claros y el texto sobre la fotografía sin un velo medido.
+Se rechazan de forma explícita los tecnicismos para el cliente y en los avisos («blockchain», «hash», «Polygon», «anclaje»), los degradados y brillos fuera de la acción principal y del riel, el oro como color de texto sobre fondos claros y el texto sobre la fotografía sin un velo medido.
 
 **Key Characteristics:**
 
@@ -328,12 +328,13 @@ Esquinas suaves y contenidas: 6px en elementos pequeños (fecha, botón «Mostra
 
 - **Style:** papel, borde de 1px de campo, 8px de esquina, 48px de alto (54px en el ingreso), texto de 16px para que el teléfono no haga zoom.
 - **Focus:** borde de 2px en tinta noche y anillo de 4px `rgba(226,173,91,.38)`; el padding se compensa 1px para que el texto no salte.
+- **Ayuda:** caption en tinta tierra bajo el campo, siempre visible (no un placeholder ni un tooltip), que dice qué se espera y qué regla aplica antes de que el usuario se equivoque («Solo aparecen pólizas vigentes.», «No se repite en la misma póliza.»). Se enlaza con `aria-describedby`; si hay error, el campo describe ambos, primero la ayuda.
 - **Error:** borde de 2px rojo y mensaje bajo el campo con el valor permitido («Supera el saldo pendiente ($518,40).»), enlazado al campo y anunciado con `role="alert"`.
 - **Archivo:** zona de arena hundida con icono en una casilla de papel, el formato permitido (PDF, JPG o PNG hasta 5 MB) y el nombre del archivo elegido.
 
 ### Navigation
 
-- **Riel del personal:** noche del oasis, 92px, isologo arriba, ítems de 56px con icono de 22px en arena tenue y etiqueta de 12px. El ítem activo usa la noche alta con texto e icono en oro, sin filos laterales. La insignia de pendientes es una píldora dorada. El avatar del usuario cierra la sesión al pie.
+- **Riel del personal:** noche del oasis, 92px, isologo arriba, ítems de 56px con icono de 22px en arena tenue y etiqueta de 12px. El ítem activo usa la noche alta con texto e icono en oro, sin filos laterales. La insignia de pendientes es una píldora dorada. El avatar del usuario abre su menú al pie: un círculo de 44px, también en la barra superior bajo 760px (un botón del riel no le presta su alto de 56px).
 - **Barra inferior del teléfono:** papel con un hilo superior, 4 pestañas con icono de 22px y etiqueta de 12px; la activa va en café de enlace y 700.
 - **Migas de pan:** «Pagos / Mesa de validación», con el tramo anterior como enlace.
 
@@ -351,6 +352,34 @@ Esquinas suaves y contenidas: 6px en elementos pequeños (fecha, botón «Mostra
 ### Insignias de estado
 
 Píldora con icono de 14px y texto de 13px en 600 sobre el fondo de su tono. Vocabulario: Por validar · Validado · Rechazado; En proceso · Verificable · Requiere atención · Anulado; Pendiente · Pago parcial · Pagada · Vencida; Vigente · Vencida · Cancelada · En mora; Auténtico · No coincide · No encontrado; para cuentas, Activo · Desactivado · Pendiente de primer ingreso · Sin cuenta, y para el segundo factor, Activo · Por activar.
+
+Cada estado tiene además una descripción de una frase, en «usted» y sin jerga técnica («El pago fue confirmado y tiene un recibo verificable.»). Vive junto al texto y al icono en `src/components/estados.ts` y el tipo la exige: la leyenda, el portal y la verificación leen la misma fuente.
+
+### Leyenda de estados
+
+- **Forma:** `<details>` nativo sobre arena hundida, con el resumen «¿Qué significa cada estado?» como enlace café (44px de alto) y un chevron que rota 180° al abrirse. Dentro, cada insignia con su descripción en tinta tierra, en dos columnas desde 640px.
+- **Dónde:** bajo los filtros de toda lista con estados (Pagos, Recibos) o al pie de la tabla (Pólizas). Muestra cada texto una vez: los estados que comparten texto («En proceso») no se repiten.
+- **Sin tooltips sobre la insignia:** el `hover` no existe en el teléfono y un tooltip no se abre con el teclado sin código propio; `<details>` funciona en ambos sin dependencias.
+
+### Ramo
+
+Icono lucide de 16px con `aria-hidden` seguido del nombre del ramo (`RamoEtiqueta`). El icono sale del código del ramo, no del nombre, para que renombrar un ramo no le quite el suyo; un código sin icono propio usa el escudo. El icono nunca va solo: el nombre es el dato accesible.
+
+### Estados vacíos
+
+Icono de bandeja, título en 600 («Sin recibos todavía»), una frase que explica por qué está vacío o qué lo llenará («Cada pago validado emite un recibo.») y, si hay algo que hacer, una acción: un enlace («Ir a Pagos») o un botón secundario pequeño («Quitar filtro»). Una lista vacía por un filtro siempre ofrece quitarlo. Sin acción ni descripción, el título solo va en tinta tierra.
+
+### Cifras que filtran
+
+Una cifra del inicio lleva a la lista que la compone, ya filtrada: «Por validar» abre Pagos con el filtro «Registrados» (`/pagos?estado=REGISTRADO`). El filtro vive en la URL, así que la vista se puede recargar y compartir; cambiarlo reemplaza la entrada del historial en lugar de sumar una.
+
+### Seguimiento del pago (portal)
+
+Lista ordenada de tres pasos bajo cada pago del cliente, con los puntos de 24px de la línea de tiempo: «Registrado» (éxito), «En revisión por Oasis Seguros» (proceso mientras espera) y el final, «Validado · recibo verificable» (éxito) o «Rechazado» (error, con el motivo debajo); mientras no hay resultado, el último paso es neutro. Cada paso dice su estado en texto («Completado», «En curso», «Pendiente») y su fecha como dd/mm/aaaa, sin hora. Responde «¿qué pasó con mi pago?» sin llamar al bróker.
+
+### En mora (portal)
+
+Una póliza con una cuota vencida suma la insignia «En mora» junto a la de su estado y, debajo, una frase en rojo de error que dice qué hacer: «Tiene una cuota vencida. Comuníquese con Oasis Seguros para ponerse al día.»
 
 ### Mesa de validación (signature)
 
@@ -376,7 +405,9 @@ Isologo de 150–236px, título display y subtítulo centrados sobre la foto del
 - **Do** escribir montos con cifras tabulares y formato de Ecuador ($1.234,50) y fechas como dd/mm/aaaa.
 - **Do** mantener todo objetivo táctil en 44px o más y el cuerpo del teléfono en 16px.
 - **Do** respetar `prefers-reduced-motion`: se quitan desplazamientos y escalados y se conservan los cambios de opacidad y color.
-- **Do** hablarle al cliente de «recibo verificable», «en proceso» y «constancia en la red pública».
+- **Do** hablarle al cliente de «recibo verificable», «en proceso» y «se está registrando para que pueda verificarse».
+- **Do** decir la consecuencia antes de una acción que no se deshace («El cliente lo verá en su portal. La acción no se puede deshacer.») y por qué un control no está disponible («Solo lectura: la póliza ya no está vigente»).
+- **Do** explicar cada estado con la leyenda y cada lista vacía con su motivo y su acción.
 
 ### Don't:
 
@@ -385,7 +416,8 @@ Isologo de 150–236px, título display y subtítulo centrados sobre la foto del
 - **Don't** escribir texto sobre la fotografía sin el velo medido, ni usar la fotografía fuera de la bienvenida.
 - **Don't** añadir grises, azules o acentos nuevos: los neutros son arena y tinta, y el azul solo existe como tono de «proceso».
 - **Don't** usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity. Las respuestas a una acción duran menos de 300ms; las entradas del prototipo (bienvenida de 0,6–0,8s, vista de 0,35s y filas escalonadas de 30–35ms) se conservan y nunca bloquean la interacción. El catálogo está en las utilidades `animate-*` de `src/index.css`.
-- **Don't** mostrar «blockchain», «hash» ni datos técnicos del anclaje al cliente; el personal sí ve la transacción y el explorador.
+- **Don't** escribir «blockchain», «hash», «Polygon» ni «anclaje» en lo que ve el cliente ni en los avisos, diálogos y notificaciones del personal. El detalle técnico (hash, transacción, red y explorador) vive solo en su bloque de las pantallas del personal.
+- **Don't** explicar un estado con un tooltip sobre la insignia.
 - **Don't** usar el rojo sólido para acciones que se pueden deshacer.
 - **Don't** marcar ítems, tarjetas ni avisos con bordes laterales de color de más de 1px.
 - **Don't** mostrar al operador lo que es solo del administrador (saldo de la cuenta de anclaje, reintentar, anular, usuarios, bitácora): se oculta, no se deshabilita.

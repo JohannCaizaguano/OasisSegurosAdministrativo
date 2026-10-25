@@ -37,6 +37,17 @@ function montar() {
 }
 
 describe('ValidarPagoDialog (HU-18, D10)', () => {
+  it('explica en lenguaje llano qué ocurre al validar', () => {
+    montar();
+
+    expect(
+      screen.getByText(
+        'Se emitirá el recibo y se registrará para que cualquiera pueda verificarlo. El cliente lo verá en su portal. La acción no se puede deshacer.',
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/worker|polygon/i)).not.toBeInTheDocument();
+  });
+
   it('no confirma al enviar sin marcar la casilla', async () => {
     const { alConfirmar } = montar();
 

@@ -42,6 +42,12 @@ describe('TablaDatos', () => {
     expect(screen.queryByText('Fila')).not.toBeInTheDocument();
   });
 
+  it('muestra la descripción del vacío', () => {
+    montarTabla({ hayDatos: false, vacioDescripcion: 'Cuando haya clientes aparecerán aquí.' });
+
+    expect(screen.getByText('Cuando haya clientes aparecerán aquí.')).toBeInTheDocument();
+  });
+
   it('muestra el error con su reintento', () => {
     montarTabla({ error: new Error('No fue posible cargar los datos') });
 

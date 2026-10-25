@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    // @oasis/shared se publica como CommonJS; prebundlarlo da interop ESM.
+    // Paquete enlazado del workspace: prebundlarlo evita servir cada módulo de dist/esm por separado.
     include: ['@oasis/shared'],
     // Recompilar el prebundle cuando cambia el paquete compartido.
     exclude: [],

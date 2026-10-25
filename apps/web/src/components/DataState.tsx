@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { AlertTriangle, Inbox, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,11 +38,19 @@ export function AvisoError({ error, alReintentar }: { error: unknown; alReintent
   );
 }
 
-export function AvisoVacio({ children }: { children: string }) {
+interface AvisoVacioProps {
+  children: string;
+  descripcion?: string;
+  accion?: ReactNode;
+}
+
+export function AvisoVacio({ children, descripcion, accion }: AvisoVacioProps) {
   return (
     <div className="flex flex-col items-center gap-2 rounded-md bg-secondary px-4 py-8 text-center">
       <Inbox className="size-6 text-muted-foreground" aria-hidden="true" />
-      <p className="text-muted-foreground">{children}</p>
+      <p className={descripcion ? 'font-semibold' : 'text-muted-foreground'}>{children}</p>
+      {descripcion ? <p className="max-w-prose text-muted-foreground">{descripcion}</p> : null}
+      {accion ? <div className="mt-1">{accion}</div> : null}
     </div>
   );
 }

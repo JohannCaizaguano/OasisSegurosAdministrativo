@@ -1,11 +1,12 @@
 import type { EstadoPago, Pago } from '@oasis/shared';
-import { ETIQUETAS_METODO_PAGO } from '@oasis/shared';
+import { ESTADOS_PAGO, ETIQUETAS_METODO_PAGO } from '@oasis/shared';
 import { Plus } from 'lucide-react';
 import { useId, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
-import { AvisoError, EsqueletoTabla } from '@/components/DataState';
+import { AvisoError, AvisoVacio, EsqueletoTabla } from '@/components/DataState';
 import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { LeyendaEstados } from '@/components/LeyendaEstados';
 import { Encabezado } from '@/components/layout/Encabezado';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,7 +29,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableEmpty,
   TableHead,
   TableHeader,
   TableRow,
@@ -51,7 +51,9 @@ const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
 
 export function PagosPage() {
   const idFiltro = useId();
-  const [estado, setEstado] = useState<EstadoPago | 'TODOS'>('TODOS');
+  const [parametros, setParametros] = useSearchParams();
+  const parametro = parametros.get('estado');
+  const estado: EstadoPago | 'TODOS' = ESTADOS_PAGO.find((e) => e === parametro) ?? 'TODOS';
   const [pagina, setPagina] = useState(1);
   const [pendiente, setPendiente] = useState<{ pago: Pago; accion: AccionPago } | null>(null);
   const [registrando, setRegistrando] = useState(false);
@@ -68,6 +70,11 @@ export function PagosPage() {
   const enCurso = validar.isPending || rechazar.isPending;
   const registrados = consulta.data?.data.filter((p) => p.estado === 'REGISTRADO').length ?? 0;
   const meta = consulta.data?.meta;
+
+  function cambiarEstado(valor: EstadoPago | 'TODOS') {
+    setParametros(valor === 'TODOS' ? {} : { estado: valor }, { replace: true });
+    setPagina(1);
+  }
 
   function cerrarDialogo() {
     if (!enCurso) {
@@ -92,10 +99,7 @@ export function PagosPage() {
           <Label htmlFor={idFiltro}>Filtrar por estado</Label>
           <Select
             value={estado}
-            onValueChange={(valor) => {
-              setEstado(valor as EstadoPago | 'TODOS');
-              setPagina(1);
-            }}
+            onValueChange={(valor) => cambiarEstado(valor as EstadoPago | 'TODOS')}
           >
             <SelectTrigger id={idFiltro} data-testid="filtro-estado-pagos">
               <SelectValue placeholder="Estado" />
@@ -111,6 +115,8 @@ export function PagosPage() {
         </div>
       </div>
 
+      <LeyendaEstados dominio="pago" />
+
       <Card className="min-w-0">
         <CardHeader className="pb-3">
           <CardTitle>{meta ? `${meta.total} pagos` : 'Pagos'}</CardTitle>
@@ -120,6 +126,28 @@ export function PagosPage() {
             <EsqueletoTabla />
           ) : consulta.isError ? (
             <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
+          ) : consulta.data?.data.length === 0 ? (
+            estado === 'TODOS' ? (
+              <AvisoVacio descripcion="Use «Registrar pago» para registrar el primero.">
+                Sin pagos registrados
+              </AvisoVacio>
+            ) : (
+              <AvisoVacio
+                descripcion="Pruebe con «Todos los estados»."
+                accion={
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => cambiarEstado('TODOS')}
+                  >
+                    Quitar filtro
+                  </Button>
+                }
+              >
+                No hay pagos con este filtro
+              </AvisoVacio>
+            )
           ) : (
             <Table>
               <TableHeader>
@@ -134,9 +162,6 @@ export function PagosPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {consulta.data && consulta.data.data.length === 0 && (
-                  <TableEmpty mensaje="No hay pagos con este filtro" />
-                )}
                 {consulta.data?.data.map((pago, indice) => (
                   <TableRow
                     key={pago.id}

@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom';
 
 import { AvisoError, AvisoVacio, EsqueletoTabla } from '@/components/DataState';
 import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { RamoEtiqueta } from '@/components/RamoEtiqueta';
 import { Button } from '@/components/ui/button';
 import { formatearFecha, formatearMoneda } from '@/lib/format';
 
 import { useMisPagos, useMisPolizas } from '../hooks';
+import { SeguimientoPago } from './SeguimientoPago';
 
 const CLASES_ACCION_CONTORNO =
   'border border-sidebar-foreground/30 bg-transparent text-sidebar-foreground shadow-none hover:bg-sidebar-accent';
@@ -95,7 +97,9 @@ export function PanelCliente() {
         ) : polizas.isError ? (
           <AvisoError error={polizas.error} alReintentar={() => void polizas.refetch()} />
         ) : listaPolizas.length === 0 ? (
-          <AvisoVacio>Sin pólizas</AvisoVacio>
+          <AvisoVacio descripcion="Cuando Oasis Seguros registre una póliza a su nombre, aparecerá aquí.">
+            Sin pólizas
+          </AvisoVacio>
         ) : (
           <ul className="grid gap-2.5">
             {listaPolizas.map((poliza) => (
@@ -105,8 +109,13 @@ export function PanelCliente() {
               >
                 <div className="flex min-w-0 flex-[1_1_220px] flex-col gap-0.5">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold">{poliza.ramo}</span>
+                    <RamoEtiqueta
+                      codigo={poliza.ramoCodigo}
+                      nombre={poliza.ramo}
+                      className="font-semibold"
+                    />
                     <EstadoInsignia dominio="poliza" estado={poliza.estado} />
+                    {poliza.enMora ? <EstadoInsignia dominio="poliza" estado="EN_MORA" /> : null}
                   </span>
                   <span className="text-label text-muted-foreground">
                     <span className="cifra">{poliza.numero}</span> · vigencia{' '}
@@ -114,6 +123,11 @@ export function PanelCliente() {
                       {formatearFecha(poliza.fechaInicio)} – {formatearFecha(poliza.fechaFin)}
                     </span>
                   </span>
+                  {poliza.enMora ? (
+                    <span className="text-label text-estado-error">
+                      Tiene una cuota vencida. Comuníquese con Oasis Seguros para ponerse al día.
+                    </span>
+                  ) : null}
                 </div>
                 <span className="ml-auto text-right">
                   <span className="block text-caption text-muted-foreground">Prima</span>
@@ -136,7 +150,9 @@ export function PanelCliente() {
         ) : pagos.isError ? (
           <AvisoError error={pagos.error} alReintentar={() => void pagos.refetch()} />
         ) : listaPagos.length === 0 ? (
-          <AvisoVacio>Sin pagos</AvisoVacio>
+          <AvisoVacio descripcion="Cuando Oasis Seguros valide un pago de sus pólizas, aparecerá aquí con su recibo verificable.">
+            Sin pagos
+          </AvisoVacio>
         ) : (
           <ul className="grid gap-2.5">
             {listaPagos.map((pago, indice) => (
@@ -157,12 +173,7 @@ export function PanelCliente() {
                   <span className="cifra text-title font-bold">{formatearMoneda(pago.monto)}</span>
                   <EstadoInsignia dominio="pago" estado={pago.estado} />
                 </span>
-                {pago.estado === 'RECHAZADO' && pago.motivoRechazo && (
-                  <p className="basis-full rounded-md bg-estado-error-fondo px-3 py-2 text-label text-estado-error">
-                    <span className="font-semibold">Motivo del rechazo: </span>
-                    {pago.motivoRechazo}
-                  </p>
-                )}
+                <SeguimientoPago pago={pago} />
               </li>
             ))}
           </ul>
