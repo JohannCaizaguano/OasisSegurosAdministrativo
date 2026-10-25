@@ -42,7 +42,7 @@ flowchart TB
 ```
 
 La verificación (`GET /api/v1/recibos/:codigo/verificacion`) exige sesión y hoy es solo del
-personal; HU-28 (S8) la abre al CLIENTE para sus propios recibos (ADR-015).
+personal; HU-28 (S5) la abre al CLIENTE para sus propios recibos (ADR-015).
 
 ## Puertos e implementaciones
 

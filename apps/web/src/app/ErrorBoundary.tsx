@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, Estado> {
         <h1 className="text-xl font-semibold">Algo salió mal en la interfaz</h1>
         <AvisoError error={error} alReintentar={() => this.setState({ error: null })} />
         <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
+          <Button asChild variant="secondary" size="sm">
             <Link to="/">Ir al inicio</Link>
           </Button>
         </div>

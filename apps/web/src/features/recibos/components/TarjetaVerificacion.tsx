@@ -18,24 +18,24 @@ export function TarjetaVerificacion({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Verificación del recibo</CardTitle>
+        <CardTitle>Verificación del recibo</CardTitle>
         <CardDescription>
           Quien escanee el QR debe iniciar sesión para ver el resultado.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid justify-items-center gap-4">
-        <div className="rounded-xl bg-white p-3" data-testid="qr-recibo">
+        <div className="rounded-md bg-card p-3 shadow-sm" data-testid="qr-recibo">
           <QRCodeSVG value={urlVerificacion} size={180} title={`Verificación de ${codigo}`} />
         </div>
-        <p className="break-all text-center font-mono text-xs text-[var(--muted-foreground)]">
+        <p className="text-center font-mono text-caption break-all text-muted-foreground">
           {urlVerificacion}
         </p>
-        <Button asChild className="w-full">
+        <Button asChild size="lg" className="w-full">
           <Link to={`/recibos/verificar/${codigo}`} data-testid="enlace-verificacion">
             Abrir verificación
           </Link>
         </Button>
-        <p className="text-center text-xs text-[var(--muted-foreground)]">
+        <p className="text-center text-caption text-muted-foreground">
           Hash: {acortarHash(hashRecibo)}
         </p>
       </CardContent>

@@ -9,6 +9,13 @@ export function useResumenPagos() {
   });
 }
 
+export function usePorValidar() {
+  return useQuery({
+    queryKey: ['pagos', 'por-validar'],
+    queryFn: () => dashboardApi.porValidar(),
+  });
+}
+
 export function useResumenRecibos() {
   return useQuery({
     queryKey: ['recibos', 'resumen'],

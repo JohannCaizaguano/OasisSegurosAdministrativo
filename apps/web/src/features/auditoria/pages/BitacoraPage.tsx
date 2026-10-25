@@ -3,6 +3,7 @@ import { ACCIONES_AUDITORIA } from '@oasis/shared';
 import { useId, useState } from 'react';
 
 import { AvisoError, EsqueletoTabla } from '@/components/DataState';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -88,16 +89,14 @@ export function BitacoraPage() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold">Bitácora</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          Quién hizo qué y cuándo: acciones del sistema con su usuario, fecha, IP y entidad.
-        </p>
-      </div>
+    <div className="grid gap-5">
+      <Encabezado
+        titulo="Bitácora"
+        descripcion="Quién hizo qué y cuándo: acciones del sistema con su usuario, fecha, IP y entidad."
+      />
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-56">
           <Label htmlFor={idUsuario}>Usuario</Label>
           <Select
             value={usuarioId}
@@ -106,7 +105,7 @@ export function BitacoraPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id={idUsuario} className="w-56">
+            <SelectTrigger id={idUsuario}>
               <SelectValue placeholder="Usuario" />
             </SelectTrigger>
             <SelectContent>
@@ -120,7 +119,7 @@ export function BitacoraPage() {
           </Select>
         </div>
 
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-52">
           <Label htmlFor={idAccion}>Acción</Label>
           <Select
             value={accion}
@@ -129,7 +128,7 @@ export function BitacoraPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id={idAccion} className="w-48">
+            <SelectTrigger id={idAccion}>
               <SelectValue placeholder="Acción" />
             </SelectTrigger>
             <SelectContent>
@@ -143,7 +142,7 @@ export function BitacoraPage() {
           </Select>
         </div>
 
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-44">
           <Label htmlFor={idDesde}>Desde</Label>
           <Input
             id={idDesde}
@@ -157,7 +156,7 @@ export function BitacoraPage() {
           />
         </div>
 
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-44">
           <Label htmlFor={idHasta}>Hasta</Label>
           <Input
             id={idHasta}
@@ -171,16 +170,16 @@ export function BitacoraPage() {
           />
         </div>
 
-        <Button type="button" variant="outline" onClick={limpiarFiltros}>
+        <Button type="button" variant="quiet" className="min-h-input" onClick={limpiarFiltros}>
           Limpiar filtros
         </Button>
       </div>
 
       {/* min-w-0: sin él, el min-content de la tabla estira la pista del grid y el scroll interno no actúa. */}
       <Card className="min-w-0">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="text-base">Registros</CardTitle>
-          <span aria-live="polite" className="text-sm text-[var(--muted-foreground)]">
+        <CardHeader className="flex flex-row flex-wrap items-baseline justify-between gap-2 pb-3">
+          <CardTitle>Registros</CardTitle>
+          <span aria-live="polite" className="text-muted-foreground">
             {meta ? `${meta.total} registros` : '—'}
           </span>
         </CardHeader>
@@ -190,7 +189,7 @@ export function BitacoraPage() {
           ) : consulta.isError ? (
             <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : (
-            <Table>
+            <Table region="Registros de la bitácora">
               <caption className="sr-only">Registros de la bitácora de auditoría</caption>
               <TableHeader>
                 <TableRow>
@@ -212,15 +211,17 @@ export function BitacoraPage() {
                       {formatearFechaHoraEcuador(registro.creadoEn)}
                     </TableCell>
                     <TableCell>{registro.usuarioEmail}</TableCell>
-                    <TableCell>{etiquetaAccion(registro.accion)}</TableCell>
+                    <TableCell className="font-semibold">
+                      {etiquetaAccion(registro.accion)}
+                    </TableCell>
                     <TableCell>{etiquetaEntidad(registro.entidad)}</TableCell>
                     <TableCell
-                      className="font-mono text-xs"
+                      className="font-mono text-caption"
                       title={registro.entidadId ?? undefined}
                     >
                       {registro.entidadId ? registro.entidadId.slice(0, 8) : '—'}
                     </TableCell>
-                    <TableCell>{registro.ip ?? '—'}</TableCell>
+                    <TableCell className="cifra whitespace-nowrap">{registro.ip ?? '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -229,29 +230,32 @@ export function BitacoraPage() {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-end gap-2 text-sm text-[var(--muted-foreground)]">
+      <nav
+        aria-label="Paginación"
+        className="flex flex-wrap items-center justify-end gap-2 text-muted-foreground"
+      >
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={pagina <= 1 || consulta.isFetching}
           onClick={() => setPagina((valor) => valor - 1)}
         >
           Anterior
         </Button>
-        <span className="py-1.5">
+        <span>
           Página {meta?.page ?? 1} de {meta?.totalPages ?? 1}
         </span>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           disabled={!meta || meta.page >= meta.totalPages || consulta.isFetching}
           onClick={() => setPagina((valor) => valor + 1)}
         >
           Siguiente
         </Button>
-      </div>
+      </nav>
     </div>
   );
 }

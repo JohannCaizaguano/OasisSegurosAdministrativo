@@ -22,6 +22,7 @@ Sistema de Registro de Pagos de Primas (SRPP)
 | 1.1         | 28/09/2026 | Módulos de cuotas, notificaciones, reportes y auditoría; servicio de correo; modelo de datos ampliado                                                                                                                         | J. Caizaguano |
 | 1.2         | 29/09/2026 | Actualización de fechas del proyecto (cierre el 08/01/2027)                                                                                                                                                                   | J. Caizaguano |
 | 1.3         | 06/10/2026 | Acceso solo con inicio de sesión para el personal de Oasis Seguros y sus clientes; sin verificación pública ni actor aseguradora. Pago en línea con PayPhone (ADR-014 y ADR-015); tabla 11-1 completada con ADR-010 a ADR-013 | J. Caizaguano |
+| 1.4         | 23/10/2026 | Tabla 11-1 completada con ADR-016 a ADR-028; ADR-014 retirada por el backlog v1.5 (sin pago en línea) | J. Caizaguano |
 
 # 1. INTRODUCCIÓN
 ## 1.1. Propósito
@@ -92,7 +93,7 @@ Todos los usuarios acceden al SRPP mediante inicio de sesión. Las aseguradoras 
 | Usuarios        | Sin wallets; acceso exclusivo con usuario y contraseña para el personal de Oasis Seguros y sus clientes |
 | Infraestructura | Un VPS de 4 vCPU y 8 GB (OVHcloud VPS-1) con Docker Compose                                             |
 | Legal           | LOPDP del Ecuador: sin datos personales en la blockchain                                                |
-| Metodología     | Scrum con sprints semanales                                                                             |
+| Metodología     | Scrum con sprints de dos semanas                                                                        |
 
 # 4. CONTEXTO DEL SISTEMA
 <img src="media/img2.png" style="width:5.6in;height:4.54396in" />
@@ -490,8 +491,21 @@ Cada decisión se registra en docs/adr/ del repositorio.
 | ADR-011 | Alcance mínimo de compose.dev.yaml en el Sprint 1                                          | Aceptada   |
 | ADR-012 | Endpoint /health con Terminus, dentro del prefijo /api/v1                                  | Aceptada   |
 | ADR-013 | Bitácora de auditoría declarativa y de solo inserción                                      | Aceptada   |
-| ADR-014 | Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend              | Aceptada   |
+| ADR-014 | Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend              | Retirada   |
 | ADR-015 | Acceso al sistema solo con inicio de sesión; sin página pública de verificación de recibos | Aceptada   |
+| ADR-016 | Sesiones por familia de rotación con cierre por inactividad en Redis                       | Aceptada   |
+| ADR-017 | Validación de identificaciones ecuatorianas (RN-11)                                        | Aceptada   |
+| ADR-018 | Ciclo de vida de la póliza: estados terminales y edición restringida                       | Aceptada   |
+| ADR-019 | Diseño de interfaz Claroscuro                                                              | Aceptada   |
+| ADR-020 | Plan de cuotas y saldo de la póliza                                                        | Aceptada   |
+| ADR-021 | Administración del contrato con billetera fría                                             | Aceptada   |
+| ADR-022 | Importación de cartera en el servidor con vista previa                                     | Aceptada   |
+| ADR-023 | Notificaciones por correo desde el worker                                                  | Aceptada   |
+| ADR-024 | Carga de pagos notificados por la aseguradora                                              | Aceptada   |
+| ADR-025 | Almacenamiento y entrega de comprobantes                                                   | Aceptada   |
+| ADR-026 | Respaldos cifrados con restic en almacenamiento externo                                    | Aceptada   |
+| ADR-027 | Segundo factor TOTP para el administrador                                                  | Aceptada   |
+| ADR-028 | Generación de reportes en CSV y PDF en el servidor                                         | Aceptada   |
 
 # 12. ESCENARIOS DE CALIDAD
 **Tabla 12-1:** Escenarios de calidad

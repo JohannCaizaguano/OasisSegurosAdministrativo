@@ -18,18 +18,18 @@ export function SheetContent({
 }: ComponentProps<typeof SheetPrimitive.Content> & { lado?: 'izquierda' | 'derecha' }) {
   return (
     <SheetPrimitive.Portal>
-      <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+      <SheetPrimitive.Overlay className="fixed inset-0 z-50 animate-velo bg-overlay" />
       <SheetPrimitive.Content
         className={cn(
-          'fixed inset-y-0 z-50 flex h-full w-72 flex-col gap-4 border-r bg-[var(--card)] p-4 shadow-lg',
-          lado === 'derecha' ? 'right-0 border-l' : 'left-0',
+          'fixed inset-y-0 z-50 flex h-full w-72 max-w-[85vw] flex-col gap-4 bg-card p-4 shadow-lg',
+          lado === 'derecha' ? 'right-0' : 'left-0',
           className,
         )}
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="absolute right-3 top-3 rounded-sm opacity-70 transition-opacity hover:opacity-100">
-          <X className="size-4" />
+        <SheetPrimitive.Close className="absolute top-2 right-2 grid size-control place-items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground">
+          <X className="size-5" aria-hidden="true" />
           <span className="sr-only">Cerrar</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Content>

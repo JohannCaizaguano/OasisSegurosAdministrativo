@@ -81,11 +81,14 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   // 3. Esperar el anclaje del recibo recién emitido en la pantalla de recibos
   await page.getByRole('link', { name: 'Recibos', exact: true }).click();
   const fila = page.locator('tbody tr', { hasText: codigo as string });
-  await expect(fila).toContainText('ANCLADO', { timeout: 90_000 });
+  await expect(fila.locator('[data-estado="ANCLADO"]')).toHaveText('Verificable', {
+    timeout: 90_000,
+  });
 
   // 4. Detalle del recibo con QR
   await fila.getByRole('link', { name: 'Ver detalle' }).click();
-  await expect(page.getByTestId('estado-recibo')).toHaveText('ANCLADO');
+  await expect(page.getByTestId('estado-recibo')).toHaveAttribute('data-estado', 'ANCLADO');
+  await expect(page.getByTestId('estado-recibo')).toHaveText('Verificable');
   await expect(page.getByTestId('qr-recibo')).toBeVisible();
   await expect(page.getByTestId('fecha-anclado')).not.toHaveText('—');
 
@@ -105,7 +108,8 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   await page.getByTestId('boton-login').click();
 
   await expect(page.getByTestId('resultado-verificacion')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId('resultado-verificacion')).toContainText('VALIDO');
+  await expect(page.getByTestId('resultado-verificacion')).toHaveAttribute('data-estado', 'VALIDO');
+  await expect(page.getByTestId('resultado-verificacion')).toContainText('Auténtico');
   await expect(page.getByTestId('resultado-verificacion')).toContainText(codigo as string);
 
   const hashVerificado = (await page.getByTestId('hash-verificado').textContent())?.trim();

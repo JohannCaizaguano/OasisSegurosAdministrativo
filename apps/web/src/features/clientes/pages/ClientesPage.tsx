@@ -1,8 +1,11 @@
 import type { Cliente, FiltroEstadoCliente } from '@oasis/shared';
 import { FILTROS_ESTADO_CLIENTE } from '@oasis/shared';
-import { MoreHorizontal, Search } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
 
+import { CampoBusqueda } from '@/components/CampoBusqueda';
+import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Paginacion, TablaDatos } from '@/components/TablaDatos';
 import {
   AlertDialog,
@@ -14,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,7 +31,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -55,7 +56,7 @@ import { useClientes, useDesactivarCliente, useReactivarCliente } from '../hooks
 
 const ETIQUETAS_ESTADO: Record<FiltroEstadoCliente, string> = {
   ACTIVOS: 'Activos',
-  INACTIVOS: 'Inactivos',
+  INACTIVOS: 'Desactivados',
   TODOS: 'Todos',
 };
 
@@ -117,38 +118,25 @@ export function ClientesPage() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Clientes</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Cartera de asegurados registrados en el bróker.
-          </p>
-        </div>
+    <div className="grid gap-5">
+      <Encabezado titulo="Clientes" descripcion="Cartera de asegurados registrados en el bróker.">
         <Button data-testid="boton-nuevo-cliente" onClick={() => abrirFormulario(null)}>
+          <Plus aria-hidden="true" />
           Nuevo cliente
         </Button>
-      </div>
+      </Encabezado>
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="relative w-full sm:max-w-xs">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--muted-foreground)]"
-            aria-hidden="true"
-          />
-          <Input
-            type="search"
-            aria-label="Buscar clientes"
-            placeholder="Buscar por nombre o identificación"
-            className="pl-9"
-            value={q}
-            onChange={(evento) => {
-              setQ(evento.target.value);
-              setPagina(1);
-            }}
-          />
-        </div>
-        <div className="grid gap-1.5">
+        <CampoBusqueda
+          aria-label="Buscar clientes"
+          placeholder="Buscar por nombre o identificación"
+          value={q}
+          onChange={(evento) => {
+            setQ(evento.target.value);
+            setPagina(1);
+          }}
+        />
+        <div className="grid w-full gap-1.5 sm:w-44">
           <Label htmlFor="filtro-estado-clientes">Estado</Label>
           <Select
             value={estado}
@@ -157,7 +145,7 @@ export function ClientesPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id="filtro-estado-clientes" className="w-40">
+            <SelectTrigger id="filtro-estado-clientes">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -194,26 +182,29 @@ export function ClientesPage() {
           <TableBody>
             {clientes.map((cliente) => (
               <TableRow key={cliente.id}>
-                <TableCell className="font-mono text-xs">{cliente.identificacion}</TableCell>
-                <TableCell>{nombreCliente(cliente)}</TableCell>
+                <TableCell className="cifra">{cliente.identificacion}</TableCell>
+                <TableCell className="font-semibold">{nombreCliente(cliente)}</TableCell>
                 <TableCell>{cliente.email}</TableCell>
-                <TableCell>{cliente.telefono ?? '—'}</TableCell>
+                <TableCell className="cifra whitespace-nowrap">{cliente.telefono ?? '—'}</TableCell>
                 <TableCell>
-                  <Badge variant={cliente.activo ? 'success' : 'secondary'}>
-                    {cliente.activo ? 'Activo' : 'Inactivo'}
-                  </Badge>
+                  <EstadoInsignia
+                    dominio="cliente"
+                    estado={cliente.activo ? 'ACTIVO' : 'DESACTIVADO'}
+                  />
                 </TableCell>
-                <TableCell>{formatearFecha(cliente.createdAt)}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatearFecha(cliente.createdAt)}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="quiet"
                         size="icon"
                         aria-label={`Acciones de ${nombreCliente(cliente)}`}
                         data-testid={`menu-cliente-${cliente.id}`}
                       >
-                        <MoreHorizontal className="size-4" />
+                        <MoreHorizontal aria-hidden="true" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">

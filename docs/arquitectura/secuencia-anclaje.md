@@ -48,7 +48,7 @@ sequenceDiagram
   actor USR as Cliente o personal (con sesión)
   USR->>SPA: /recibos/verificar/:codigo (sin sesión: inicia sesión primero)
   SPA->>API: GET /api/v1/recibos/:codigo/verificacion (JWT)
-  API->>API: RolesGuard (desde S8, RN-07: el CLIENTE solo ve sus recibos)
+  API->>API: RolesGuard (desde S5, RN-07: el CLIENTE solo ve sus recibos)
   API->>DB: leer recibo (payloadCanonico + sal)
   API->>API: recalcular hashRecibo
   API->>CH: verificar(idOnchain)

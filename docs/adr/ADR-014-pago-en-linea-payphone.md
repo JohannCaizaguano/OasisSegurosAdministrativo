@@ -1,6 +1,7 @@
 # ADR-014 · Pago en línea con la Cajita de Pagos de PayPhone, confirmado desde el backend
 
-- **Estado**: aceptado (pendiente de implementar)
+- **Estado**: retirada (backlog v1.5, 23/10/2026: HU-48 y HU-49 salen del alcance porque Oasis
+  Seguros no cobra primas; las aseguradoras las cobran y notifican los pagos, HU-50 y ADR-024)
 - **Fecha**: 2026-10
 - **Sprint**: 12
 

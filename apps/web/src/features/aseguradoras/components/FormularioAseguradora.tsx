@@ -79,7 +79,7 @@ export function FormularioAseguradora({ aseguradora, alGuardar }: FormularioAseg
           <p
             id="aseguradora-nombre-error"
             role="alert"
-            className="text-sm text-[var(--destructive)]"
+            className="text-caption font-medium text-destructive"
           >
             {errores.nombre.message}
           </p>
@@ -95,7 +95,11 @@ export function FormularioAseguradora({ aseguradora, alGuardar }: FormularioAseg
           {...formulario.register('ruc')}
         />
         {errores.ruc && (
-          <p id="aseguradora-ruc-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p
+            id="aseguradora-ruc-error"
+            role="alert"
+            className="text-caption font-medium text-destructive"
+          >
             {errores.ruc.message}
           </p>
         )}

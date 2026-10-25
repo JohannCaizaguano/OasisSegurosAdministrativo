@@ -149,7 +149,7 @@ El gas real de `registrar` en Amoy (84 242) queda por debajo del límite de RNF-
 `grantRole` ≈ 0,0025 POL y el registro de prueba 0,002688372831655118 POL (≈ 0,003), como
 presupuestó el sprint.
 
-`CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S13): el primero
+`CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S7): el primero
 al `.env` y la segunda a `.env.worker` (ambos `chmod 600`), y luego
 `docker compose -f compose.prod.yaml up -d`.
 

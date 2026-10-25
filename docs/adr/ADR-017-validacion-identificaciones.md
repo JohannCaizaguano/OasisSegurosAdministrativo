@@ -7,7 +7,7 @@
 ## Contexto
 
 HU-07 exige validar la cédula, el RUC y el pasaporte del cliente "según RN-11", pero el texto de esa
-regla vive en el ERS `.docx`, que no está en el repositorio; hasta S3 el esquema solo comprobaba una
+regla vive en el ERS `.docx`, que no está en el repositorio; hasta S2 el esquema solo comprobaba una
 longitud de 5 a 20 caracteres. HU-11 pide además un RUC de 13 dígitos para las aseguradoras. Hace
 falta una sola regla, verificable con pruebas, para ambos casos.
 

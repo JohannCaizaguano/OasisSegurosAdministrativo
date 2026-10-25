@@ -121,7 +121,7 @@ describe('Usuarios del personal (e2e)', () => {
     expect(JSON.stringify(respuesta.body.details)).toContain('rol');
   });
 
-  it('desactivar cierra la sesión abierta y bloquea el login (HU-04.3 y deuda S3)', async () => {
+  it('desactivar cierra la sesión abierta y bloquea el login (HU-04.3 y deuda S2)', async () => {
     const email = correoNuevo('baja');
     const { usuario, contrasenaTemporal } = await crearUsuario({
       email,

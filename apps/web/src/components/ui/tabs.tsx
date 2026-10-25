@@ -9,7 +9,7 @@ export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrim
   return (
     <TabsPrimitive.List
       className={cn(
-        'inline-flex h-9 items-center justify-center rounded-md bg-[var(--muted)] p-1 text-[var(--muted-foreground)]',
+        'flex flex-wrap items-center gap-2',
         className,
       )}
       {...props}
@@ -21,10 +21,10 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded px-3 py-1 text-sm font-medium transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]',
-        'disabled:pointer-events-none disabled:opacity-50',
-        'data-[state=active]:bg-[var(--card)] data-[state=active]:text-[var(--foreground)] data-[state=active]:shadow-sm',
+        // Pestaña de filtro (DESIGN.md): píldora de papel; la activa, en tinta noche.
+        'inline-flex min-h-control items-center justify-center rounded-full bg-card px-4 font-medium whitespace-nowrap text-foreground shadow-sm',
+        'disabled:cursor-not-allowed disabled:opacity-45',
+        'data-[state=active]:bg-foreground data-[state=active]:font-semibold data-[state=active]:text-card',
         className,
       )}
       {...props}
@@ -35,7 +35,7 @@ export function TabsTrigger({ className, ...props }: ComponentProps<typeof TabsP
 export function TabsContent({ className, ...props }: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
-      className={cn('mt-2 focus-visible:outline-none', className)}
+      className={cn('mt-4', className)}
       {...props}
     />
   );

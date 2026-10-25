@@ -14,6 +14,7 @@ import {
   crearPagoSchema,
   crearPolizaSchema,
   crearUsuarioSchema,
+  ESTADOS_CUOTA,
   listarClientesQuerySchema,
   listarPolizasQuerySchema,
   loginSchema,
@@ -456,5 +457,12 @@ describe('ramoSchema', () => {
 describe('acciones de auditoría', () => {
   it('incluye CAMBIAR_ESTADO (D12)', () => {
     expect(ACCIONES_AUDITORIA).toContain('CAMBIAR_ESTADO');
+  });
+});
+
+describe('estados de cuota (HT-13)', () => {
+  it('coincide con el enum EstadoCuota de apps/api/prisma/schema.prisma, en su orden', () => {
+    // Si cambia el enum de Prisma, esta lista y ESTADOS_CUOTA cambian juntas.
+    expect(ESTADOS_CUOTA).toEqual(['PENDIENTE', 'PARCIAL', 'PAGADA', 'VENCIDA']);
   });
 });

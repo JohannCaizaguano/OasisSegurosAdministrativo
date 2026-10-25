@@ -14,7 +14,7 @@ function App() {
   if (!listo) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-[var(--muted-foreground)]">Cargando Oasis Seguros…</p>
+        <p className="text-caption text-muted-foreground">Cargando Oasis Seguros…</p>
       </div>
     );
   }

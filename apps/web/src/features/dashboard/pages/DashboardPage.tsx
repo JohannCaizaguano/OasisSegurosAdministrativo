@@ -1,3 +1,4 @@
+import { Encabezado } from '@/components/layout/Encabezado';
 import { useAuthStore } from '@/lib/auth-store';
 
 import { PanelCliente } from '../components/PanelCliente';
@@ -5,18 +6,19 @@ import { PanelPersonal } from '../components/PanelPersonal';
 
 export function DashboardPage() {
   const usuario = useAuthStore((estado) => estado.usuario);
+  const esCliente = usuario?.rol === 'CLIENTE';
 
   return (
     <div className="grid gap-5">
-      <div>
-        <h1 className="text-2xl font-semibold">Hola, {usuario?.nombre}</h1>
-        <p className="text-sm text-[var(--muted-foreground)]">
-          {usuario?.rol === 'CLIENTE'
+      <Encabezado
+        titulo={`Hola, ${usuario?.nombre ?? ''}`}
+        descripcion={
+          esCliente
             ? 'Consulte sus pólizas y el estado de sus pagos.'
-            : 'Resumen operativo del bróker.'}
-        </p>
-      </div>
-      {usuario?.rol === 'CLIENTE' ? <PanelCliente /> : <PanelPersonal />}
+            : 'Empiece por los pagos que esperan validación.'
+        }
+      />
+      {esCliente ? <PanelCliente /> : <PanelPersonal />}
     </div>
   );
 }

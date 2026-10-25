@@ -42,7 +42,7 @@ export function AvisoInactividad() {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={cerrarSesion}>
+          <Button variant="secondary" onClick={cerrarSesion}>
             Cerrar sesión
           </Button>
           <Button ref={botonContinuar} onClick={continuar}>

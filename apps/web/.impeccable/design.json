@@ -1,0 +1,687 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-23T21:43:13.188Z",
+  "title": "Design System: SRPP Oasis Seguros · Claroscuro",
+  "extensions": {
+    "colorMeta": {
+      "lienzo-arena": {
+        "role": "neutral",
+        "displayName": "Lienzo arena",
+        "canonical": "#f6f4f0",
+        "tonalRamp": [
+          "#0c0b09",
+          "#282623",
+          "#464542",
+          "#686662",
+          "#8b8985",
+          "#afaeaa",
+          "#d3d1cd",
+          "#f0eeea"
+        ]
+      },
+      "papel": {
+        "role": "neutral",
+        "displayName": "Papel",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#262626",
+          "#454545",
+          "#666666",
+          "#898989",
+          "#aeaeae",
+          "#d1d1d1",
+          "#eeeeee"
+        ]
+      },
+      "arena-hundida": {
+        "role": "neutral",
+        "displayName": "Arena hundida",
+        "canonical": "#efebe4",
+        "tonalRamp": [
+          "#0d0b07",
+          "#292621",
+          "#48453f",
+          "#696660",
+          "#8c8982",
+          "#b1ada7",
+          "#d4d0ca",
+          "#f2eee7"
+        ]
+      },
+      "tinta-noche": {
+        "role": "primary",
+        "displayName": "Tinta noche",
+        "canonical": "#1a1714",
+        "tonalRamp": [
+          "#0d0b08",
+          "#292623",
+          "#484441",
+          "#696562",
+          "#8c8884",
+          "#b1ada9",
+          "#d4d0cc",
+          "#f2eee9"
+        ]
+      },
+      "tinta-tierra": {
+        "role": "neutral",
+        "displayName": "Tinta tierra",
+        "canonical": "#5e564b",
+        "tonalRamp": [
+          "#100a03",
+          "#2c251b",
+          "#4b4439",
+          "#6d6559",
+          "#90887c",
+          "#b6aca0",
+          "#d9cfc3",
+          "#f7ede0"
+        ]
+      },
+      "borde-campo": {
+        "role": "neutral",
+        "displayName": "Borde de campo",
+        "canonical": "#8c8478",
+        "tonalRamp": [
+          "#100a03",
+          "#2c251b",
+          "#4b4439",
+          "#6d6559",
+          "#90887c",
+          "#b5ada0",
+          "#d8d0c3",
+          "#f6ede0"
+        ]
+      },
+      "hilo": {
+        "role": "neutral",
+        "displayName": "Hilo",
+        "canonical": "#e9e4db",
+        "tonalRamp": [
+          "#0e0b05",
+          "#2a261f",
+          "#49443d",
+          "#6a655e",
+          "#8d8980",
+          "#b2ada5",
+          "#d5d0c7",
+          "#f3eee5"
+        ]
+      },
+      "cafe-enlace": {
+        "role": "secondary",
+        "displayName": "Café de enlace",
+        "canonical": "#8a6122",
+        "tonalRamp": [
+          "#200000",
+          "#401c00",
+          "#623b00",
+          "#865d1d",
+          "#ab8044",
+          "#d2a568",
+          "#f6c88b",
+          "#ffe6a7"
+        ]
+      },
+      "noche-oasis": {
+        "role": "neutral",
+        "displayName": "Noche del oasis",
+        "canonical": "#14110d",
+        "tonalRamp": [
+          "#0d0b07",
+          "#292621",
+          "#484440",
+          "#696560",
+          "#8c8883",
+          "#b1ada8",
+          "#d5d0ca",
+          "#f2eee8"
+        ]
+      },
+      "noche-oasis-alta": {
+        "role": "neutral",
+        "displayName": "Noche alta",
+        "canonical": "#26201a",
+        "tonalRamp": [
+          "#0f0a05",
+          "#2b251f",
+          "#4a443d",
+          "#6c655e",
+          "#8f8880",
+          "#b4aca5",
+          "#d8cfc7",
+          "#f5ede5"
+        ]
+      },
+      "luna-arena": {
+        "role": "neutral",
+        "displayName": "Luna de arena",
+        "canonical": "#f3ece0",
+        "tonalRamp": [
+          "#0f0a04",
+          "#2b261d",
+          "#4a443a",
+          "#6b655b",
+          "#8f887d",
+          "#b4ada2",
+          "#d7d0c4",
+          "#f5eee2"
+        ]
+      },
+      "arena-tenue": {
+        "role": "neutral",
+        "displayName": "Arena tenue",
+        "canonical": "#a59985",
+        "tonalRamp": [
+          "#120900",
+          "#2e2514",
+          "#4e4332",
+          "#706452",
+          "#938774",
+          "#b9ac98",
+          "#dccfba",
+          "#faedd7"
+        ]
+      },
+      "oro-oasis": {
+        "role": "primary",
+        "displayName": "Oro del oasis",
+        "canonical": "#f0c878",
+        "tonalRamp": [
+          "#1f0100",
+          "#3f1d00",
+          "#603d00",
+          "#845f00",
+          "#a88330",
+          "#cfa858",
+          "#f3cb7b",
+          "#ffe998"
+        ]
+      },
+      "oro-claro": {
+        "role": "primary",
+        "displayName": "Oro claro",
+        "canonical": "#f6d592",
+        "tonalRamp": [
+          "#1c0300",
+          "#3b2000",
+          "#5c3f00",
+          "#7f611c",
+          "#a38443",
+          "#c9a968",
+          "#edcd8a",
+          "#ffeaa7"
+        ]
+      },
+      "oro-medio": {
+        "role": "primary",
+        "displayName": "Oro medio",
+        "canonical": "#e2ad5b",
+        "tonalRamp": [
+          "#230000",
+          "#441800",
+          "#673900",
+          "#8b5b00",
+          "#b17e27",
+          "#d8a351",
+          "#fdc775",
+          "#ffe492"
+        ]
+      },
+      "oro-profundo": {
+        "role": "primary",
+        "displayName": "Oro profundo",
+        "canonical": "#c98f3e",
+        "tonalRamp": [
+          "#250000",
+          "#471500",
+          "#6a3600",
+          "#8f5800",
+          "#b57c28",
+          "#dca151",
+          "#ffc475",
+          "#ffe292"
+        ]
+      },
+      "tinta-sobre-oro": {
+        "role": "primary",
+        "displayName": "Tinta sobre oro",
+        "canonical": "#1a140c",
+        "tonalRamp": [
+          "#100a04",
+          "#2c251d",
+          "#4b443b",
+          "#6c655b",
+          "#90887d",
+          "#b5ada2",
+          "#d8d0c4",
+          "#f6ede2"
+        ]
+      },
+      "exito": {
+        "role": "state",
+        "displayName": "Éxito",
+        "canonical": "#2f6b3a",
+        "tonalRamp": [
+          "#001400",
+          "#003202",
+          "#145323",
+          "#3a7544",
+          "#5d9a66",
+          "#82c08a",
+          "#a4e3ac",
+          "#c1ffc9"
+        ]
+      },
+      "exito-fondo": {
+        "role": "state",
+        "displayName": "Fondo de éxito",
+        "canonical": "#eaf4e4",
+        "tonalRamp": [
+          "#070d04",
+          "#22291d",
+          "#40483b",
+          "#61695b",
+          "#838c7e",
+          "#a8b1a2",
+          "#cbd5c5",
+          "#e8f2e2"
+        ]
+      },
+      "proceso": {
+        "role": "state",
+        "displayName": "Proceso",
+        "canonical": "#2b5c87",
+        "tonalRamp": [
+          "#00082d",
+          "#00274e",
+          "#154871",
+          "#396a96",
+          "#5c8ebc",
+          "#80b3e3",
+          "#a3d7ff",
+          "#bff5ff"
+        ]
+      },
+      "proceso-fondo": {
+        "role": "state",
+        "displayName": "Fondo de proceso",
+        "canonical": "#e6f0f7",
+        "tonalRamp": [
+          "#060c10",
+          "#20282d",
+          "#3e464c",
+          "#5f676d",
+          "#828b91",
+          "#a6afb6",
+          "#c9d3d9",
+          "#e6f0f7"
+        ]
+      },
+      "aviso": {
+        "role": "state",
+        "displayName": "Aviso",
+        "canonical": "#8c4f0a",
+        "tonalRamp": [
+          "#270000",
+          "#491100",
+          "#6d3300",
+          "#925514",
+          "#b9783e",
+          "#e19d63",
+          "#ffc085",
+          "#ffdea2"
+        ]
+      },
+      "aviso-fondo": {
+        "role": "state",
+        "displayName": "Fondo de aviso",
+        "canonical": "#fcefd9",
+        "tonalRamp": [
+          "#120900",
+          "#2f2514",
+          "#4e4331",
+          "#706451",
+          "#938874",
+          "#b9ac97",
+          "#dccfba",
+          "#faedd7"
+        ]
+      },
+      "error": {
+        "role": "state",
+        "displayName": "Error",
+        "canonical": "#a2332b",
+        "tonalRamp": [
+          "#340000",
+          "#5b0000",
+          "#82100e",
+          "#aa3b32",
+          "#d46055",
+          "#fe8678",
+          "#ffa99a",
+          "#ffc7b6"
+        ]
+      },
+      "error-fondo": {
+        "role": "state",
+        "displayName": "Fondo de error",
+        "canonical": "#fbe8e4",
+        "tonalRamp": [
+          "#130806",
+          "#302320",
+          "#50413e",
+          "#72625e",
+          "#968581",
+          "#bba9a6",
+          "#dfccc8",
+          "#fdeae6"
+        ]
+      },
+      "neutro": {
+        "role": "state",
+        "displayName": "Neutro",
+        "canonical": "#5e564b",
+        "tonalRamp": [
+          "#100a03",
+          "#2c251b",
+          "#4b4439",
+          "#6d6559",
+          "#90887c",
+          "#b6aca0",
+          "#d9cfc3",
+          "#f7ede0"
+        ]
+      },
+      "neutro-fondo": {
+        "role": "state",
+        "displayName": "Fondo neutro",
+        "canonical": "#efebe4",
+        "tonalRamp": [
+          "#0d0b07",
+          "#292621",
+          "#48453f",
+          "#696660",
+          "#8c8982",
+          "#b1ada7",
+          "#d4d0ca",
+          "#f2eee7"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "«Iniciar sesión» y el título sobre la fotografía de bienvenida."
+      },
+      "headline": {
+        "displayName": "Título de página",
+        "purpose": "Título de cada página del personal."
+      },
+      "cifra": {
+        "displayName": "Cifra",
+        "purpose": "Cifras del resumen y montos grandes, con tnum."
+      },
+      "title": {
+        "displayName": "Título de tarjeta",
+        "purpose": "Títulos de tarjeta y panel."
+      },
+      "body": {
+        "displayName": "Cuerpo",
+        "purpose": "Texto de trabajo del escritorio."
+      },
+      "body-movil": {
+        "displayName": "Cuerpo móvil",
+        "purpose": "Texto del portal en el teléfono."
+      },
+      "label": {
+        "displayName": "Etiqueta",
+        "purpose": "Campos, botones y nombres en filas."
+      },
+      "caption": {
+        "displayName": "Nota",
+        "purpose": "Metadatos, ayudas y avisos."
+      },
+      "encabezado-tabla": {
+        "displayName": "Encabezado de tabla",
+        "purpose": "Encabezados de columna en mayúsculas."
+      }
+    },
+    "gradients": [
+      {
+        "name": "oro-del-oasis",
+        "value": "linear-gradient(135deg,#f6d592 0%,#e2ad5b 55%,#c98f3e 100%)",
+        "purpose": "Solo el botón primario."
+      },
+      {
+        "name": "resplandor",
+        "value": "radial-gradient(120% 130% at 0% 0%,rgba(240,200,120,.22),rgba(240,200,120,0) 60%)",
+        "purpose": "Luz dorada de los paneles de noche."
+      }
+    ],
+    "shadows": [
+      {
+        "name": "tarjeta",
+        "value": "0 0 0 1px #ebe6dd, 0 4px 16px rgba(26,23,20,.05)",
+        "purpose": "Tarjetas, filas, pestañas y botones secundarios."
+      },
+      {
+        "name": "panel-noche",
+        "value": "inset 0 0 0 1px rgba(240,200,120,.25), 0 10px 28px rgba(20,17,13,.18)",
+        "purpose": "Paneles de noche."
+      },
+      {
+        "name": "accion-dorada",
+        "value": "inset 0 1px 0 rgba(255,255,255,.4), 0 2px 6px rgba(26,20,12,.16)",
+        "purpose": "Botón primario."
+      },
+      {
+        "name": "flotante",
+        "value": "0 24px 60px rgba(20,17,13,.28)",
+        "purpose": "Diálogos, notificaciones y marco del teléfono."
+      }
+    ],
+    "motion": [
+      {
+        "name": "presionar",
+        "value": "transform scale(.97) 120ms ease-out",
+        "purpose": "Respuesta al presionar botones."
+      },
+      {
+        "name": "cajon",
+        "value": "cubic-bezier(.32,.72,0,1)",
+        "purpose": "Paneles, pasos del teléfono y entradas de vista."
+      },
+      {
+        "name": "ease-out-fuerte",
+        "value": "cubic-bezier(.23,1,.32,1)",
+        "purpose": "Menús, diálogos y select."
+      },
+      {
+        "name": "entrada-vista",
+        "value": "opacity + translateY(12px) 350ms",
+        "purpose": "Entrada de cada vista; se reduce con prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "riel-horizontal",
+        "value": "760px"
+      },
+      {
+        "name": "telefono",
+        "value": "480px"
+      },
+      {
+        "name": "minimo",
+        "value": "360px"
+      }
+    ],
+    "focus": {
+      "claro": "outline: 3px solid #1a1714; outline-offset: 2px",
+      "oscuro": "outline: 3px solid #f0c878; outline-offset: 2px",
+      "campo": "border: 2px solid #1a1714; box-shadow: 0 0 0 4px rgba(226,173,91,.38)"
+    }
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "La única acción dorada de la vista.",
+      "html": "<button class=\"ds-btn-primary\">Validar y emitir recibo</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border:0;border-radius:8px;background:linear-gradient(135deg,#f6d592 0%,#e2ad5b 55%,#c98f3e 100%);color:#1a140c;font:600 15px Figtree,system-ui,sans-serif;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 6px rgba(26,20,12,.16);cursor:pointer;transition:transform .15s cubic-bezier(.32,.72,0,1),filter .2s}.ds-btn-primary:hover{filter:brightness(1.06)}.ds-btn-primary:active{transform:scale(.97)}.ds-btn-primary:focus-visible{outline:3px solid #1a1714;outline-offset:2px}"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Acciones de apoyo sobre papel.",
+      "html": "<button class=\"ds-btn-secondary\">Ver cartera</button>",
+      "css": ".ds-btn-secondary{min-height:44px;padding:0 18px;border:0;border-radius:8px;background:#fff;color:#1a1714;font:600 15px Figtree,system-ui,sans-serif;box-shadow:0 0 0 1px #ebe6dd,0 4px 16px rgba(26,23,20,.05);cursor:pointer}.ds-btn-secondary:hover{background:#efebe4}.ds-btn-secondary:active{transform:scale(.97)}.ds-btn-secondary:focus-visible{outline:3px solid #1a1714;outline-offset:2px}"
+    },
+    {
+      "name": "Rechazar",
+      "kind": "button",
+      "refersTo": "button-danger-outline",
+      "description": "Abre el rechazo con motivo.",
+      "html": "<button class=\"ds-btn-reject\">Rechazar</button>",
+      "css": ".ds-btn-reject{min-height:44px;padding:0 18px;border:0;border-radius:8px;background:#fff;color:#a2332b;font:600 15px Figtree,system-ui,sans-serif;box-shadow:inset 0 0 0 1.5px #a2332b;cursor:pointer}.ds-btn-reject:hover{background:#fbe8e4}.ds-btn-reject:focus-visible{outline:3px solid #1a1714;outline-offset:2px}"
+    },
+    {
+      "name": "Campo",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo de formulario con foco de tinta y halo dorado.",
+      "html": "<label class=\"ds-field\">Referencia<input class=\"ds-input\" placeholder=\"Número del comprobante\"></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;font:600 14px Figtree,system-ui,sans-serif;color:#1a1714}.ds-input{height:48px;padding:0 14px;border:1px solid #8c8478;border-radius:8px;background:#fff;font:400 16px Figtree,system-ui,sans-serif;color:#1a1714}.ds-input:focus{outline:0;border:2px solid #1a1714;padding-left:13px;box-shadow:0 0 0 4px rgba(226,173,91,.38)}"
+    },
+    {
+      "name": "Insignia de estado",
+      "kind": "chip",
+      "refersTo": "insignia-exito",
+      "description": "Estado con texto, icono y color.",
+      "html": "<span class=\"ds-pill ds-ok\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>Validado</span> <span class=\"ds-pill ds-info\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/></svg>Por validar</span> <span class=\"ds-pill ds-bad\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.4\"><path d=\"M12 4 2.5 20h19z\"/><path d=\"M12 10v4M12 17h.01\"/></svg>Vencida</span>",
+      "css": ".ds-pill{display:inline-flex;gap:6px;align-items:center;padding:4px 11px 4px 8px;border-radius:999px;font:600 13px Figtree,system-ui,sans-serif}.ds-ok{background:#eaf4e4;color:#2f6b3a}.ds-info{background:#e6f0f7;color:#2b5c87}.ds-bad{background:#fbe8e4;color:#a2332b}"
+    },
+    {
+      "name": "Riel del personal",
+      "kind": "nav",
+      "refersTo": "riel",
+      "description": "Navegación de iconos con el activo en oro.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-rail-item\" aria-current=\"page\" href=\"#\">Pagos<span class=\"ds-badge\">6</span></a><a class=\"ds-rail-item\" href=\"#\">Cartera</a><a class=\"ds-rail-item\" href=\"#\">Recibos</a></nav>",
+      "css": ".ds-rail{display:flex;flex-direction:column;gap:6px;width:92px;padding:18px 8px;background:#14110d;border-radius:12px}.ds-rail-item{position:relative;display:flex;align-items:center;justify-content:center;min-height:56px;border-radius:8px;color:#f3ece0;font:500 12px Figtree,system-ui,sans-serif;text-decoration:none}.ds-rail-item:hover{background:#26201a}.ds-rail-item[aria-current=page]{background:#26201a;color:#f0c878;font-weight:700;box-shadow:inset 3px 0 0 #f0c878}.ds-rail-item:focus-visible{outline:3px solid #f0c878;outline-offset:2px}.ds-badge{position:absolute;top:3px;right:8px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#f0c878;color:#1a140c;font-size:11px;font-weight:800;display:grid;place-items:center}"
+    },
+    {
+      "name": "Panel de noche",
+      "kind": "card",
+      "refersTo": "panel-noche",
+      "description": "Resumen o héroe con la cifra en oro.",
+      "html": "<div class=\"ds-night\"><span class=\"ds-night-m\">Saldo pendiente</span><b class=\"ds-night-big\">$518,40</b><span class=\"ds-night-m\">Vehículo · cuota 7 · vence 30/10/2026</span></div>",
+      "css": ".ds-night{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:12px;color:#f3ece0;background:radial-gradient(120% 130% at 0% 0%,rgba(240,200,120,.22),rgba(240,200,120,0) 60%),#14110d;box-shadow:inset 0 0 0 1px rgba(240,200,120,.25),0 10px 28px rgba(20,17,13,.18);font-family:Figtree,system-ui,sans-serif}.ds-night-m{color:#a59985;font-size:14px}.ds-night-big{font:700 36px/1.1 Outfit,system-ui,sans-serif;color:#f0c878;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Etiqueta de rol",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Rol del usuario; no es un estado.",
+      "html": "<span class=\"ds-tag ds-tag-adm\">Administrador</span> <span class=\"ds-tag\">Operador</span>",
+      "css": ".ds-tag{display:inline-flex;align-items:center;height:24px;padding:0 9px;border-radius:6px;font:700 12px Figtree,system-ui,sans-serif;letter-spacing:.04em;background:#efebe4;color:#1a1714}.ds-tag-adm{background:#14110d;color:#f0c878}"
+    },
+    {
+      "name": "Interruptor de catálogo",
+      "kind": "custom",
+      "refersTo": "switch",
+      "description": "Activa o desactiva un elemento del catálogo.",
+      "html": "<label class=\"ds-row\"><span>Débito bancario</span><button class=\"ds-switch\" role=\"switch\" aria-checked=\"true\" aria-label=\"Débito bancario\"></button></label>",
+      "css": ".ds-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:52px;font:600 15px Figtree,system-ui,sans-serif;color:#1a1714}.ds-switch{width:46px;height:28px;border-radius:14px;border:0;background:#8c8478;position:relative;padding:0;cursor:pointer}.ds-switch::after{content:\"\";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s cubic-bezier(.32,.72,0,1)}.ds-switch[aria-checked=true]{background:#2f6b3a}.ds-switch[aria-checked=true]::after{transform:translateX(18px)}.ds-switch:focus-visible{outline:3px solid #1a1714;outline-offset:2px}"
+    },
+    {
+      "name": "Código de un solo uso",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Segundo factor del administrador.",
+      "html": "<input class=\"ds-otp\" inputmode=\"numeric\" autocomplete=\"one-time-code\" maxlength=\"6\" placeholder=\"000000\" aria-label=\"Código de verificación\">",
+      "css": ".ds-otp{width:260px;height:60px;border:1px solid #8c8478;border-radius:8px;background:#fff;font:600 26px/1 Outfit,system-ui,sans-serif;letter-spacing:.5em;text-align:center;padding-left:.5em;color:#1a1714}.ds-otp:focus{outline:0;border:2px solid #1a1714;box-shadow:0 0 0 4px rgba(226,173,91,.38)}"
+    },
+    {
+      "name": "Tarjeta",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor de papel sobre el lienzo.",
+      "html": "<div class=\"ds-card\"><b>Por validar</b><p>Del más antiguo al más reciente</p></div>",
+      "css": ".ds-card{padding:22px;border-radius:12px;background:#fff;box-shadow:0 0 0 1px #ebe6dd,0 4px 16px rgba(26,23,20,.05);font:400 15px/1.45 Figtree,system-ui,sans-serif;color:#1a1714}.ds-card b{font:700 17px Outfit,system-ui,sans-serif}.ds-card p{margin:4px 0 0;color:#5e564b;font-size:13px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El oasis al anochecer",
+    "overview": "El SRPP se ve como la fotografía de marca de Oasis Seguros: un lienzo de arena cálida donde se trabaja de día y, sobre él, paneles negros iluminados por una sola luz dorada, la del isologo. La luz no decora: marca lo que la persona tiene que hacer ahora (validar, registrar, reportar) y las cifras que importan sobre fondo negro. Todo lo demás es tinta, arena y espacio.\n\nEs una herramienta de trabajo (modo Operate) para tres operadores y un gerente que validan pagos toda la jornada, y un portal de consulta para clientes que lo abren desde el celular. Por eso la ambición se expresa en precisión: filas de 56 px, controles de 44 px o más, cifras tabulares, estados que se leen sin color y un único gesto de marca repetido con disciplina. La estructura viene de la propuesta C · Cercano (riel de iconos, resumen del día, mesa de validación en dos paneles); la paleta y la forma, del manual de marca: negro, café y el degradado dorado del logo.\n\nSe rechazan de forma explícita los tecnicismos para el cliente («blockchain», «hash»), los degradados y brillos fuera de la acción principal y del riel, el oro como color de texto sobre fondos claros y el texto sobre la fotografía sin un velo medido.",
+    "keyCharacteristics": [
+      "Lienzo de arena (#f6f4f0) con tarjetas de papel y paneles de noche (#14110d) para lo que resume o dirige.",
+      "Una sola acción dorada por vista; el resto de botones son papel, arena o contorno.",
+      "Outfit para títulos y cifras, Figtree para todo lo que se lee; montos siempre con cifras tabulares.",
+      "Estado = texto + icono + color, con cinco tonos para todo el sistema.",
+      "Contraste calculado: texto ≥ 4,5:1, bordes de campo y foco ≥ 3:1."
+    ],
+    "rules": [
+      {
+        "name": "The One Light Rule",
+        "body": "Cada vista tiene como máximo una acción con el oro del oasis. Si dos botones compiten por el oro, uno de ellos pasa a papel o a arena.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gold Stays in the Dark Rule",
+        "body": "El oro como color de texto o de trazo solo aparece sobre la noche (11,9:1). Sobre el lienzo da 1,44:1 y está prohibido para texto, iconos sueltos y foco.",
+        "section": "colors"
+      },
+      {
+        "name": "The Three Signals Rule",
+        "body": "Ningún estado depende solo del color: siempre lleva su texto y su icono, y cada estado usa siempre el mismo icono.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Todo monto, fecha y código usa cifras tabulares y el formato de Ecuador: $1.234,50 · 06/10/2026.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Hype Rule",
+        "body": "Nada de pesos 800 ni tracking abierto en títulos; la jerarquía sale del tamaño y del espacio.",
+        "section": "typography"
+      },
+      {
+        "name": "The Task First Rule",
+        "body": "El inicio del personal abre con lo que hay que hacer (por validar, vence esta semana) y el del cliente con lo urgente (cuota vencida, pago en validación); los gráficos decorativos no tienen lugar.",
+        "section": "layout"
+      },
+      {
+        "name": "The Lamp Rule",
+        "body": "Solo los paneles de noche llevan el filo dorado. Una tarjeta de papel nunca brilla.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do usar el gradiente del oro del oasis solo en el botón primario; el oro plano, en el ítem activo y la insignia de pendientes del riel.",
+      "Do tematizar lo que dibuja el navegador: selección en oro del oasis con tinta sobre oro, cursor de texto y `accent-color` en tinta noche, barras de desplazamiento en arena tenue y subrayado con desplazamiento de 3px.",
+      "Do usar migas de pan solo en subpáginas («Pagos / Mesa de validación»); una página principal no repite su título encima del título.",
+      "Do poner el foco como contorno de 3px en tinta noche con 2px de separación sobre superficies claras, y en oro del oasis dentro del riel, los paneles de noche y las notificaciones.",
+      "Do acompañar cada estado de su texto y su icono, con los cinco tonos de estado y nada más.",
+      "Do escribir montos con cifras tabulares y formato de Ecuador ($1.234,50) y fechas como dd/mm/aaaa.",
+      "Do mantener todo objetivo táctil en 44px o más y el cuerpo del teléfono en 16px.",
+      "Do respetar `prefers-reduced-motion`: se quitan desplazamientos y escalados y se conservan los cambios de opacidad y color.",
+      "Do hablarle al cliente de «recibo verificable», «en proceso» y «constancia en la red pública»."
+    ],
+    "donts": [
+      "Don't usar el oro del oasis como color de texto, icono o foco sobre el lienzo o el papel (1,44:1).",
+      "Don't poner dos acciones doradas en la misma vista.",
+      "Don't escribir texto sobre la fotografía sin el velo medido, ni usar la fotografía fuera de la bienvenida.",
+      "Don't añadir grises, azules o acentos nuevos: los neutros son arena y tinta, y el azul solo existe como tono de «proceso».",
+      "Don't usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity, por debajo de 300ms.",
+      "Don't mostrar «blockchain», «hash» ni datos técnicos del anclaje al cliente; el personal sí ve la transacción y el explorador.",
+      "Don't usar el rojo sólido para acciones que se pueden deshacer.",
+      "Don't marcar ítems, tarjetas ni avisos con bordes laterales de color de más de 1px.",
+      "Don't mostrar al operador lo que es solo del administrador (saldo de la cuenta de anclaje, reintentar, anular, usuarios, bitácora): se oculta, no se deshabilita."
+    ]
+  }
+}

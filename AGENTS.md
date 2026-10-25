@@ -9,8 +9,10 @@ cambiar código. Lee también `CLAUDE.md` (mapa técnico) y `apps/api/src/module
 Sistema de Registro de Pagos de Primas (SRPP) del bróker **Oasis Seguros** (Quito,
 Ecuador): clientes, pólizas, cuotas y pagos; cada pago validado emite un recibo digital
 cuyo hash con sal se ancla en Polygon PoS (Amoy). Solo el personal y los clientes de Oasis
-usan el sistema, con inicio de sesión: el cliente verifica sus recibos y paga sus cuotas en
-línea con PayPhone (ADR-014 y ADR-015). Las aseguradoras son datos, no usuarias.
+usan el sistema, con inicio de sesión (ADR-015): el cliente consulta sus pólizas, verifica sus
+recibos y reporta con comprobante lo que pagó fuera del débito bancario (HU-17). Las aseguradoras
+cobran las primas y notifican los pagos (HU-50); el pago en línea con PayPhone (ADR-014) salió
+del alcance en el backlog v1.5 (HU-48 y HU-49). Las aseguradoras son datos, no usuarias.
 Es el proyecto de titulación de Ingeniería de Software de la ESPOCH: el código, la
 documentación y las decisiones deben ser trazables y estar justificados.
 
@@ -99,7 +101,9 @@ convenciones que la skill ya define.
   corto que funcione, sin abstracciones con una sola implementación. Las simplificaciones
   deliberadas se marcan con un comentario `ponytail:` que nombre el techo y la salida.
   Para auditar: `ponytail-review` (diff) y `ponytail-audit` (repo completo).
-- **Impeccable** para cualquier trabajo de UI (crear, auditar, pulir).
+- **Impeccable** para cualquier trabajo de UI (crear, auditar, pulir). El sistema visual es
+  Claroscuro ([ADR-019](docs/adr/ADR-019-diseno-interfaz-claroscuro.md)): manda
+  `apps/web/DESIGN.md`, con el prototipo y el documento en `docs/diseno/`.
 - Orden: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
 - **Agentes** (`.opencode/agents/`): superpowers dirige la ejecución y cada tarea la hace el
   especialista de su área (sección "Agentes").
@@ -161,8 +165,9 @@ esta tabla. Cada uno trae sus skills, sus reglas y su verificación, y edita sol
 - **Acceso y auditoría**: todo handler declara `@Roles(...)` o `@Public()`, y toda mutación
   `@Auditar(accion, entidad)`; las rutas públicas y las exenciones están en
   `apps/api/src/modules/README.md`.
-- **SPA**: una página nueva se registra en `router.tsx` con sus roles y se enlaza desde el menú
-  lateral de `AppLayout`; las páginas de la cuenta del usuario, desde su menú en el encabezado.
+- **SPA**: una página nueva se registra en `router.tsx` con sus roles y se enlaza desde `ENLACES`
+  (`components/layout/RielPersonal.tsx`) o, si es del cliente, desde `BarraInferiorCliente.tsx`;
+  las páginas de la cuenta del usuario, desde `MenuUsuario.tsx`.
 - **Hexagonal**: cada módulo usa `domain/ application/{ports,use-cases}/
 infrastructure/ presentation/http/`; puertos como interfaz + token `Symbol`; sin
   `process.env` fuera de `config/`; errores de dominio tipados (`shared-kernel/`).

@@ -143,7 +143,7 @@ export function SelectorCliente({
       {seleccionado && (
         <Button
           type="button"
-          variant="ghost"
+          variant="quiet"
           size="icon"
           aria-label="Quitar cliente seleccionado"
           data-testid={`${idBase}-quitar`}
@@ -157,12 +157,14 @@ export function SelectorCliente({
         (consulta.isError ? (
           <div
             role="alert"
-            className="absolute z-50 mt-1 flex w-full flex-wrap items-center justify-between gap-2 rounded-md border bg-[var(--popover)] px-2 py-1.5 text-sm shadow-md"
+            className="absolute z-50 mt-1 flex w-full flex-wrap items-center justify-between gap-2 rounded-md bg-popover px-3 py-2 shadow-md"
           >
-            <span className="text-[var(--destructive)]">No se pudieron cargar los clientes.</span>
+            <span className="font-medium text-destructive">
+              No se pudieron cargar los clientes.
+            </span>
             <button
               type="button"
-              className="rounded-sm underline focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:outline-none"
+              className="inline-flex min-h-control items-center rounded-sm font-semibold text-link underline"
               onClick={() => void consulta.refetch()}
             >
               Reintentar
@@ -173,21 +175,15 @@ export function SelectorCliente({
             id={idLista}
             role="listbox"
             aria-label="Sugerencias de clientes"
-            className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md border bg-[var(--popover)] p-1 text-[var(--popover-foreground)] shadow-md"
+            className="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-md bg-popover p-1.5 text-popover-foreground shadow-md"
           >
             {consulta.isFetching && (
-              <li
-                role="presentation"
-                className="px-2 py-1.5 text-sm text-[var(--muted-foreground)]"
-              >
+              <li role="presentation" className="px-3 py-2.5 text-muted-foreground">
                 Buscando…
               </li>
             )}
             {!consulta.isFetching && clientes.length === 0 && (
-              <li
-                role="presentation"
-                className="px-2 py-1.5 text-sm text-[var(--muted-foreground)]"
-              >
+              <li role="presentation" className="px-3 py-2.5 text-muted-foreground">
                 Sin resultados
               </li>
             )}
@@ -198,14 +194,16 @@ export function SelectorCliente({
                 role="option"
                 aria-selected={indice === indiceActivo}
                 className={cn(
-                  'cursor-pointer rounded-sm px-2 py-1.5 text-sm',
-                  indice === indiceActivo && 'bg-[var(--accent)] text-[var(--accent-foreground)]',
+                  'flex min-h-control cursor-pointer flex-wrap items-center rounded-md px-3 py-2',
+                  indice === indiceActivo && 'bg-accent text-accent-foreground',
                 )}
                 onMouseDown={(evento) => evento.preventDefault()}
                 onClick={() => elegir(cliente)}
               >
                 {nombreCliente(cliente)}
-                <span className="text-[var(--muted-foreground)]"> — {cliente.identificacion}</span>
+                <span className="cifra text-muted-foreground">
+                  &nbsp;— {cliente.identificacion}
+                </span>
               </li>
             ))}
           </ul>

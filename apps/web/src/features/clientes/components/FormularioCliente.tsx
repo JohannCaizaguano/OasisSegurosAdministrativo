@@ -143,7 +143,7 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
           <p
             id="tipo-identificacion-error"
             role="alert"
-            className="text-sm text-[var(--destructive)]"
+            className="text-caption font-medium text-destructive"
           >
             {errores.tipoIdentificacion.message}
           </p>
@@ -162,11 +162,15 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
           }
           {...formulario.register('identificacion', { disabled: bloqueoIdentificacion })}
         />
-        <p id="identificacion-ayuda" className="text-xs text-[var(--muted-foreground)]">
+        <p id="identificacion-ayuda" className="text-caption text-muted-foreground">
           {bloqueoIdentificacion ? AYUDA_BLOQUEADA : AYUDAS[tipo]}
         </p>
         {errores.identificacion && (
-          <p id="identificacion-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p
+            id="identificacion-error"
+            role="alert"
+            className="text-caption font-medium text-destructive"
+          >
             {errores.identificacion.message}
           </p>
         )}
@@ -181,7 +185,11 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
             {...formulario.register('razonSocial')}
           />
           {errores.razonSocial && (
-            <p id="razonSocial-error" role="alert" className="text-sm text-[var(--destructive)]">
+            <p
+              id="razonSocial-error"
+              role="alert"
+              className="text-caption font-medium text-destructive"
+            >
               {errores.razonSocial.message}
             </p>
           )}
@@ -197,7 +205,11 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
               {...formulario.register('nombres')}
             />
             {errores.nombres && (
-              <p id="nombres-error" role="alert" className="text-sm text-[var(--destructive)]">
+              <p
+                id="nombres-error"
+                role="alert"
+                className="text-caption font-medium text-destructive"
+              >
                 {errores.nombres.message}
               </p>
             )}
@@ -211,7 +223,11 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
               {...formulario.register('apellidos')}
             />
             {errores.apellidos && (
-              <p id="apellidos-error" role="alert" className="text-sm text-[var(--destructive)]">
+              <p
+                id="apellidos-error"
+                role="alert"
+                className="text-caption font-medium text-destructive"
+              >
                 {errores.apellidos.message}
               </p>
             )}
@@ -228,7 +244,7 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
           {...formulario.register('email')}
         />
         {errores.email && (
-          <p id="email-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p id="email-error" role="alert" className="text-caption font-medium text-destructive">
             {errores.email.message}
           </p>
         )}
@@ -242,7 +258,7 @@ export function FormularioCliente({ cliente, alGuardar }: FormularioClienteProps
           {...formulario.register('telefono')}
         />
         {errores.telefono && (
-          <p id="telefono-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p id="telefono-error" role="alert" className="text-caption font-medium text-destructive">
             {errores.telefono.message}
           </p>
         )}

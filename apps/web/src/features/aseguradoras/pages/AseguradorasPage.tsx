@@ -1,7 +1,9 @@
 import type { Aseguradora } from '@oasis/shared';
-import { MoreHorizontal, Search } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';
 
+import { CampoBusqueda } from '@/components/CampoBusqueda';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Paginacion, TablaDatos } from '@/components/TablaDatos';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +19,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -53,38 +54,28 @@ export function AseguradorasPage() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Aseguradoras</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Datos de referencia de las pólizas; sin cuenta ni acceso al sistema.
-          </p>
-        </div>
+    <div className="grid gap-5">
+      <Encabezado
+        titulo="Aseguradoras"
+        descripcion="Datos de referencia de las pólizas; sin cuenta ni acceso al sistema."
+      >
         {esAdmin && (
           <Button data-testid="boton-nueva-aseguradora" onClick={() => abrirFormulario(null)}>
+            <Plus aria-hidden="true" />
             Nueva aseguradora
           </Button>
         )}
-      </div>
+      </Encabezado>
 
-      <div className="relative w-full sm:max-w-xs">
-        <Search
-          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[var(--muted-foreground)]"
-          aria-hidden="true"
-        />
-        <Input
-          type="search"
-          aria-label="Buscar aseguradoras"
-          placeholder="Buscar por nombre o RUC"
-          className="pl-9"
-          value={q}
-          onChange={(evento) => {
-            setQ(evento.target.value);
-            setPagina(1);
-          }}
-        />
-      </div>
+      <CampoBusqueda
+        aria-label="Buscar aseguradoras"
+        placeholder="Buscar por nombre o RUC"
+        value={q}
+        onChange={(evento) => {
+          setQ(evento.target.value);
+          setPagina(1);
+        }}
+      />
 
       <TablaDatos
         titulo={meta ? `${meta.total} aseguradoras` : 'Aseguradoras'}
@@ -108,20 +99,22 @@ export function AseguradorasPage() {
           <TableBody>
             {aseguradoras.map((aseguradora) => (
               <TableRow key={aseguradora.id}>
-                <TableCell className="font-medium">{aseguradora.nombre}</TableCell>
-                <TableCell className="font-mono text-xs">{aseguradora.ruc}</TableCell>
-                <TableCell>{formatearFecha(aseguradora.createdAt)}</TableCell>
+                <TableCell className="font-semibold">{aseguradora.nombre}</TableCell>
+                <TableCell className="cifra">{aseguradora.ruc}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatearFecha(aseguradora.createdAt)}
+                </TableCell>
                 {esAdmin && (
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="quiet"
                           size="icon"
                           aria-label={`Acciones de ${aseguradora.nombre}`}
                           data-testid={`menu-aseguradora-${aseguradora.id}`}
                         >
-                          <MoreHorizontal className="size-4" />
+                          <MoreHorizontal aria-hidden="true" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">

@@ -87,13 +87,13 @@ export function ConfirmarPagoDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <dl className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-lg border p-3 text-sm">
-          <dt className="text-[var(--muted-foreground)]">Póliza</dt>
-          <dd className="font-mono text-xs">{pago.numeroPoliza ?? '—'}</dd>
-          <dt className="text-[var(--muted-foreground)]">Monto</dt>
-          <dd className="tabular-nums">{formatearMoneda(pago.monto)}</dd>
-          <dt className="text-[var(--muted-foreground)]">Referencia</dt>
-          <dd>{pago.referencia ?? '—'}</dd>
+        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 rounded-md bg-secondary p-3.5">
+          <dt className="text-muted-foreground">Póliza</dt>
+          <dd className="cifra text-right font-semibold">{pago.numeroPoliza ?? '—'}</dd>
+          <dt className="text-muted-foreground">Monto</dt>
+          <dd className="cifra text-right font-semibold">{formatearMoneda(pago.monto)}</dd>
+          <dt className="text-muted-foreground">Referencia</dt>
+          <dd className="text-right font-semibold">{pago.referencia ?? '—'}</dd>
         </dl>
 
         <form
@@ -115,7 +115,7 @@ export function ConfirmarPagoDialog({
                 })}
                 id={idConfirmado}
                 type="checkbox"
-                className="size-4 accent-[var(--primary)]"
+                className="size-5 shrink-0 accent-foreground"
                 aria-invalid={errorConfirmado ? true : undefined}
                 aria-describedby={errorConfirmado ? `${idConfirmado}-error` : undefined}
               />
@@ -127,7 +127,7 @@ export function ConfirmarPagoDialog({
               <p
                 id={`${idConfirmado}-error`}
                 role="alert"
-                className="text-sm text-[var(--destructive)]"
+                className="text-caption font-medium text-destructive"
               >
                 {errorConfirmado}
               </p>
@@ -148,7 +148,7 @@ export function ConfirmarPagoDialog({
                 <p
                   id={`${idNota}-error`}
                   role="alert"
-                  className="text-sm text-[var(--destructive)]"
+                  className="text-caption font-medium text-destructive"
                 >
                   {errorNota}
                 </p>
@@ -170,7 +170,7 @@ export function ConfirmarPagoDialog({
                 <p
                   id={`${idMotivo}-error`}
                   role="alert"
-                  className="text-sm text-[var(--destructive)]"
+                  className="text-caption font-medium text-destructive"
                 >
                   {errorMotivo}
                 </p>
@@ -181,7 +181,7 @@ export function ConfirmarPagoDialog({
           <DialogFooter>
             <Button
               type="button"
-              variant="outline"
+              variant="quiet"
               onClick={() => alCambiarAbierto(false)}
               disabled={enCurso}
             >
@@ -189,7 +189,7 @@ export function ConfirmarPagoDialog({
             </Button>
             <Button
               type="submit"
-              variant={esValidar ? 'default' : 'destructive'}
+              variant={esValidar ? 'primary' : 'danger'}
               disabled={enCurso}
               aria-busy={enCurso}
               data-testid={`confirmar-${accion}`}

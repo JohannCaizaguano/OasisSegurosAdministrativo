@@ -101,7 +101,7 @@ describe('UsuariosPage', () => {
 
     expect(await screen.findByText('Operador Oasis')).toBeInTheDocument();
     expect(screen.getByText('admin@oasis.com')).toBeInTheDocument();
-    expect(screen.getAllByText('Activo')).toHaveLength(2);
+    expect(screen.getAllByText('Activa')).toHaveLength(2);
   });
 
   it('muestra la contraseña temporal una sola vez tras crear', async () => {
