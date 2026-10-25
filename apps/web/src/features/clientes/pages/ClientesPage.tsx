@@ -257,7 +257,7 @@ export function ClientesPage() {
             <DialogDescription>
               {enEdicion
                 ? 'Actualice los datos de contacto; la identificación solo se modifica si el cliente no tiene pólizas.'
-                : 'Los datos personales nunca se escriben en la blockchain.'}
+                : 'Los datos personales nunca salen del sistema: el recibo verificable no los incluye.'}
             </DialogDescription>
           </DialogHeader>
           <FormularioCliente

@@ -34,6 +34,7 @@ y no se reutilizan.
 | ADR-026 | Respaldos cifrados con restic en almacenamiento externo                        | S7      | `ADR-026-respaldos-restic.md`               |
 | ADR-027 | Segundo factor TOTP para el administrador                                      | S8      | `ADR-027-segundo-factor-totp.md`            |
 | ADR-028 | Generación de reportes en CSV y PDF en el servidor                             | S8      | `ADR-028-reportes-csv-pdf.md`               |
+| ADR-029 | `@oasis/shared` en CJS y ESM para el bundler                                   | S4      | `ADR-029-shared-cjs-esm.md`                 |
 
 Las ADR-020 a ADR-028 se redactaron el 23/10/2026 con los planes de S4 a S9: registran decisiones
 ya tomadas y se actualizan en su sprint si la implementación las cambia.

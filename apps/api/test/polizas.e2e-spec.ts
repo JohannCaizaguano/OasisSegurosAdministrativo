@@ -6,6 +6,7 @@ import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
 import { cedulaValida } from './identificaciones';
+import { crearPolizaDePrueba } from './polizas-de-prueba';
 
 /**
  * E2E de HU-12 (registrar), HU-13 (editar y cambiar estado) y HU-14 (listar) de
@@ -123,6 +124,29 @@ describe('Pólizas (e2e)', () => {
     expect(respuesta.body.tienePagosValidados).toBe(false);
     expect(respuesta.body.clienteNombre).toContain('Cliente');
     expect(respuesta.body.aseguradoraNombre).toBeTruthy();
+  });
+
+  it('expone ramoCodigo en el detalle, el listado y las pólizas del cliente (M1)', async () => {
+    const clienteId = await clienteNuevo();
+    const creada = await crearPoliza(clienteId).expect(201);
+    const id = creada.body.id as string;
+
+    const detalle = await conSesion('get', `/api/v1/polizas/${id}`).expect(200);
+    expect(detalle.body.ramoCodigo).toBe('VEHICULOS');
+
+    const listado = await listarPolizas({ clienteId, page: 1, pageSize: 10 }).expect(200);
+    const enListado = (listado.body.data as Array<{ id: string; ramoCodigo: string }>).find(
+      (item) => item.id === id,
+    );
+    expect(enListado?.ramoCodigo).toBe('VEHICULOS');
+
+    const propiaId = await crearPolizaDePrueba(prisma);
+    const mias = await conSesion('get', '/api/v1/mis-polizas?page=1&pageSize=100', tokenCliente);
+    expect(mias.status).toBe(200);
+    const propia = (mias.body.data as Array<{ id: string; ramoCodigo: string }>).find(
+      (item) => item.id === propiaId,
+    );
+    expect(propia?.ramoCodigo).toBe('VEHICULOS');
   });
 
   it('rechaza fin igual al inicio y primas inválidas (HU-12.2, HU-12.3, RN-10)', async () => {

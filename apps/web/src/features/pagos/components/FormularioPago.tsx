@@ -84,14 +84,24 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
         crear.mutate(datos, { onSuccess: alGuardar, onError: manejarError }),
       )}
     >
-      <Campo id="pago-poliza" label="Póliza" error={errores.polizaId?.message}>
+      <Campo
+        id="pago-poliza"
+        ayuda="Solo aparecen pólizas vigentes."
+        label="Póliza"
+        error={errores.polizaId?.message}
+      >
         {(atributos) => (
           <SelectorPoliza onChange={(id) => campoPoliza.onChange(id ?? '')} {...atributos} />
         )}
       </Campo>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Campo id="pago-monto" label="Monto" error={errores.monto?.message}>
+        <Campo
+          id="pago-monto"
+          ayuda="En dólares, con punto decimal. No puede superar el saldo pendiente de la póliza."
+          label="Monto"
+          error={errores.monto?.message}
+        >
           {(atributos) => (
             <Input
               {...atributos}
@@ -101,7 +111,12 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
             />
           )}
         </Campo>
-        <Campo id="pago-fecha" label="Fecha de pago" error={errores.fechaPago?.message}>
+        <Campo
+          id="pago-fecha"
+          ayuda="El día en que se hizo el pago; no puede ser posterior a hoy."
+          label="Fecha de pago"
+          error={errores.fechaPago?.message}
+        >
           {(atributos) => (
             <Input
               {...atributos}
@@ -130,7 +145,12 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
         )}
       </Campo>
 
-      <Campo id="pago-referencia" label="Referencia" error={errores.referencia?.message}>
+      <Campo
+        id="pago-referencia"
+        ayuda="Número del comprobante o del débito. No se repite en la misma póliza."
+        label="Referencia"
+        error={errores.referencia?.message}
+      >
         {(atributos) => (
           <Input
             {...atributos}

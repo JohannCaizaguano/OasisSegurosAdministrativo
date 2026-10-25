@@ -171,4 +171,39 @@ describe('FormularioPago (HU-16)', () => {
       'true',
     );
   });
+
+  it('cada campo enlaza su ayuda y, con error, también el error', async () => {
+    montar();
+    const ayudas: Array<[HTMLElement, string, string]> = [
+      [
+        screen.getByRole('combobox', { name: 'Póliza' }),
+        'pago-poliza',
+        'Solo aparecen pólizas vigentes.',
+      ],
+      [
+        screen.getByLabelText('Monto'),
+        'pago-monto',
+        'En dólares, con punto decimal. No puede superar el saldo pendiente de la póliza.',
+      ],
+      [
+        screen.getByLabelText('Fecha de pago'),
+        'pago-fecha',
+        'El día en que se hizo el pago; no puede ser posterior a hoy.',
+      ],
+      [
+        screen.getByLabelText('Referencia'),
+        'pago-referencia',
+        'Número del comprobante o del débito. No se repite en la misma póliza.',
+      ],
+    ];
+    for (const [control, id, texto] of ayudas) {
+      expect(control.getAttribute('aria-describedby')?.split(' ')).toContain(`${id}-ayuda`);
+      expect(document.getElementById(`${id}-ayuda`)).toHaveTextContent(texto);
+    }
+
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar pago' }));
+    await screen.findByText('La referencia es obligatoria');
+    const ids = screen.getByLabelText('Referencia').getAttribute('aria-describedby')?.split(' ');
+    expect(ids).toEqual(expect.arrayContaining(['pago-referencia-error', 'pago-referencia-ayuda']));
+  });
 });

@@ -180,6 +180,7 @@ export class MisPagosController {
         referencia: pago.referencia,
         estado: pago.estado,
         validadoEn: pago.validadoEn,
+        rechazadoEn: pago.rechazadoEn,
         motivoRechazo: pago.motivoRechazo,
         createdAt: pago.createdAt,
         updatedAt: pago.updatedAt,

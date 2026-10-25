@@ -50,7 +50,7 @@ Cada recibo de pago de prima es verificable de forma independiente: el contenido
 
 - Manual de marca de Oasis Seguros: negro #1e1e1e, café «Oasis coffe» #6e532a, blanco cálido #f0efed y un degradado dorado (sin valores en el manual). Isologo con palmera dentro de un círculo.
 - Tipografías del manual: Harabara Mais Demo para el nombre de marca (licencia demo, sin Ñ en el espécimen) y General Sans para texto.
-- Voz: español neutro de Ecuador; trato de «usted» en el portal del cliente; mensajes de error claros y accionables. En la interfaz del cliente no aparecen «blockchain» ni «hash»: se habla de «recibo verificable».
+- Voz: español neutro de Ecuador; trato de «usted» en el portal del cliente; mensajes de error claros y accionables. En la interfaz del cliente y en los avisos del personal no aparecen «blockchain», «hash», «Polygon» ni «anclaje»: se habla de «recibo verificable». El término técnico queda en el bloque de detalle de las pantallas del personal.
 - Personalidad: sobria, confiable, clara y cercana.
 
 ## Evidence on Hand
@@ -62,7 +62,7 @@ Cada recibo de pago de prima es verificable de forma independiente: el contenido
 ## Product Principles
 
 1. La tarea del operador manda: validar, registrar y cobrar con el menor número de pasos.
-2. Cada estado se entiende sin depender del color: texto, icono y color.
+2. Cada estado se entiende sin depender del color: texto, icono y color, y una frase que dice qué significa.
 3. El recibo es la prueba: debe poder comprobarse, imprimirse y explicarse sin tecnicismos.
 4. El cliente ve primero lo que debe hacer (cuota vencida, pago en validación) y luego el resto.
 5. Nada de datos personales donde no hacen falta: ni en la cadena ni en pantallas de verificación.

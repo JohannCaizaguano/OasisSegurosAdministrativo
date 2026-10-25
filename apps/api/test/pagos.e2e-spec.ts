@@ -180,4 +180,28 @@ describe('Pagos: registrar, validar y rechazar (e2e)', () => {
     );
     expect(visto?.motivoRechazo).toBe(motivo);
   });
+
+  it('7. /mis-pagos devuelve rechazadoEn con fecha en un pago rechazado y null en uno validado (M6)', async () => {
+    const polizaId = await crearPolizaDePrueba(prisma);
+    const validado = await registrar(polizaId, { monto: '100.00' }).expect(201);
+    const rechazado = await registrar(polizaId, { monto: '100.00' }).expect(201);
+    await validar(validado.body.id as string).expect(200);
+    await como(tokenOperador, 'patch', `/api/v1/pagos/${rechazado.body.id}/rechazar`)
+      .send({ confirmado: true, motivo: 'La referencia no corresponde' })
+      .expect(200);
+
+    const misPagos = await como(
+      tokenCliente,
+      'get',
+      '/api/v1/mis-pagos?page=1&pageSize=100',
+    ).expect(200);
+    const porId = new Map(
+      (misPagos.body.data as Array<{ id: string; rechazadoEn: string | null }>).map((p) => [
+        p.id,
+        p,
+      ]),
+    );
+    expect(porId.get(rechazado.body.id as string)?.rechazadoEn).toEqual(expect.any(String));
+    expect(porId.get(validado.body.id as string)?.rechazadoEn).toBeNull();
+  });
 });

@@ -11,6 +11,13 @@ const FECHA_HORA = new Intl.DateTimeFormat('es-EC', {
   timeZone: 'America/Guayaquil',
 });
 
+const SOLO_FECHA = new Intl.DateTimeFormat('es-EC', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  timeZone: 'America/Guayaquil',
+});
+
 const FECHA_HORA_SEGUNDOS = new Intl.DateTimeFormat('es-EC', {
   day: '2-digit',
   month: '2-digit',
@@ -37,6 +44,14 @@ export function formatearFecha(fecha: string | null | undefined): string {
     return `${dia}/${mes}/${anio}`;
   }
   return FECHA_HORA.format(new Date(fecha));
+}
+
+/** Solo la fecha `dd/mm/aaaa`, sea `aaaa-mm-dd` o un instante ISO (este en la zona de Ecuador). */
+export function formatearSoloFecha(fecha: string | null | undefined): string {
+  if (!fecha) {
+    return '—';
+  }
+  return fecha.includes('T') ? SOLO_FECHA.format(new Date(fecha)) : formatearFecha(fecha);
 }
 
 export function acortarHash(hash: string | null | undefined): string {

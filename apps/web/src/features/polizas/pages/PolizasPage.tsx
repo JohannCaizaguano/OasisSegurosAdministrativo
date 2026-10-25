@@ -4,6 +4,8 @@ import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus } from 'lucide-re
 import { useState } from 'react';
 
 import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { LeyendaEstados } from '@/components/LeyendaEstados';
+import { RamoEtiqueta } from '@/components/RamoEtiqueta';
 import { presentacionDe } from '@/components/estados';
 import { Encabezado } from '@/components/layout/Encabezado';
 import { Paginacion, TablaDatos } from '@/components/TablaDatos';
@@ -253,7 +255,9 @@ export function PolizasPage() {
                 </TableCell>
                 <TableCell>{poliza.clienteNombre ?? '—'}</TableCell>
                 <TableCell>{poliza.aseguradoraNombre ?? '—'}</TableCell>
-                <TableCell>{poliza.ramo}</TableCell>
+                <TableCell>
+                  <RamoEtiqueta codigo={poliza.ramoCodigo} nombre={poliza.ramo} />
+                </TableCell>
                 <TableCell className="cifra text-right font-semibold whitespace-nowrap">
                   {formatearMoneda(poliza.primaTotal)}
                 </TableCell>
@@ -266,6 +270,11 @@ export function PolizasPage() {
                     <EstadoInsignia dominio="poliza" estado={poliza.estado} />
                     {poliza.enMora && <EstadoInsignia dominio="poliza" estado="EN_MORA" />}
                   </div>
+                  {poliza.estado !== 'VIGENTE' && (
+                    <p className="mt-1.5 text-caption text-muted-foreground">
+                      Solo lectura: la póliza ya no está vigente
+                    </p>
+                  )}
                 </TableCell>
                 <TableCell className="text-right whitespace-nowrap">
                   <Button
@@ -321,6 +330,8 @@ export function PolizasPage() {
           alCambiar={setPagina}
         />
       )}
+
+      <LeyendaEstados dominio="poliza" />
 
       <Dialog
         open={formularioAbierto}

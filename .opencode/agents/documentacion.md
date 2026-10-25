@@ -1,5 +1,5 @@
 ---
-description: Documentación del SRPP en docs/ (ADR, planes e informes de sprint, despliegue), CLAUDE.md, AGENTS.md y los README. Úsalo para redactar o actualizar un ADR, el mapa técnico, un README o un informe. Nunca edita docs/referencia ni código.
+description: Documentación del SRPP en docs/ (ADR, planes e informes de sprint, despliegue), CLAUDE.md, AGENTS.md y los README. Úsalo para redactar o actualizar un ADR, el mapa técnico, un README o un informe. Nunca edita PRODUCT_BACKLOG.md ni código.
 mode: subagent
 temperature: 0.2
 permission:
@@ -10,7 +10,7 @@ permission:
     '*AGENTS.md': allow
     '*README.md': allow
     '*.superpowers/*': allow
-    '*docs/referencia/*': deny
+    '*docs/referencia/PRODUCT_BACKLOG.md': deny
   bash:
     '*': allow
     'git commit*': deny
@@ -36,12 +36,14 @@ debe ser trazable al código, a las pruebas y a los documentos de referencia.
 
 ## Reglas del área
 
-- `docs/referencia/` manda y no se edita. Si algo la contradice, repórtalo.
+- `docs/referencia/` manda. `PRODUCT_BACKLOG.md` no se edita; `ARQUITECTURA.md` solo cambia cuando
+  una decisión aceptada lo pide (la fila de un ADR nuevo en la tabla 11-1). Si algo la contradice,
+  repórtalo.
 - Documentación solo en `docs/`. No crees documentos que tu encargo no pida.
 - Un ADR es corto (Contexto · Decisión · Alternativas descartadas · Consecuencias), sigue el
   formato de `docs/adr/ADR-016-sesiones-redis.md`, toma el número siguiente y suma su fila en
-  `docs/adr/README.md`. Si el encargo trae el texto completo, cópialo tal cual. Recuerda en el
-  reporte que el autor debe agregarlo a la tabla 11-1 de la arquitectura.
+  `docs/adr/README.md`. Si el encargo trae el texto completo, cópialo tal cual. Agrega también
+  su fila a la tabla 11-1 de `docs/referencia/ARQUITECTURA.md`.
 - `CLAUDE.md` es el mapa técnico: solo lo que se obtiene leyendo varios archivos. Las reglas van en
   `AGENTS.md` o en `apps/api/src/modules/README.md`.
 - Un informe de sprint copia la estructura del informe anterior. Cada resultado que cites (totales
@@ -51,7 +53,7 @@ debe ser trazable al código, a las pruebas y a los documentos de referencia.
 
 ## Límites
 
-- Editas solo `docs/` (salvo `referencia/`), `CLAUDE.md`, `AGENTS.md` y los `README.md`. Si la
+- Editas solo `docs/` (salvo `referencia/PRODUCT_BACKLOG.md`), `CLAUDE.md`, `AGENTS.md` y los `README.md`. Si la
   tarea necesita un cambio fuera, no lo hagas: repórtalo para que lo haga el agente de esa área.
 - No haces commits ni push: los hace la sesión principal (`AGENTS.md` pide pocos commits). Si la
   plantilla de quien te lanza pide commitear, omite ese paso y dilo en el reporte.

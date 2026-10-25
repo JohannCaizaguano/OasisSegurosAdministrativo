@@ -51,8 +51,8 @@ export function RechazarPagoDialog({
         <DialogHeader>
           <DialogTitle>Rechazar pago</DialogTitle>
           <DialogDescription>
-            El pago quedará rechazado, no emitirá recibo y ya no podrá validarse. El cliente verá el
-            motivo en su portal.
+            El pago quedará rechazado, no emitirá recibo y ya no podrá validarse.{' '}
+            <strong>El cliente verá el motivo en su portal.</strong>
           </DialogDescription>
         </DialogHeader>
 

@@ -23,7 +23,7 @@ interface FilaPoliza {
   clienteId: string;
   aseguradoraId: string;
   ramoId: string;
-  ramo: { nombre: string };
+  ramo: { nombre: string; codigo: string };
   primaTotal: { toString(): string };
   fechaInicio: Date;
   fechaFin: Date;
@@ -285,6 +285,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       aseguradoraId: fila.aseguradoraId,
       ramoId: fila.ramoId,
       ramo: fila.ramo.nombre,
+      ramoCodigo: fila.ramo.codigo,
       primaTotal: fila.primaTotal.toString(),
       fechaInicio: fila.fechaInicio.toISOString().slice(0, 10),
       fechaFin: fila.fechaFin.toISOString().slice(0, 10),

@@ -14,27 +14,12 @@ import { formatearFecha } from '@/lib/format';
 
 import { useVerificacion } from '../hooks';
 
-const LEYENDAS: Record<VerificacionRecibo['estado'], { titulo: string; detalle: string }> = {
-  VALIDO: {
-    titulo: 'Recibo auténtico',
-    detalle: 'El hash recalculado coincide con el registrado en la blockchain.',
-  },
-  ANULADO: {
-    titulo: 'Recibo anulado',
-    detalle: 'El emisor anuló este recibo en la cadena.',
-  },
-  NO_ANCLADO: {
-    titulo: 'Recibo en proceso',
-    detalle: 'El recibo existe pero su anclaje todavía no está confirmado en la cadena.',
-  },
-  NO_ENCONTRADO: {
-    titulo: 'Recibo no encontrado',
-    detalle: 'No existe un recibo con ese código en el sistema.',
-  },
-  HASH_INCONSISTENTE: {
-    titulo: 'El recibo no coincide',
-    detalle: 'El contenido del recibo no coincide con lo registrado en la cadena.',
-  },
+const TITULOS: Record<VerificacionRecibo['estado'], string> = {
+  VALIDO: 'Recibo auténtico',
+  ANULADO: 'Recibo anulado',
+  NO_ANCLADO: 'Recibo en proceso',
+  NO_ENCONTRADO: 'Recibo no encontrado',
+  HASH_INCONSISTENTE: 'El recibo no coincide',
 };
 
 function Dato({
@@ -57,8 +42,7 @@ function Dato({
 }
 
 function Resultado({ verificacion }: { verificacion: VerificacionRecibo }) {
-  const leyenda = LEYENDAS[verificacion.estado];
-  const { tono, icono: Icono } = presentacionDe('verificacion', verificacion.estado);
+  const { tono, icono: Icono, descripcion } = presentacionDe('verificacion', verificacion.estado);
 
   return (
     <Card
@@ -75,10 +59,10 @@ function Resultado({ verificacion }: { verificacion: VerificacionRecibo }) {
           </span>
           <div className="grid min-w-0 gap-1.5">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-title font-bold">{leyenda.titulo}</h2>
+              <h2 className="text-title font-bold">{TITULOS[verificacion.estado]}</h2>
               <EstadoInsignia dominio="verificacion" estado={verificacion.estado} />
             </div>
-            <p className="text-muted-foreground">{leyenda.detalle}</p>
+            <p className="text-muted-foreground">{descripcion}</p>
           </div>
         </div>
 
@@ -179,7 +163,7 @@ export function VerificacionPage() {
 
       {consulta.isFetching && (
         <p role="status" className="text-muted-foreground">
-          Consultando la cadena…
+          Verificando el recibo…
         </p>
       )}
 

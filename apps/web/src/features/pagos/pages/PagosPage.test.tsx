@@ -2,7 +2,7 @@ import type { Pago, RespuestaPaginada, ValidarPagoResponse } from '@oasis/shared
 import { MOTIVOS_RECHAZO_FRECUENTES } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigationType } from 'react-router-dom';
 import { toast } from 'sonner';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -38,12 +38,24 @@ function paginada<T>(items: T[]): RespuestaPaginada<T> {
   return { data: items, meta: { page: 1, pageSize: 20, total: items.length, totalPages: 1 } };
 }
 
-function montar() {
+function Ubicacion() {
+  const { pathname, search } = useLocation();
+  const tipo = useNavigationType();
+  return (
+    <>
+      <output data-testid="ubicacion">{pathname + search}</output>
+      <output data-testid="tipo-navegacion">{tipo}</output>
+    </>
+  );
+}
+
+function montar(ruta = '/pagos') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[ruta]}>
         <PagosPage />
+        <Ubicacion />
       </MemoryRouter>
     </QueryClientProvider>,
   );
@@ -127,5 +139,44 @@ describe('PagosPage (HU-16, HU-18, HU-19)', () => {
     expect(await screen.findByText('Débito bancario')).toBeInTheDocument();
     fireEvent.click(screen.getByTestId('boton-nuevo-pago'));
     expect(await screen.findByRole('dialog', { name: 'Registrar pago' })).toBeInTheDocument();
+  });
+
+  it('/pagos?estado=REGISTRADO abre con el filtro «Registrados»', async () => {
+    montar('/pagos?estado=REGISTRADO');
+
+    expect(await screen.findByTestId('filtro-estado-pagos')).toHaveTextContent('Registrados');
+    await waitFor(() =>
+      expect(listar).toHaveBeenCalledWith(expect.objectContaining({ estado: 'REGISTRADO' })),
+    );
+  });
+
+  it('un estado desconocido en la URL abre en «Todos»', async () => {
+    montar('/pagos?estado=OTRO');
+
+    expect(await screen.findByTestId('filtro-estado-pagos')).toHaveTextContent('Todos los estados');
+    await waitFor(() => expect(listar).toHaveBeenCalled());
+    expect(listar).not.toHaveBeenCalledWith(expect.objectContaining({ estado: expect.anything() }));
+  });
+
+  it('cambiar el filtro actualiza la URL sin agregar entradas al historial', async () => {
+    montar();
+
+    fireEvent.click(await screen.findByTestId('filtro-estado-pagos'));
+    fireEvent.click(await screen.findByRole('option', { name: 'Validados' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('ubicacion')).toHaveTextContent('/pagos?estado=VALIDADO'),
+    );
+    expect(screen.getByTestId('tipo-navegacion')).toHaveTextContent('REPLACE');
+  });
+
+  it('«Quitar filtro» vuelve a «Todos» y deja la URL sin estado', async () => {
+    listar.mockResolvedValue(paginada([]));
+    montar('/pagos?estado=RECHAZADO');
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Quitar filtro' }));
+
+    await waitFor(() => expect(screen.getByTestId('ubicacion')).toHaveTextContent(/^\/pagos$/));
+    expect(screen.getByTestId('filtro-estado-pagos')).toHaveTextContent('Todos los estados');
   });
 });

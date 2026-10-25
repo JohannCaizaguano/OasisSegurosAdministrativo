@@ -43,7 +43,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .seg button[aria-pressed="true"]{background:var(--gold);color:var(--on-gold)}
 .pbar .grow{flex:1}
 .pbar .ghost{border:1px solid rgba(255,255,255,.22);background:transparent;color:var(--bar-ink);height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600}
-.grp{display:inline-flex;gap:8px;align-items:center}
+.grp{display:inline-flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:100%}
+.seg{flex-wrap:wrap}
 
 /* common controls */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border:0;border-radius:var(--r);font-weight:600;font-size:15px;text-decoration:none;transition:transform .15s var(--ease),background-color .2s}
@@ -107,15 +108,16 @@ textarea.inp{height:auto;padding:12px 14px;resize:vertical}
 
 /* staff */
 .staff{display:flex;min-height:calc(100vh - 48px)}
-.rail{flex:none;width:92px;background:var(--rail);color:var(--rail-ink);padding:18px 8px;display:flex;flex-direction:column;gap:6px;position:sticky;top:48px;height:calc(100vh - 48px)}
+.rail{flex:none;width:92px;background:var(--rail);color:var(--rail-ink);padding:18px 8px;display:flex;flex-direction:column;gap:6px;position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;scrollbar-width:none}
 .rail img{width:52px;height:52px;object-fit:contain;align-self:center;margin-bottom:12px}
-.rail button{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border:0;border-radius:var(--r);background:transparent;color:var(--rail-ink);font-size:12px;min-height:56px}
+.rail button{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px;text-align:center;line-height:1.2;border:0;border-radius:var(--r);background:transparent;color:var(--rail-ink);font-size:12px;min-height:56px}
 .rail button svg{width:22px;height:22px;color:var(--rail-mute)}
 .rail button:hover{background:var(--rail-2)}
 .rail button[aria-current="page"]{background:var(--rail-2);color:var(--gold);font-weight:700}
 .rail button[aria-current="page"] svg{color:var(--gold)}
 .rail .badge{position:absolute;top:3px;right:12px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--gold);color:var(--on-gold);font-size:11px;font-weight:800;display:grid;place-items:center}
-.rail .me{margin-top:auto;align-self:center;width:40px;height:40px;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;font-weight:800;font-size:13px;border:0}
+.rail .me{margin-top:auto;align-self:center;flex:none;width:44px;height:44px;min-width:0;min-height:0;padding:0;border-radius:50%;background:var(--gold);color:var(--on-gold);display:grid;place-items:center;font-weight:800;font-size:13px;border:0}
+.rail .me:hover{background:var(--gold);filter:brightness(1.06)}
 .work{flex:1;min-width:0;padding:22px 30px 40px;display:flex;flex-direction:column;gap:20px}
 .view{display:flex;flex-direction:column;gap:20px;animation:fadeUp .35s var(--ease) both}
 .crumb{color:var(--ink2);font-size:14px}
@@ -248,6 +250,7 @@ td.r,th.r{text-align:right}
 .ibtn .dot{position:absolute;top:8px;right:9px;width:9px;height:9px;border-radius:50%;background:var(--bad);border:2px solid var(--surface)}
 .mbody{flex:1;overflow-y:auto;padding:10px 16px 20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:none}
 .mbody::-webkit-scrollbar{display:none}
+.mbody > *{flex-shrink:0}
 .hero{padding:18px;border-radius:var(--r-l);background:var(--rail);color:var(--rail-ink);display:flex;flex-direction:column;gap:6px;animation:fadeUp .4s var(--ease) both}
 .hero .m{color:var(--rail-mute);font-size:14px}
 .hero b.big{font:var(--dw) 36px/1.1 var(--display);color:var(--gold);font-variant-numeric:tabular-nums}
@@ -302,6 +305,49 @@ label.cuota{cursor:pointer}
 .listrow{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow);width:100%;border:0;text-align:left;min-height:64px}
 .listrow .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .listrow .main span{font-size:13.5px;color:var(--ink2)}
+
+/* Etapa C (S4): ramo, leyenda de estados, vacíos con acción, seguimiento del pago */
+.ramo{display:inline-flex;align-items:center;gap:8px}
+.ramo svg{width:16px;height:16px;flex:none}
+.pills{display:inline-flex;flex-wrap:wrap;gap:6px;align-items:center}
+.leyenda{border-radius:var(--r);background:var(--sunk);padding:0 16px}
+.leyenda summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px;cursor:pointer;font-weight:600;color:var(--link);text-decoration:underline;text-underline-offset:3px}
+.leyenda summary::-webkit-details-marker{display:none}
+.leyenda summary svg{width:16px;height:16px;flex:none;transition:transform .2s var(--ease)}
+.leyenda[open] summary svg{transform:rotate(180deg)}
+.leyenda dl{display:grid;gap:12px;margin:0;padding:4px 0 14px}
+.leyenda dl div{display:grid;gap:6px;align-items:start}
+.leyenda dd{margin:0;color:var(--ink2)}
+@media (min-width:640px){.leyenda dl div{grid-template-columns:11rem 1fr;gap:16px}}
+.vacio{display:flex;flex-direction:column;align-items:center;gap:8px;padding:32px 16px;border-radius:var(--r);background:var(--sunk);text-align:center}
+.vacio > svg{width:24px;height:24px;color:var(--ink2)}
+.vacio b{font-weight:600}
+.vacio p{margin:0;max-width:60ch;color:var(--ink2)}
+.vacio .btn{min-height:40px;font-size:14px}
+.vacio a,.vacio .linkbtn{display:inline-flex;align-items:center;min-height:44px;text-decoration:underline;text-underline-offset:3px}
+.segp{list-style:none;margin:0;padding:0;display:grid;gap:8px;flex-basis:100%}
+.segp li{display:flex;gap:10px;align-items:flex-start}
+.segp .dot{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center}
+.segp .dot svg{width:14px;height:14px}
+.segp li > span:last-child{font-size:14px;min-width:0}
+.segp b{display:block;font-weight:600}
+.segp .st{color:var(--ink2)}
+.segp .mot{display:block;margin-top:4px;color:var(--bad)}
+.mora-txt{font-size:14px;color:var(--bad)}
+.solo-lectura{display:block;margin-top:6px;font-size:13px;color:var(--ink2)}
+.pagom{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;padding:14px 16px}
+.pagom .main{flex:1 1 180px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pagom .main > span{font-size:13.5px;color:var(--ink2)}
+.pagom .main b .ramo{font-weight:600}
+.pagom .right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.vres{padding:22px;display:flex;flex-direction:column;gap:16px}
+.vres .vh{display:flex;gap:14px;align-items:flex-start}
+.vres .vh .ic{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+.vres .vh .ic svg{width:24px;height:24px}
+.vres dl{display:grid;gap:12px;margin:0}
+.vres dt{font-size:13px;color:var(--ink2)}
+.vres dd{margin:0;font-weight:600;word-break:break-all}
+.vres dd.mono{font:500 13.5px ui-monospace,SFMono-Regular,Menlo,monospace}
 
 /* Claroscuro accents: metallic gold actions, gold-lit dark panels */
 .btn-p,
@@ -388,34 +434,77 @@ const I={
  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
  refresh:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/>',
- dl:'<path d="M12 4v11M8 11l4 4 4-4M5 20h14"/>'
+ dl:'<path d="M12 4v11M8 11l4 4 4-4M5 20h14"/>',
+ /* lucide: íconos por ramo (mapa D2 de la Etapa C) y de la leyenda y los vacíos */
+ heartPulse:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>',
+ stethoscope:'<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>',
+ carL:'<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+ flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+ fileSignature:'<path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8.5L18 5.5"/><path d="M8 18h1"/><path d="M18.42 9.61a2.1 2.1 0 1 1 2.97 2.97L16.95 17 13 18l.99-3.95 4.43-4.44Z"/>',
+ laptop:'<path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>',
+ plane:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+ cog:'<path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"/><path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/><path d="M12 2v2M12 22v-2M17 20.66l-1-1.73M11 10.27 7 3.34M20.66 17l-1.73-1M3.34 7l1.73 1M14 12h8M2 12h2M20.66 7l-1.73 1M3.34 17l1.73-1M17 3.34l-1 1.73M11 13.73l-4 6.93"/>',
+ shieldL:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+ shieldX:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="m9.5 9.5 5 5M14.5 9.5l-5 5"/>',
+ searchX:'<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8.5 8.5l5 5M13.5 8.5l-5 5"/>',
+ down:'<path d="m6 9 6 6 6-6"/>',
+ inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+ circle:'<circle cx="12" cy="12" r="9"/>',
+ dots:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+ scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="11" cy="11" r="3"/><path d="m16 16-2.5-2.5"/>'
 };
 const ic=(n,w=22,sw=1.9,extra='')=>`<svg width="${w}" height="${w}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}>${I[n]}</svg>`;
 const ST={por:['s-info','clock','Por validar'],val:['s-ok','check','Validado'],verif:['s-ok','shield','Verificable'],lista:['s-ok','check','Lista para registrar'],rech:['s-bad','x','Rechazado'],aten:['s-warn','warn','Requiere atención'],anul:['s-void','void','Anulado'],
   proc:['s-info','clock','En proceso'],activo:['s-ok','check','Activo'],inactivo:['s-void','void','Desactivado'],pend1:['s-info','clock','Pendiente de primer ingreso'],sincta:['s-void','void','Sin cuenta'],activa:['s-ok','check','Activa'],tfa:['s-ok','shield','Activo'],notfa:['s-warn','warn','Por activar'],
-  pagada:['s-ok','check','Pagada'],validacion:['s-info','clock','En validación'],vencida:['s-bad','warn','Vencida'],pendiente:['s-void','clock','Pendiente'],vigente:['s-ok','check','Vigente'],mora:['s-bad','warn','En mora']};
-const pill=k=>{const s=ST[k];return `<span class="pill ${s[0]}">${ic(s[1],14,2.4)}${s[2]}</span>`};
+  pagada:['s-ok','check','Pagada'],validacion:['s-info','clock','En validación'],vencida:['s-bad','warn','Vencida'],pendiente:['s-void','clock','Pendiente'],vigente:['s-ok','check','Vigente'],mora:['s-bad','warn','En mora'],
+  parcial:['s-warn','clock','Pago parcial'],polvenc:['s-bad','warn','Vencida'],cancelada:['s-void','void','Cancelada'],inactiva:['s-void','void','Desactivada'],
+  aut:['s-ok','shield','Auténtico'],nocoin:['s-bad','shieldX','No coincide'],vproc:['s-info','clock','En proceso'],noenc:['s-bad','searchX','No encontrado'],atc:['s-warn','warn','Hasta 20 días'],atl:['s-bad','warn','Más de 20 días']};
+const pill=k=>{const s=ST[k];return `<span class="pill ${s[0]}" data-estado="${k}">${ic(s[1],14,2.4)}${s[2]}</span>`};
+/* Una frase por estado, en «usted» y sin jerga técnica (textos 3.1 del plan de la Etapa C; los
+   estados que solo existen en el prototipo siguen el mismo patrón). La leen la leyenda y el portal. */
+const DESC={por:'Oasis Seguros está revisando este pago con la notificación de la aseguradora o el comprobante.',val:'El pago fue confirmado y tiene un recibo verificable.',rech:'El pago no se pudo confirmar; el motivo aparece junto a él.',
+  proc:'El recibo se está registrando para que pueda verificarse; suele tardar menos de un minuto.',verif:'Cualquier persona con sesión puede comprobar que el recibo es auténtico.',aten:'No se pudo registrar el recibo; el sistema lo reintenta y, si sigue así, un administrador lo revisa.',anul:'Oasis Seguros anuló este recibo; ya no vale como comprobante.',
+  vigente:'La póliza está activa y admite pagos.',polvenc:'Terminó su vigencia; ya no admite pagos.',cancelada:'Se canceló antes de terminar; ya no admite pagos.',mora:'Tiene al menos una cuota vencida sin pagar.',
+  pendiente:'Aún no vence y no tiene pagos.',parcial:'Tiene un abono, pero falta completar su valor.',pagada:'Está cubierta por completo.',vencida:'Pasó su fecha de vencimiento sin cubrirse.',validacion:'Hay un pago de esta cuota que Oasis Seguros está revisando.',
+  aut:'El recibo fue emitido por Oasis Seguros y no ha cambiado.',nocoin:'Los datos del recibo no son los que se registraron. No lo acepte y comuníquese con Oasis Seguros.',vproc:'El recibo existe y se está registrando. Vuelva a intentarlo en un minuto.',noenc:'No hay un recibo con ese código. Revise que lo haya escrito bien.',
+  activo:'Puede usar el sistema.',activa:'Puede usar el sistema.',inactivo:'No puede iniciar sesión ni operar.',inactiva:'No puede iniciar sesión ni operar.',pend1:'Tiene cuenta, pero aún no entra para cambiar su contraseña temporal.',sincta:'Todavía no tiene cuenta para entrar al portal.',atc:'La cuota venció hace poco; un recordatorio suele bastar.',atl:'La cuota lleva más de 20 días vencida; conviene llamar al cliente.'};
+const DOM={pago:['por','val','rech'],recibo:['proc','verif','aten','anul'],poliza:['vigente','polvenc','cancelada','mora'],cuota:['pendiente','validacion','parcial','pagada','vencida'],verificacion:['aut','nocoin','vproc','anul','noenc'],cliente:['activo','inactivo'],usuario:['activo','pend1','inactivo'],cuentaCli:['activa','pend1','sincta'],atraso:['atc','atl']};
+/* Leyenda con <details> nativo: se abre con teclado y en el teléfono, sin tooltips sobre la insignia. */
+const leyenda=d=>`<details class="leyenda" data-leyenda="${d}"><summary>¿Qué significa cada estado?${ic('down',16,2.2)}</summary><dl>${DOM[d].map(k=>`<div><dt>${pill(k)}</dt><dd>${DESC[k]}</dd></div>`).join('')}</dl></details>`;
+/* Vacío que explica y propone una acción (AvisoVacio con descripcion y accion). */
+const vacio=(t,desc='',acc='')=>`<div class="vacio">${ic('inbox',24,1.9)}<b>${t}</b>${desc?`<p>${desc}</p>`:''}${acc?`<div>${acc}</div>`:''}</div>`;
+/* Ícono por código de ramo (mapa D2); un código desconocido usa el escudo. El nombre es el dato accesible. */
+const RAMO_IC={VIDA:'heartPulse',SALUD:'stethoscope',ASISTENCIA_MEDICA:'stethoscope',VEHICULOS:'carL',INCENDIO:'flame',FIANZAS:'fileSignature',EQUIPOS_ELECTRONICOS:'laptop',AEREO_DRONES:'plane',EQUIPOS_MAQUINARIA:'cog'};
+const RAMO_NOM={VIDA:'Vida',ASISTENCIA_MEDICA:'Asistencia médica',VEHICULOS:'Vehículos',INCENDIO:'Incendio',FIANZAS:'Fianzas',EQUIPOS_ELECTRONICOS:'Equipos electrónicos',AEREO_DRONES:'Aéreo (drones)',EQUIPOS_MAQUINARIA:'Equipos y maquinaria'};
+const RAMO_PREF={VEH:'VEHICULOS',VID:'VIDA',MED:'ASISTENCIA_MEDICA',INC:'INCENDIO',FIA:'FIANZAS',EEL:'EQUIPOS_ELECTRONICOS'};
+const ramoIc=(c,w=16)=>ic(Object.hasOwn(RAMO_IC,c)?RAMO_IC[c]:'shieldL',w,2);
+const ramoDe=code=>RAMO_PREF[String(code).slice(0,3)]||'OTRO';
+const ramo=c=>`<span class="ramo" data-ramo="${c}">${ramoIc(c)}${RAMO_NOM[c]||'Otro ramo'}</span>`;
+/* Ayuda permanente bajo el campo, enlazada con aria-describedby junto al error. */
+const ayudaDe=(id,h,e)=>{const x=[h&&id+'-ayuda',e&&id+'-error'].filter(Boolean).join(' ');return x?`aria-describedby="${x}"`:''};
+const pieCampo=(id,h,e)=>`${h?`<span class="hint" id="${id}-ayuda">${h}</span>`:''}${e?`<span class="err" id="${id}-error" role="alert">${e}</span>`:''}`;
 
 /* ---------- data ---------- */
 function mkCuotas(n,monto,y,m,d,states){const a=[];for(let i=0;i<n;i++){const dt=new Date(y,m+i,d);a.push({n:i+1,monto,vence:dt,estado:states[i]||'pendiente'})}return a}
 function seed(){
-  const veh={id:'veh',code:'VEH-2025-01127',ramo:'Vehículo',icon:'car',detalle:'Chevrolet Onix 2023 · PDJ-4821',aseg:'Seguros Unidos',cuotas:mkCuotas(12,86.40,2026,2,30,['pagada','pagada','pagada','pagada','pagada','pagada','validacion'])};
-  const vida={id:'vida',code:'VID-2026-00052',ramo:'Vida',icon:'heart',detalle:'Plan cobertura $15.000',aseg:'Seguros Unidos',cuotas:mkCuotas(12,42.50,2026,4,15,['pagada','pagada','pagada','pagada','vencida'])};
+  const veh={id:'veh',code:'VEH-2025-01127',rc:'VEHICULOS',ramo:'Vehículos',detalle:'Chevrolet Onix 2023 · PDJ-4821',aseg:'Seguros Unidos',cuotas:mkCuotas(12,86.40,2026,2,30,['pagada','pagada','pagada','pagada','pagada','pagada','validacion'])};
+  const vida={id:'vida',code:'VID-2026-00052',rc:'VIDA',ramo:'Vida',detalle:'Plan cobertura $15.000',aseg:'Seguros Unidos',cuotas:mkCuotas(12,42.50,2026,4,15,['pagada','pagada','pagada','pagada','vencida'])};
   return {
     consent:false,
     pols:{veh,vida},
     seq:215,
     pays:[
-      {id:'p1',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[7],monto:86.40,fecha:'03/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004518772',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'hace 3 días'},
+      {id:'p1',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[7],monto:86.40,fecha:'03/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004518772',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'hace 3 días',reg:'03/10/2026'},
       {id:'p2',cli:'Gabriela Estefanía Loor',ini:'GL',code:'VEH-2026-00088',cuotas:[1],monto:118.75,fecha:'29/09/2026',metodo:'Depósito',banco:'Banco Guayaquil',ref:'77120934',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'por',hace:'hace 7 días',old:true},
       {id:'p3',cli:'Patricio Salazar Mena',ini:'PS',code:'VEH-2026-00131',cuotas:[4],monto:97.20,fecha:'04/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310044587',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'hace 2 días'},
       {id:'p4',cli:'Rosa Elena Quishpe',ini:'RQ',code:'MED-2025-00488',cuotas:[9],monto:156.00,fecha:'05/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004601239',origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'ayer'},
       {id:'p5',cli:'Transportes Ilaló S.A.',ini:'TI',code:'VEH-2025-00907',cuotas:[6],monto:412.35,fecha:'06/10/2026',metodo:'Cheque',banco:'Banco Internacional',ref:'CH-000871',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'por',hace:'hoy'},
       {id:'p6',cli:'Andrés Felipe Mora',ini:'AM',code:'VEH-2025-01212',cuotas:[4],monto:74.80,fecha:'06/10/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004599120',origen:'Comprobante del cliente',por:'cliente',estado:'val',hace:'hoy',rec:'OAS-2026-000212',hoy:true},
-      {id:'p7',cli:'Comercial Andina Cía. Ltda.',ini:'CA',code:'MED-2026-00211',cuotas:[2],monto:1245.90,fecha:'06/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310041002',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000213',hoy:true},
+      {id:'p7',cli:'Comercial Andina Cía. Ltda.',ini:'CA',code:'MED-2026-00211',cuotas:[2],monto:1245.90,fecha:'06/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310041002',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000213',hoy:true,alt:true},
       {id:'p8',cli:'Lucía Fernanda Benítez',ini:'LB',code:'VID-2025-00398',cuotas:[7],monto:38.25,fecha:'05/10/2026',metodo:'Débito bancario',banco:'Seguros Unidos',ref:'SU-261005-0412',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000214',hoy:true,deb:true,arch:'cobros-seguros-unidos-octubre.xlsx',fila:12},
-      {id:'p9',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[6],monto:86.40,fecha:'28/08/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004390551',origen:'Comprobante del cliente',por:'cliente',estado:'val',hace:'28/08',rec:'OAS-2026-000187'},
-      {id:'p10',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'vida',code:'VID-2026-00052',cuotas:[4],monto:42.50,fecha:'14/08/2026',metodo:'Débito bancario',banco:'Seguros Unidos',ref:'SU-260814-0388',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'14/08',rec:'OAS-2026-000176',deb:true,arch:'cobros-seguros-unidos-agosto.xlsx',fila:31},
+      {id:'p9',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[6],monto:86.40,fecha:'28/08/2026',metodo:'Transferencia',banco:'Banco Pichincha',ref:'004390551',origen:'Comprobante del cliente',por:'cliente',estado:'val',hace:'28/08',rec:'OAS-2026-000187',reg:'28/08/2026',res:'29/08/2026'},
+      {id:'p16',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'veh',code:'VEH-2025-01127',cuotas:[7],monto:86.40,fecha:'30/09/2026',metodo:'Depósito',banco:'Banco Pichincha',ref:'5530',origen:'Comprobante del cliente',por:'cliente',estado:'rech',motivo:'El monto no coincide con la notificación',hace:'30/09',reg:'30/09/2026',res:'01/10/2026'},
+      {id:'p10',cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:'vida',code:'VID-2026-00052',cuotas:[4],monto:42.50,fecha:'14/08/2026',metodo:'Débito bancario',banco:'Seguros Unidos',ref:'SU-260814-0388',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'14/08',rec:'OAS-2026-000176',reg:'14/08/2026',res:'14/08/2026',deb:true,arch:'cobros-seguros-unidos-agosto.xlsx',fila:31},
       {id:'p11',cli:'Andrés Felipe Mora',ini:'AM',code:'VEH-2025-01212',cuotas:[3],monto:74.80,fecha:'02/09/2026',metodo:'Depósito',banco:'Banco Pichincha',ref:'5521',origen:'Comprobante del cliente',por:'cliente',estado:'rech',motivo:'El comprobante no es legible.',hace:'02/09'},
       {id:'p13',cli:'Daniela Sofía Cevallos',ini:'DC',code:'VID-2025-00342',cuotas:[1],monto:540.00,fecha:'01/10/2026',metodo:'Débito bancario',banco:'Interoceánica',ref:'IN-261001-0044',origen:'Archivo de la aseguradora',por:'Diego Andrade',estado:'val',hace:'01/10',rec:'OAS-2026-000209',anc:'fall',deb:true,arch:'cobros-interoceanica-octubre.xlsx',fila:4},
       {id:'p14',cli:'Jorge Luis Andrade',ini:'JA',code:'VEH-2024-00751',cuotas:[12],monto:92.30,fecha:'06/10/2026',metodo:'Transferencia',banco:'Produbanco',ref:'310045120',origen:'Registrado por Diego Andrade',por:'Diego Andrade',estado:'val',hace:'hoy',rec:'OAS-2026-000215',anc:'proc',hoy:true},
@@ -435,6 +524,17 @@ function seed(){
       {d:'09',m:'oct',cli:'Comercial Andina Cía. Ltda.',code:'MED-2026-00211',cuota:3,monto:1245.90},
       {d:'10',m:'oct',cli:'Lucía Fernanda Benítez',code:'VID-2025-00398',cuota:8,monto:38.25}
     ],
+    polizas:[
+      {code:'VEH-2025-01127',cli:'María Fernanda Guamán',aseg:'Seguros Unidos',rc:'VEHICULOS',prima:1036.80,ini:'30/03/2026',fin:'29/03/2027',st:'vigente'},
+      {code:'VID-2026-00052',cli:'María Fernanda Guamán',aseg:'Seguros Unidos',rc:'VIDA',prima:510.00,ini:'15/05/2026',fin:'14/05/2027',st:'vigente'},
+      {code:'VEH-2025-00907',cli:'Transportes Ilaló S.A.',aseg:'Aseguradora del Sur',rc:'VEHICULOS',prima:4948.20,ini:'06/04/2026',fin:'05/04/2027',st:'vigente'},
+      {code:'MED-2026-00211',cli:'Comercial Andina Cía. Ltda.',aseg:'Ecuasanitas',rc:'ASISTENCIA_MEDICA',prima:14950.80,ini:'06/08/2026',fin:'05/08/2027',st:'vigente'},
+      {code:'INC-2025-00031',cli:'Comercial Andina Cía. Ltda.',aseg:'Aseguradora del Sur',rc:'INCENDIO',prima:2380.00,ini:'01/09/2025',fin:'31/08/2026',st:'polvenc'},
+      {code:'VEH-2025-00680',cli:'Cooperativa San Pedro',aseg:'Aseguradora del Sur',rc:'VEHICULOS',prima:3628.80,ini:'01/02/2026',fin:'31/01/2027',st:'vigente'},
+      {code:'FIA-2025-00012',cli:'Transportes Ilaló S.A.',aseg:'Sweaden',rc:'FIANZAS',prima:860.00,ini:'10/06/2025',fin:'09/06/2026',st:'cancelada'},
+      {code:'MED-2025-00488',cli:'Rosa Elena Quishpe',aseg:'Ecuasanitas',rc:'ASISTENCIA_MEDICA',prima:1872.00,ini:'07/01/2026',fin:'06/01/2027',st:'vigente'},
+      {code:'EEL-2026-00009',cli:'Patricio Salazar Mena',aseg:'Interoceánica',rc:'EQUIPOS_ELECTRONICOS',prima:420.00,ini:'02/03/2026',fin:'01/03/2027',st:'vigente'}
+    ],
     recaudado:5135.10,
     anc:{saldo:0.84,umbral:1.00,anclados:45},
     users:[
@@ -452,7 +552,7 @@ function seed(){
     asegs:[
       {n:'Aseguradora del Sur',ruc:'1790000001001',act:true},{n:'Seguros Unidos',ruc:'1790000002001',act:true},{n:'Sweaden',ruc:'1790000003001',act:true},
       {n:'Interoceánica',ruc:'1790000004001',act:true},{n:'Prestasalud',ruc:'1790000005001',act:true},{n:'Ecuasanitas',ruc:'1790000006001',act:true}],
-    ramos:[{n:'Vida',act:true,uso:true},{n:'Asistencia médica',act:true,uso:true},{n:'Vehículos',act:true,uso:true},{n:'Equipos electrónicos',act:true},{n:'Aéreo (drones)',act:true},{n:'Equipos y maquinaria',act:false}],
+    ramos:[{n:'Vida',rc:'VIDA',act:true,uso:true},{n:'Asistencia médica',rc:'ASISTENCIA_MEDICA',act:true,uso:true},{n:'Vehículos',rc:'VEHICULOS',act:true,uso:true},{n:'Incendio',rc:'INCENDIO',act:true,uso:true},{n:'Fianzas',rc:'FIANZAS',act:true,uso:true},{n:'Equipos electrónicos',rc:'EQUIPOS_ELECTRONICOS',act:true,uso:true},{n:'Aéreo (drones)',rc:'AEREO_DRONES',act:true},{n:'Equipos y maquinaria',rc:'EQUIPOS_MAQUINARIA',act:false}],
     metodos:[{n:'Débito bancario',act:true,uso:true},{n:'Transferencia',act:true,uso:true},{n:'Depósito',act:true,uso:true},{n:'Cheque',act:true,uso:true},{n:'Efectivo en oficina',act:true}],
     log:[
       ['06/10/2026 09:12','Diego Andrade','INICIAR_SESION','Inició sesión con segundo factor','Sesión','186.4.12.33'],
@@ -467,7 +567,7 @@ function seed(){
   };
 }
 let D=seed();
-const UI={who:'op',totp:null,adm:'usuarios',rp:'conc',repF:{aseg:'',desde:'2026-09-01',hasta:'2026-10-06'},bit:{u:'',a:''},newUser:false,anular:false,codes:null,role:'login',staff:{v:'inicio',p:null},m:{stack:[{s:'inicio'}],dir:null},tab:'por',rej:{open:false,chip:null},rep:{},carga:{step:'form',aseg:'Sweaden',ids:[]},regErr:null,logErr:false,verify:null};
+const UI={who:'op',polF:{cli:'',aseg:'',st:''},totp:null,adm:'usuarios',rp:'conc',repF:{aseg:'',desde:'2026-09-01',hasta:'2026-10-06'},bit:{u:'',a:''},newUser:false,anular:false,codes:null,role:'login',staff:{v:'inicio',p:null},m:{stack:[{s:'inicio'}],dir:null},tab:'por',rej:{open:false,chip:null},rep:{},carga:{step:'form',aseg:'Sweaden',ids:[]},regErr:null,logErr:false,verify:null};
 
 /* ---------- role ---------- */
 function setRole(r){
@@ -512,8 +612,8 @@ function vLogin(){
       <div style="display:flex;flex-direction:column;gap:8px"><h1>Iniciar sesión</h1><span class="muted lead">Personal de Oasis Seguros y clientes asegurados.</span></div>
       ${UI.logErr?`<div class="alert s-bad" role="alert" style="border:1px solid var(--bad)">${ic('warn',20,2)}<span>El correo o la contraseña no son correctos. Revise los datos e intente de nuevo.</span></div>`:''}
       <label class="field" for="lEmail">Correo electrónico<input class="inp" id="lEmail" type="email" autocomplete="username" placeholder="nombre@correo.ec"></label>
-      <label class="field" for="lPass">Contraseña<span class="pw"><input id="lPass" type="password" autocomplete="current-password" placeholder="Su contraseña"><button type="button" id="pwToggle">${ic('eye',18)}<span>Mostrar</span></button></span></label>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between"><label style="display:flex;gap:10px;align-items:center;min-height:44px" for="lRem"><input id="lRem" type="checkbox" checked style="width:18px;height:18px;accent-color:var(--brand);margin:0">Recordar este equipo</label><a href="#" id="forgot" style="font-weight:600;font-size:14px;text-underline-offset:3px">¿Olvidó su contraseña?</a></div>
+      <label class="field" for="lPass">Contraseña<span class="pw"><input id="lPass" type="password" autocomplete="current-password"><button type="button" id="pwToggle" aria-pressed="false" style="min-height:44px">${ic('eye',18)}<span>Mostrar</span> <span class="sr">contraseña</span></button></span></label>
+      <div style="display:flex;justify-content:flex-end;min-height:44px;align-items:center"><a href="#" id="forgot" style="font-weight:600;font-size:14px;text-underline-offset:3px">¿Olvidó su contraseña?</a></div>
       <button class="btn btn-p btn-lg" type="submit" id="loginBtn">Ingresar</button>
       <span class="muted fine" title="Prototipo: diego.andrade@oasisseguros.ec entra como administrador (con cualquier código de 6 dígitos); otro correo @oasisseguros.ec, como operador; cualquier otro, como asegurado.">Después de 5 intentos fallidos en un minuto deberá esperar antes de volver a intentarlo. ¿Problemas para ingresar? Comuníquese con el administrador de Oasis Seguros.</span>
     </form>`}
@@ -546,12 +646,12 @@ function bindLogin(){
     UI.logErr=false;const b=$('#loginBtn');b.disabled=true;b.innerHTML='<span class="spin" style="width:20px;height:20px;border-width:3px;border-color:rgba(26,20,12,.25);border-top-color:#1a140c"></span>Ingresando';
     setTimeout(()=>setRole(/@oasisseguros\.ec$/i.test(em)?'staff':'client'),650);
   });
-  $('#pwToggle').onclick=()=>{const p=$('#lPass');const s=p.type==='password';p.type=s?'text':'password';$('#pwToggle span').textContent=s?'Ocultar':'Mostrar'};
+  $('#pwToggle').onmousedown=e=>e.preventDefault();$('#pwToggle').onclick=()=>{const p=$('#lPass');const s=p.type==='password';p.type=s?'text':'password';$('#pwToggle span').textContent=s?'Ocultar':'Mostrar';$('#pwToggle').setAttribute('aria-pressed',String(s))};
   $('#forgot').onclick=e=>{e.preventDefault();toast('Le enviaríamos un enlace para crear una contraseña nueva.')};
 }
 
 /* ---------- STAFF ---------- */
-const NAV=[['inicio','home','Inicio'],['pagos','card','Pagos'],['registrar','plus','Registrar'],['cartera','cal','Cartera'],['clientes','user','Clientes'],['recibos','rec','Recibos']];
+const NAV=[['inicio','home','Inicio'],['pagos','card','Pagos'],['recibos','rec','Recibos'],['verificar','scan','Verificar recibo'],['clientes','user','Clientes'],['polizas','shieldL','Pólizas'],['cartera','cal','Cartera']];
 function navFor(){return UI.who==='admin'?[...NAV,['reportes','chart','Reportes'],['admin','gear','Admin.']]:[...NAV,['reportes','chart','Reportes']]}
 const recSt=p=>({fall:'aten',proc:'proc',anul:'anul'})[p.anc]||'verif';
 const fmtPol=n=>n.toFixed(2).replace('.',',');
@@ -560,49 +660,60 @@ let clock=20;
 function logA(code,label,ent,who){clock++;D.log.unshift(['06/10/2026 09:'+String(clock).padStart(2,'0'),who||(UI.who==='admin'?'Diego Andrade':'Andrea Villacís'),code,label,ent,who==='Sistema'?'—':(UI.who==='admin'||who==='Diego Andrade'?'186.4.12.33':'186.4.12.40')])}
 function go(v,p=null){UI.staff={v,p};UI.anular=false;UI.newUser=false;UI.nuErr=null;UI.codes=null;if(v!=='validar')UI.rej={open:false,chip:null};render();window.scrollTo({top:0,behavior:'smooth'})}
 function vStaff(){
-  const v=UI.staff.v,cur=(v==='validar'||v==='cargar'?'pagos':v==='recibo'?'recibos':v==='cliente'?'clientes':v);
+  const v=UI.staff.v,cur=(v==='validar'||v==='cargar'||v==='registrar'?'pagos':v==='recibo'?'recibos':v==='cliente'?'clientes':v==='poliza'?'polizas':v);
   const n=porList().length;
   return `<div class="staff"><nav class="rail" aria-label="Principal"><img src="logo.png" alt="Oasis Seguros">
   ${navFor().map(([k,icn,l])=>`<button type="button" data-go="${k}" ${cur===k?'aria-current="page"':''}>${ic(icn)}${l}${k==='pagos'&&n?`<span class="badge">${n}</span>`:''}${k==='admin'&&ancAlerts()?`<span class="badge">${ancAlerts()}</span>`:''}</button>`).join('')}
   ${UI.who==='admin'?'<button type="button" class="me" data-logout title="Diego Andrade · cerrar sesión" aria-label="Cerrar sesión de Diego Andrade">DA</button>':'<button type="button" class="me" data-logout title="Andrea Villacís · cerrar sesión" aria-label="Cerrar sesión de Andrea Villacís">AV</button>'}</nav>
-  <main class="work"><div class="view" id="view">${({inicio:sInicio,pagos:sPagos,cargar:sCargar,validar:sValidar,registrar:sRegistrar,cartera:sCartera,clientes:sClientes,cliente:sCliente,recibos:sRecibos,recibo:sRecibo,reportes:sReportes,admin:sAdmin})[v]()}</div></main></div>`;
+  <main class="work"><div class="view" id="view">${({inicio:sInicio,pagos:sPagos,cargar:sCargar,validar:sValidar,registrar:sRegistrar,cartera:sCartera,clientes:sClientes,cliente:sCliente,polizas:sPolizas,poliza:sPoliza,recibos:sRecibos,recibo:sRecibo,verificar:sVerificar,reportes:sReportes,admin:sAdmin})[v]()}</div></main></div>`;
 }
 function sInicio(){
   const por=porList(),hoy=D.pays.filter(p=>p.hoy&&p.estado==='val');
   const sumHoy=hoy.reduce((s,p)=>s+p.monto,0),venc=D.cartera.reduce((s,c)=>s+c.monto,0);
   const old=[...por].sort((a,b)=>(b.old?1:0)-(a.old?1:0)),fall=D.pays.filter(p=>p.anc==='fall').length;
-  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Buenos días, ${UI.who==='admin'?'Diego':'Andrea'}</h1><span class="muted">${por.length?`Hoy conviene empezar por los ${por.length} pagos que esperan validación.`:'No quedan pagos por validar. Buen trabajo.'}</span></div>
+  const ult=D.pays.filter(p=>p.rec).sort((a,b)=>b.rec.localeCompare(a.rec)).slice(0,5);
+  const kLink=(txt,attrs)=>`<button type="button" class="linkbtn" style="align-self:flex-start;min-height:44px;text-decoration:underline;text-underline-offset:3px" ${attrs}>${txt}</button>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Hola, ${UI.who==='admin'?'Diego Andrade':'Andrea Villacís'}</h1><span class="muted">Empiece por los pagos que esperan validación.</span></div>
    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-go="cartera">Ver cartera</button><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div></div>
   <div class="kpis">
-    <div class="kpi dark"><span class="t" style="font-size:14px">Por validar</span><b data-count="${por.length}" data-int="1">${por.length}</b><button type="button" data-go="pagos">Abrir la mesa de validación</button></div>
-    ${UI.who==='admin'?`<div class="kpi card"><span class="muted" style="font-size:14px">Validados en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span class="muted" style="font-size:13px">${D.pays.filter(p=>p.estado==='val').length+36} pagos · ${Math.round(D.recaudado/88.5)} % de lo esperado</span></div>
-    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos anclados</span><b data-count="${D.anc.anclados}" data-int="1">${D.anc.anclados}</b><span class="muted" style="font-size:13px">en octubre · ${D.pays.filter(p=>p.anc==='proc').length} en proceso</span></div>
-    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos que requieren atención</span><b data-count="${fall}" data-int="1" style="color:${fall?'var(--warn)':'var(--ink)'}">${fall}</b><button type="button" class="linkbtn" data-goadm="anclaje" style="align-self:flex-start">Revisar el anclaje</button></div>`:`<div class="kpi card"><span class="muted" style="font-size:14px">Validados hoy</span><b data-count="${sumHoy}">${fmt(sumHoy)}</b><span class="muted" style="font-size:13px">${hoy.length} pagos · ${hoy.filter(p=>p.deb).length} por débito bancario</span></div>
-    <div class="kpi card"><span class="muted" style="font-size:14px">Cuotas vencidas</span><b data-count="${venc}" style="color:var(--bad)">${fmt(venc)}</b><span class="muted" style="font-size:13px">${D.cartera.length} cuotas de ${D.cartera.length} clientes</span></div>
-    <div class="kpi card"><span class="muted" style="font-size:14px">Recaudado en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span style="font-size:13px;color:var(--ok)">${Math.round(D.recaudado/88.5)} % de lo esperado al día 6</span></div>`}
+    <div class="kpi dark"><span class="t" style="font-size:14px">Por validar</span><b data-count="${por.length}" data-int="1">${por.length}</b><button type="button" style="min-height:44px" data-go="pagos" data-filtro="por">Revisar los pagos</button></div>
+    ${UI.who==='admin'?`<div class="kpi card"><span class="muted" style="font-size:14px">Validados en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span class="muted" style="font-size:13px">${D.pays.filter(p=>p.estado==='val').length+36} pagos · ${Math.round(D.recaudado/88.5)} % de lo esperado</span>${kLink('Ver los validados','data-go="pagos" data-filtro="val"')}</div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos verificables</span><b data-count="${D.anc.anclados}" data-int="1">${D.anc.anclados}</b><span class="muted" style="font-size:13px">en octubre · ${D.pays.filter(p=>p.anc==='proc').length} en proceso</span>${kLink('Ver los recibos','data-go="recibos"')}</div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recibos que requieren atención</span><b data-count="${fall}" data-int="1" style="color:${fall?'var(--warn)':'var(--ink)'}">${fall}</b>${kLink('Revisar el anclaje','data-goadm="anclaje"')}</div>`:`<div class="kpi card"><span class="muted" style="font-size:14px">Validados hoy</span><b data-count="${sumHoy}">${fmt(sumHoy)}</b><span class="muted" style="font-size:13px">${hoy.length} pagos · ${hoy.filter(p=>p.deb).length} por débito bancario</span>${kLink('Ver los validados','data-go="pagos" data-filtro="val"')}</div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Cuotas vencidas</span><b data-count="${venc}" style="color:var(--bad)">${fmt(venc)}</b><span class="muted" style="font-size:13px">${D.cartera.length} cuotas de ${D.cartera.length} clientes</span>${kLink('Ver la cartera','data-go="cartera"')}</div>
+    <div class="kpi card"><span class="muted" style="font-size:14px">Recaudado en octubre</span><b data-count="${D.recaudado}">${fmt(D.recaudado)}</b><span style="font-size:13px;color:var(--ok)">${Math.round(D.recaudado/88.5)} % de lo esperado al día 6</span>${kLink('Ver el reporte','data-go="reportes"')}</div>`}
   </div>
   <div class="cols">
-    <section class="card panel"><div class="ph"><div><h2>Por validar</h2><span class="muted" style="font-size:13px">Del más antiguo al más reciente</span></div><button class="linkbtn" data-go="pagos">Ver los ${por.length}</button></div>
-      ${old.slice(0,4).map(p=>`<button class="row" data-val="${p.id}"><span class="av" ${p.old?'style="background:var(--warn-bg);color:var(--warn)"':''}>${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${p.old?`<span style="color:var(--warn)">${p.hace}</span>`:p.hace}</span></span><b class="num">${fmt(p.monto)}</b></button>`).join('')||'<p class="muted" style="padding:0 10px 10px">Nada pendiente.</p>'}
+    <section class="card panel"><div class="ph"><div><h2>Por validar</h2><span class="muted" style="font-size:13px">Del más antiguo al más reciente</span></div>${por.length?`<button class="linkbtn" data-go="pagos" data-filtro="por">Ver los ${por.length}</button>`:''}</div>
+      ${old.slice(0,4).map(p=>`<button class="row" data-val="${p.id}"><span class="av" ${p.old?'style="background:var(--warn-bg);color:var(--warn)"':''}>${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${p.old?`<span style="color:var(--warn)">${p.hace}</span>`:p.hace}</span></span><b class="num">${fmt(p.monto)}</b></button>`).join('')||`<div style="padding:0 10px 10px">${vacio('No hay pagos por validar','Cuando se registre un pago o una aseguradora notifique un cobro, aparecerá aquí.')}</div>`}
     </section>
     <section class="card panel"><div class="ph"><div><h2>Vencen esta semana</h2><span class="muted" style="font-size:13px">Un recordatorio a tiempo evita la mora</span></div><button class="linkbtn" data-go="cartera">Ver cartera</button></div>
-      ${D.semana.map(s=>`<div class="row"><span class="date" ${s.urg?'style="background:var(--warn-bg);color:var(--warn)"':''}><b>${s.d}</b><span ${s.urg?'style="color:inherit"':''}>${s.m}</span></span><span class="main"><b>${esc(s.cli)}</b><span>${s.code} · cuota ${s.cuota}</span></span><b class="num">${fmt(s.monto)}</b></div>`).join('')}
+      ${D.semana.map(s=>`<div class="row"><span class="date" ${s.urg?'style="background:var(--warn-bg);color:var(--warn)"':''}><b>${s.d}</b><span ${s.urg?'style="color:inherit"':''}>${s.m}</span></span><span class="main"><b>${esc(s.cli)}</b><span>${ramo(ramoDe(s.code))} · ${s.code} · cuota ${s.cuota}</span></span><b class="num">${fmt(s.monto)}</b></div>`).join('')}
     </section>
   </div>
-  ${UI.who==='admin'?`<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2 style="font-size:17px">Anclaje de recibos</h2><button class="linkbtn" data-goadm="anclaje">Abrir el anclaje</button></div>${ancHealth()}</div>`:`<div class="strip"><b>Recibos en la red</b><span>${ic('shield',16,2.2,'style="color:var(--ok)"')}${D.pays.filter(p=>p.rec&&!p.anc).length+199} verificables</span><span>${ic('clock',16,2.2,'style="color:var(--info)"')}${D.pays.filter(p=>p.anc==='proc').length} en proceso</span>${fall?`<span style="color:var(--warn)">${ic('warn',16,2.2)}${fall} requiere atención del administrador</span>`:''}</div>`}`;
+  ${UI.who==='admin'?`<div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2 style="font-size:17px">Anclaje de recibos</h2><button class="linkbtn" data-goadm="anclaje">Abrir el anclaje</button></div>${ancHealth()}</div>`:''}
+  <section class="card panel"><div class="ph"><h2>Últimos recibos</h2><button class="linkbtn" data-go="recibos">Ver todos los recibos</button></div>
+   ${ult.length?`<div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Estado</th><th>Anclado</th><th class="r">Detalle</th></tr></thead><tbody>${ult.map(p=>`<tr><td class="num"><b>${p.rec}</b></td><td>${pill(recSt(p))}</td><td class="num">${(p.anc==='proc'||p.anc==='fall')?'—':p.fecha+' 16:05'}</td><td class="r"><button class="linkbtn" style="min-height:44px" data-rec="${p.rec}" aria-label="Ver el recibo ${p.rec}">Ver</button></td></tr>`).join('')}</tbody></table></div>`:vacio('Sin recibos todavía','Cada pago validado emite un recibo.','<button class="linkbtn" data-go="pagos">Ir a Pagos</button>')}
+  </section>`;
 }
 function sPagos(){
   const t=UI.tab,all=D.pays;
-  const tabs=[['todos','Todos',all.length],['por','Por validar',porList().length],['val','Validados',all.filter(p=>p.estado==='val').length],['rech','Rechazados',all.filter(p=>p.estado==='rech').length]];
+  const tabs=[['todos','Todos los estados',all.length],['por','Por validar',porList().length],['val','Validados',all.filter(p=>p.estado==='val').length],['rech','Rechazados',all.filter(p=>p.estado==='rech').length]];
   const list=all.filter(p=>t==='todos'||p.estado===t);
-  return `<div class="head"><h1>Pagos</h1><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-go="cargar">${ic('up',17,2)}Cargar notificación</button><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div></div>
-  <div class="tabs" role="tablist">${tabs.map(([k,l,c])=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${t===k}">${l} · ${c}</button>`).join('')}</div>
-  <ul class="plist">${list.map((p,i)=>`<li class="card" style="animation-delay:${i*35}ms"><span class="av">${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><br><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${esc(p.origen)} · ${p.hace}</span></span><span class="amt">${fmt(p.monto)}</span>${pill(p.estado)}${p.estado==='por'?`<button class="btn btn-q" style="min-height:40px" data-val="${p.id}">Revisar</button>`:p.rec?`<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Recibo</button>`:`<span style="width:86px"></span>`}</li>`).join('')||'<li class="card muted">No hay pagos en esta lista.</li>'}</ul>`;
+  const acc=p=>p.estado==='por'?`<span style="display:flex;gap:8px"><button class="btn btn-q" style="min-height:44px" data-val="${p.id}">Validar</button><button class="btn btn-bad" style="min-height:44px" data-valrej="${p.id}">Rechazar</button></span>`
+    :p.rec?`<button class="btn btn-q" style="min-height:44px" data-rec="${p.rec}">Recibo</button>`:`<span class="muted num" style="font-size:13px">${p.res||p.fecha}</span>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Pagos</h1><span class="muted">Registre los pagos notificados y valídelos para emitir su recibo.</span></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-s" data-go="cargar">${ic('up',17,2)}Cargar notificación</button><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div></div>
+  <div class="tabs" role="tablist" aria-label="Filtrar por estado">${tabs.map(([k,l,c])=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${t===k}">${l} · ${c}</button>`).join('')}</div>
+  ${leyenda('pago')}
+  ${list.length?`<ul class="plist">${list.map((p,i)=>`<li class="card" style="animation-delay:${i*35}ms"><span class="av">${p.ini}</span><span class="main"><b>${esc(p.cli)}</b><br><span>${p.code} · cuota ${p.cuotas.join(', ')} · ${esc(p.metodo)} · ref. ${esc(p.ref)} · ${p.hace}</span>${p.estado==='rech'&&p.motivo?`<br><span style="color:var(--bad)"><b>Motivo del rechazo:</b> ${esc(p.motivo)}</span>`:''}</span><span class="amt">${fmt(p.monto)}</span>${pill(p.estado)}${acc(p)}</li>`).join('')}</ul>`
+   :t==='todos'?vacio('Sin pagos registrados','Use «Registrar pago» para registrar el primero.')
+   :vacio('No hay pagos con este filtro','Pruebe con «Todos los estados».','<button class="btn btn-s" data-tab="todos">Quitar filtro</button>')}
+  <p class="muted" style="margin:0">¿Necesita ver un recibo? <button class="linkbtn" data-go="recibos" style="text-decoration:underline;text-underline-offset:3px">Ir a Recibos</button></p>`;
 }
 function notifCard(p){return `<div class="notif"><div class="nh"><b>${esc(p.banco)}</b><span>${esc(p.arch||'archivo de cobros')} · fila ${p.fila||1}</span></div><dl><dt>Póliza</dt><dd>${p.code}</dd><dt>Fecha de cobro</dt><dd>${p.fecha}</dd><dt>Forma de cobro</dt><dd>Débito bancario</dd><dt>Referencia</dt><dd>${esc(p.ref)}</dd><dt>Monto</dt><dd style="font-size:18px">${fmt(p.monto)}</dd></dl></div>`}
 function sValidar(){
   const p=D.pays.find(x=>x.id===UI.staff.p);if(!p)return sPagos();
-  const chips=['El monto no coincide','El comprobante no es legible','La referencia ya fue usada','Falta el comprobante'];
+  const chips=['El monto no coincide con la notificación','La referencia no corresponde','Pago duplicado','La póliza no corresponde'];
   return `<div><span class="crumb"><button data-go="pagos">Pagos</button> / Mesa de validación</span></div>
   <div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>${esc(p.cli)}</h1><span class="muted">${p.code} · cuota ${p.cuotas.join(', ')} · ${esc(p.origen)}</span></div>${pill(p.estado)}</div>
   <div class="split">
@@ -618,10 +729,13 @@ function sValidar(){
     <section class="card side">
       <h2 style="font-size:17px">Decisión</h2>
       <dl class="kv"><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Póliza</dt><dd>${p.code}</dd><dt>Fecha de pago</dt><dd>${p.fecha}</dd><dt>Método</dt><dd>${esc(p.metodo)}</dd><dt>Monto</dt><dd class="num" style="font-size:18px">${fmt(p.monto)}</dd></dl>
-      ${p.estado!=='por'?'':UI.rej.open?`<div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .3s var(--ease)"><b>¿Por qué se rechaza?</b><div class="chips">${chips.map(c=>`<button type="button" data-chip="${esc(c)}" aria-pressed="${UI.rej.chip===c}">${c}</button>`).join('')}</div>
-        <label class="field" for="rejTxt">Mensaje para el cliente<textarea class="inp" id="rejTxt" rows="3">${esc(UI.rej.chip?UI.rej.chip+' Por favor, reporte el pago de nuevo.':'')}</textarea></label>
+      ${p.estado!=='por'?'':UI.rej.open?`<div style="display:flex;flex-direction:column;gap:10px;animation:fadeUp .3s var(--ease)"><span class="muted" style="font-size:14px">El pago quedará rechazado, no emitirá recibo y ya no podrá validarse. <b style="color:var(--ink)">El cliente verá el motivo en su portal.</b></span><fieldset style="border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px"><legend style="font-weight:600;font-size:14px;padding:0;margin-bottom:8px">Motivos frecuentes</legend><div class="chips">${chips.map(c=>`<button type="button" data-chip="${esc(c)}" aria-pressed="${UI.rej.chip===c}">${c}</button>`).join('')}</div></fieldset>
+        <div class="field"><label for="rejTxt">Motivo del rechazo <span aria-hidden="true">*</span></label><textarea class="inp" id="rejTxt" rows="3" ${ayudaDe('rejTxt','x')}>${esc(UI.rej.chip||'')}</textarea>${pieCampo('rejTxt','Entre 5 y 300 caracteres; el cliente lo leerá tal cual.')}</div>
         <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-q" data-rejcancel>Volver</button><button class="btn btn-p" style="background:var(--bad)" data-rejok="${p.id}">Rechazar pago</button></div></div>`
-      :`<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-bad" data-rejopen>Rechazar</button><button class="btn btn-p btn-lg" data-valok="${p.id}">${ic('check',18,2.4)}Validar y emitir recibo</button></div>`}
+      :`<div style="display:flex;flex-direction:column;gap:12px;padding-top:12px;border-top:1px solid var(--hair)"><span class="muted" style="font-size:14px">Se emitirá el recibo y se registrará para que cualquiera pueda verificarlo. El cliente lo verá en su portal. La acción no se puede deshacer.</span>
+        <label style="display:flex;gap:10px;align-items:center;min-height:44px;font-weight:600;font-size:14px" for="valConf"><input id="valConf" type="checkbox" style="width:20px;height:20px;accent-color:var(--brand);margin:0;flex:none" ${UI.valErr?'aria-invalid="true" aria-describedby="valConf-error"':''}>Confirmo que revisé la póliza y los datos del pago</label>${UI.valErr?'<span class="err" id="valConf-error" role="alert" style="font-size:13px;color:var(--bad);font-weight:500">Marque la confirmación para validar el pago.</span>':''}
+        <div class="field"><label for="valNota">Nota de auditoría (opcional)</label><input class="inp" id="valNota" autocomplete="off"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-bad" data-rejopen>Rechazar</button><button class="btn btn-p btn-lg" data-valok="${p.id}">${ic('check',18,2.4)}Validar y emitir recibo</button></div></div>`}
       <button class="linkbtn" style="align-self:flex-start" data-cli="${esc(p.cli)}">Ver ficha del cliente</button>
     </section>
   </div>`;
@@ -662,21 +776,23 @@ function bindCargar(){
 function polOptions(){return Object.values(D.pols).map(p=>`<option value="${p.id}">${p.code} · María Fernanda Guamán</option>`).join('')+`<option value="x-gel">VEH-2026-00088 · Gabriela Estefanía Loor</option><option value="x-jlp">VEH-2025-00744 · Jorge Luis Paredes</option>`}
 function sRegistrar(){
   const e=UI.regErr||{};
+  const H={pol:'Solo aparecen pólizas vigentes.',cu:'Las cuotas vencidas aparecen primero.',mo:'En dólares, con punto decimal. No puede superar el saldo pendiente de la póliza.',fe:'El día en que se hizo el pago; no puede ser posterior a hoy.',ref:'Número del comprobante o del débito. No se repite en la misma póliza.'};
   return `<div><span class="crumb"><button data-go="pagos">Pagos</button> / Registrar pago</span></div>
-  <div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:30px;font-weight:var(--dw)">Registrar pago</h1><span class="muted">Queda «Por validar» hasta que otra persona del personal lo confirme.</span></div>
+  <div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:30px;font-weight:var(--dw)">Registrar pago</h1><span class="muted">El pago queda por validar. La póliza debe estar vigente y el monto no puede superar su saldo pendiente.</span></div>
   <div class="split">
     <form class="card form-grid" id="regForm" novalidate>
-      <label class="field full" for="rPol">¿De qué póliza es el pago?<select class="inp" id="rPol">${polOptions()}</select></label>
-      <label class="field full" for="rCuota">¿Qué cuota cubre?<select class="inp" id="rCuota"></select></label>
-      <label class="field" for="rFecha">Fecha de pago<input class="inp" id="rFecha" type="date" value="2026-10-06"></label>
-      <label class="field" for="rMet">Método<select class="inp" id="rMet"><option>Débito bancario</option><option>Transferencia</option><option>Depósito</option><option>Cheque</option><option>Efectivo en oficina</option></select></label>
-      <label class="field" for="rMonto">Monto (USD)<input class="inp num" id="rMonto" inputmode="decimal" ${e.monto?'aria-invalid="true"':''}>${e.monto?`<span class="err" role="alert">${e.monto}</span>`:''}</label>
-      <label class="field" for="rRef">Referencia<input class="inp" id="rRef" placeholder="Número del comprobante" ${e.ref?'aria-invalid="true"':''}>${e.ref?`<span class="err" role="alert">${e.ref}</span>`:''}</label>
+      <div class="field full"><label for="rPol">Póliza</label><select class="inp" id="rPol" ${ayudaDe('rPol',H.pol)}>${polOptions()}</select>${pieCampo('rPol',H.pol)}</div>
+      <div class="field full"><label for="rCuota">Cuota que cubre</label><select class="inp" id="rCuota" ${ayudaDe('rCuota',H.cu)}></select>${pieCampo('rCuota',H.cu)}</div>
+      <div class="field"><label for="rMonto">Monto</label><input class="inp num" id="rMonto" inputmode="decimal" ${e.monto?'aria-invalid="true"':''} ${ayudaDe('rMonto',H.mo,e.monto)}>${pieCampo('rMonto',H.mo,e.monto)}</div>
+      <div class="field"><label for="rFecha">Fecha de pago</label><input class="inp" id="rFecha" type="date" value="2026-10-06" max="2026-10-06" ${ayudaDe('rFecha',H.fe)}>${pieCampo('rFecha',H.fe)}</div>
+      <div class="field"><label for="rMet">Método</label><select class="inp" id="rMet"><option>Débito bancario</option><option>Transferencia</option><option>Depósito</option><option>Cheque</option><option>Efectivo en oficina</option></select></div>
+      <div class="field"><label for="rRef">Referencia</label><input class="inp" id="rRef" ${e.ref?'aria-invalid="true"':''} ${ayudaDe('rRef',H.ref,e.ref)}>${pieCampo('rRef',H.ref,e.ref)}</div>
       <label class="drop full" for="rFile"><span class="ic">${ic('up',22)}</span><span><b>Adjuntar comprobante</b> <span class="muted">(opcional)</span><br><span class="muted" style="font-size:13px" id="rFileName">PDF, JPG o PNG de hasta 5 MB</span></span><input type="file" id="rFile" class="sr" accept=".pdf,.jpg,.jpeg,.png"></label>
       <div class="full" style="display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-q" data-go="pagos">Cancelar</button><button type="submit" class="btn btn-p btn-lg">Registrar pago</button></div>
     </form>
     <aside class="summary" id="regSum"></aside>
   </div>`;
+
 }
 function regSync(){
   const pid=$('#rPol').value,pol=D.pols[pid];
@@ -685,7 +801,7 @@ function regSync(){
   sel.innerHTML=cs.map(c=>`<option value="${c.n}">Cuota ${c.n} · vence ${dstr(c.vence)} · ${fmt(c.monto)}${c.estado==='vencida'?' · vencida':''}</option>`).join('');
   if(prev&&cs.some(c=>String(c.n)===prev))sel.value=prev;
   const c=cs.find(x=>String(x.n)===sel.value)||cs[0];
-  if(!$('#rMonto').value)$('#rMonto').value=c.monto.toFixed(2).replace('.',',');
+  if(!$('#rMonto').value)$('#rMonto').value=c.monto.toFixed(2);
   const pr=pol?prima(pol):1425,pg=pol?pagado(pol):pr-cs.reduce((s,x)=>s+x.monto,0)*6,sd=pol?saldo(pol):pr-pg;
   $('#regSum').innerHTML=`<h2 style="font-size:17px">Resumen de la póliza</h2><div style="display:flex;justify-content:space-between"><span class="m">Prima total</span><b class="num">${fmt(pr)}</b></div><div style="display:flex;justify-content:space-between"><span class="m">Pagado y validado</span><b class="num">${fmt(pg)}</b></div><span class="bar"><i style="width:${Math.round(pg/pr*100)}%"></i></span><div style="display:flex;flex-direction:column;gap:2px;padding-top:10px;border-top:1px solid var(--rail-2)"><span class="m">Saldo pendiente</span><b class="num" style="font:var(--dw) 30px var(--display);color:var(--gold)">${fmt(sd)}</b></div>`;
   return {pol,cs,c,sd};
@@ -696,9 +812,9 @@ function bindRegistrar(){
   $('#rCuota').onchange=()=>{$('#rMonto').value='';ctx()};
   $('#rFile').onchange=e=>{const f=e.target.files[0];$('#rFileName').textContent=f?f.name:'PDF, JPG o PNG de hasta 5 MB'};
   $('#regForm').onsubmit=e=>{e.preventDefault();
-    const {pol,c,sd}=ctx();const m=parseFloat($('#rMonto').value.replace(/\./g,'').replace(',','.'));const ref=$('#rRef').value.trim();const err={};
+    const {pol,c,sd}=ctx();const m=parseFloat($('#rMonto').value.replace(',','.'));const ref=$('#rRef').value.trim();const err={};
     if(!(m>0))err.monto='Escriba el monto pagado.';else if(m>sd+0.001)err.monto=`Supera el saldo pendiente (${fmt(sd)}).`;
-    if(!ref)err.ref='Escriba la referencia del comprobante.';else if(D.pays.some(p=>p.ref===ref))err.ref='Esa referencia ya está registrada en otro pago.';
+    if(!ref)err.ref='Escriba la referencia del comprobante.';else if(D.pays.some(p=>p.ref===ref&&p.code===(pol?pol.code:$('#rPol').selectedOptions[0].text.split(' · ')[0])))err.ref='Esa referencia ya está registrada en esta póliza.';
     if(Object.keys(err).length){const keep={pol:$('#rPol').value,cu:$('#rCuota').value,mo:$('#rMonto').value,ref,fe:$('#rFecha').value,me:$('#rMet').value};UI.regErr=err;render();$('#rPol').value=keep.pol;regSync();$('#rCuota').value=keep.cu;$('#rMonto').value=keep.mo;$('#rRef').value=keep.ref;$('#rFecha').value=keep.fe;$('#rMet').value=keep.me;$(err.monto?'#rMonto':'#rRef').focus();return}
     UI.regErr=null;const f=$('#rFile').files[0];const fd=$('#rFecha').value.split('-');
     const cli=pol?'María Fernanda Guamán':($('#rPol').value==='x-gel'?'Gabriela Estefanía Loor':'Jorge Luis Paredes');
@@ -708,50 +824,96 @@ function bindRegistrar(){
   };
 }
 function sCartera(){
-  return `<div class="head"><h1>Cuotas vencidas</h1><button class="btn btn-s" data-remindall>${ic('send',17)}Recordar a todos</button></div>
-  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Póliza</th><th class="r">Cuota</th><th>Venció</th><th class="r">Atraso</th><th class="r">Monto</th><th></th></tr></thead><tbody>
-  ${D.cartera.map(c=>`<tr><td><button class="linkbtn" style="color:var(--ink)" data-cli="${esc(c.cli)}">${esc(c.cli)}</button></td><td class="muted">${c.code}</td><td class="r num">${c.cuota}</td><td class="num">${c.vence}</td><td class="r"><span class="pill ${c.dias>20?'s-bad':'s-warn'}">${ic('warn',14,2.4)}${c.dias} días</span></td><td class="r num"><b>${fmt(c.monto)}</b></td><td class="r">${c.rem?`<span class="muted" style="font-size:13px;white-space:nowrap">Recordado hoy</span>`:`<button class="btn btn-q" style="min-height:38px;white-space:nowrap" data-remind="${c.id}">Recordar</button>`}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No hay cuotas vencidas.</td></tr>'}
-  </tbody></table></div></section>
-  <p class="muted" style="margin:0;font-size:14px">El recordatorio llega al correo del cliente con el monto, la fecha y un enlace para pagar en línea.</p>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Cuotas vencidas</h1><span class="muted">Cuotas que pasaron su fecha sin cubrirse, de la más atrasada a la más reciente.</span></div>${D.cartera.length?`<button class="btn btn-s" data-remindall>${ic('send',17)}Recordar a todos</button>`:''}</div>
+  ${leyenda('atraso')}
+  ${D.cartera.length?`<section class="card"><div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Póliza</th><th>Ramo</th><th class="r">Cuota</th><th>Venció</th><th class="r">Atraso</th><th class="r">Monto</th><th></th></tr></thead><tbody>
+  ${[...D.cartera].sort((a,b)=>b.dias-a.dias).map(c=>`<tr><td><button class="linkbtn" style="color:var(--ink);min-height:44px" data-cli="${esc(c.cli)}">${esc(c.cli)}</button></td><td class="muted num">${c.code}</td><td>${ramo(ramoDe(c.code))}</td><td class="r num">${c.cuota}</td><td class="num">${c.vence}</td><td class="r"><span class="pill ${c.dias>20?'s-bad':'s-warn'}">${ic('warn',14,2.4)}${c.dias} días</span></td><td class="r num"><b>${fmt(c.monto)}</b></td><td class="r">${c.rem?`<span class="muted" style="font-size:13px;white-space:nowrap">Recordado hoy</span>`:`<button class="btn btn-q" style="min-height:44px;white-space:nowrap" data-remind="${c.id}">Recordar</button>`}</td></tr>`).join('')}
+  </tbody></table></div></section>`:vacio('No hay cuotas vencidas','Cuando una cuota pase su fecha sin cubrirse, aparecerá aquí con sus días de atraso.')}
+  <p class="muted" style="margin:0;font-size:14px">El recordatorio llega al correo del cliente con la póliza, la cuota, el monto y la fecha de vencimiento.</p>`;
 }
 const CLIS=()=>{const m=new Map();D.pays.forEach(p=>{if(!m.has(p.cli))m.set(p.cli,{cli:p.cli,ini:p.ini,codes:new Set()});m.get(p.cli).codes.add(p.code)});D.cartera.forEach(c=>{if(!m.has(c.cli))m.set(c.cli,{cli:c.cli,ini:c.ini,codes:new Set()});m.get(c.cli).codes.add(c.code)});return [...m.values()]};
+const enMora=code=>D.cartera.some(c=>c.code===code)||Object.values(D.pols).some(p=>p.code===code&&polEstado(p)==='mora');
+const polPills=(code,st='vigente')=>`<span class="pills">${pill(st)}${st==='vigente'&&enMora(code)?pill('mora'):''}</span>`;
 function sClientes(){
-  return `<div class="head"><h1>Clientes</h1></div>
-  <ul class="plist">${CLIS().map((c,i)=>`<li class="card" style="animation-delay:${i*30}ms"><span class="av">${c.ini}</span><span class="main"><b>${esc(c.cli)}</b><br><span>${[...c.codes].join(' · ')}</span></span>${D.cartera.some(x=>x.cli===c.cli)?pill('mora'):pill('vigente')}<button class="btn btn-q" style="min-height:40px" data-cli="${esc(c.cli)}">Ver ficha</button></li>`).join('')}</ul>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Clientes</h1><span class="muted">Cartera de asegurados registrados en el bróker.</span></div><button class="btn btn-p" data-newcli>${ic('plus',17,2.2)}Nuevo cliente</button></div>
+  <label class="sr" for="cliQ">Buscar clientes</label><input class="inp" id="cliQ" placeholder="Buscar por nombre o identificación" style="max-width:420px">
+  ${leyenda('cliente')}
+  <ul class="plist">${CLIS().map((c,i)=>{const mora=[...c.codes].some(enMora);return `<li class="card" style="animation-delay:${i*30}ms"><span class="av">${c.ini}</span><span class="main"><b>${esc(c.cli)}</b><br><span>${[...c.codes].join(' · ')}</span>${mora?'<br><span class="mora-txt">Tiene una póliza en mora.</span>':''}</span>${pill('activo')}<button class="btn btn-q" style="min-height:44px" data-cli="${esc(c.cli)}">Ver ficha</button></li>`}).join('')}</ul>`;
 }
 function sCliente(){
   const name=UI.staff.p,pays=D.pays.filter(p=>p.cli===name),mine=name==='María Fernanda Guamán';
   const c=CLIS().find(x=>x.cli===name)||{ini:'?',codes:new Set()};
-  const pols=mine?Object.values(D.pols):[...c.codes].map(code=>({code,ramo:code.startsWith('VEH')?'Vehículo':code.startsWith('VID')?'Vida':'Asistencia médica'}));
+  const pols=D.polizas.filter(p=>p.cli===name);[...c.codes].forEach(code=>{if(!pols.some(p=>p.code===code))pols.push({code,cli:name,rc:ramoDe(code),st:'vigente'})});
   return `<div><span class="crumb"><button data-go="clientes">Clientes</button> / Ficha</span></div>
   <div class="head"><div style="display:flex;gap:14px;align-items:center"><span class="av" style="width:56px;height:56px;font-size:17px;background:var(--gold);color:var(--on-gold)">${c.ini}</span><div><h1>${esc(name)}</h1><span class="muted">${mine?'mf.guaman@correo.ec · cliente desde 2025':'Cliente de Oasis Seguros'}</span></div></div><button class="btn btn-p" data-go="registrar">${ic('plus',17,2.2)}Registrar pago</button></div>
-  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pólizas</h2></div><div class="tbl-wrap"><table><thead><tr><th>Póliza</th><th>Ramo</th><th>Estado</th><th class="r">Prima</th><th class="r">Saldo</th></tr></thead><tbody>
-  ${pols.map(p=>`<tr><td><b>${p.code}</b></td><td>${p.ramo}</td><td>${p.cuotas?pill(polEstado(p)):D.cartera.some(x=>x.code===p.code)?pill('mora'):pill('vigente')}</td><td class="r num">${p.cuotas?fmt(prima(p)):'—'}</td><td class="r num"><b>${p.cuotas?fmt(saldo(p)):'—'}</b></td></tr>`).join('')}
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pólizas</h2></div><div class="tbl-wrap"><table><thead><tr><th>Póliza</th><th>Ramo</th><th>Estado</th><th class="r">Prima</th><th class="r">Saldo</th><th></th></tr></thead><tbody>
+  ${pols.map(p=>{const own=Object.values(D.pols).find(x=>x.code===p.code);return `<tr><td class="num"><b>${p.code}</b></td><td>${ramo(p.rc)}</td><td>${polPills(p.code,p.st)}</td><td class="r num">${own?fmt(prima(own)):p.prima?fmt(p.prima):'—'}</td><td class="r num"><b>${own?fmt(saldo(own)):'—'}</b></td><td class="r"><button class="linkbtn" style="min-height:44px" data-pol="${p.code}">Cuotas</button></td></tr>`}).join('')}
   </tbody></table></div></section>
-  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pagos</h2></div><div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th class="r">Cuota</th><th>Estado</th><th class="r">Monto</th><th></th></tr></thead><tbody>
-  ${pays.map(p=>`<tr><td class="num">${p.fecha}</td><td>${p.code}</td><td class="r num">${p.cuotas.join(', ')}</td><td>${pill(p.estado)}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td class="r">${p.estado==='por'?`<button class="linkbtn" data-val="${p.id}">Revisar</button>`:p.rec?`<button class="linkbtn" data-rec="${p.rec}">Recibo</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">Sin pagos registrados.</td></tr>'}
-  </tbody></table></div></section>`;
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Pagos</h2></div>${pays.length?`<div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th class="r">Cuota</th><th>Estado</th><th class="r">Monto</th><th></th></tr></thead><tbody>
+  ${pays.map(p=>`<tr><td class="num">${p.fecha}</td><td class="num">${p.code}</td><td class="r num">${p.cuotas.join(', ')}</td><td>${pill(p.estado)}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td class="r">${p.estado==='por'?`<button class="linkbtn" style="min-height:44px" data-val="${p.id}">Validar</button>`:p.rec?`<button class="linkbtn" style="min-height:44px" data-rec="${p.rec}">Recibo</button>`:''}</td></tr>`).join('')}
+  </tbody></table></div>`:`<div style="padding:8px 18px 18px">${vacio('Sin pagos','Cuando se registre un pago de este cliente, aparecerá aquí.','<button class="btn btn-s" data-go="registrar">Registrar pago</button>')}</div>`}</section>
+  ${leyenda('poliza')}`;
 }
-function verifRes(p){
-  if(p.anc==='anul')return `<div class="alert s-void" style="animation:fadeUp .3s var(--ease)">${ic('void',20,2)}<span><b>Recibo anulado.</b> ${p.rec} · ${esc(p.cli)} · ${fmt(p.monto)}. Motivo: ${esc(p.motivoAnul)}</span></div>`;
-  if(p.anc==='proc'||p.anc==='fall')return `<div class="alert s-info" style="animation:fadeUp .3s var(--ease)">${ic('clock',20,2)}<span><b>En proceso.</b> El recibo ${p.rec} existe y todavía se está registrando en la red. Vuelva a verificarlo en unos minutos.</span></div>`;
-  return `<div class="verif" style="animation:fadeUp .3s var(--ease)">${ic('shield',28,2)}<div><b>Recibo auténtico</b><br><span style="font-size:14px">${p.rec} · ${esc(p.cli)} · ${fmt(p.monto)} · ${p.fecha}</span></div></div>`}
-function verifyBlock(id){
-  const r=UI.verify;let res='';
-  if(r){const p=findRec(r);res=p?verifRes(p):`<div class="alert s-bad" style="animation:fadeUp .3s var(--ease)">${ic('warn',20,2)}<span><b>No encontramos ese recibo.</b> Revise el código; si es correcto, el documento no fue emitido por Oasis Seguros.</span></div>`}
-  return `<form class="verify-box" id="${id}"><label class="sr" for="${id}-in">Código del recibo</label><input class="inp" id="${id}-in" placeholder="Ej. OAS-2026-000212" value="${esc(r||'')}"><button class="btn btn-p" type="submit">Verificar</button></form>${res}`;
+/* ---------- POLIZAS ---------- */
+function sPolizas(){
+  const f=UI.polF,clis=[...new Set(D.polizas.map(p=>p.cli))].sort(),asgs=[...new Set(D.polizas.map(p=>p.aseg))].sort();
+  const rows=D.polizas.filter(p=>(!f.cli||p.cli===f.cli)&&(!f.aseg||p.aseg===f.aseg)&&(!f.st||(f.st==='mora'?p.st==='vigente'&&enMora(p.code):p.st===f.st)));
+  const sel=(id,lbl,todos,opts,val)=>`<div class="field"><label for="${id}">${lbl}</label><select class="inp" id="${id}"><option value="">${todos}</option>${opts.map(([v,t])=>`<option value="${esc(v)}" ${v===val?'selected':''}>${esc(t)}</option>`).join('')}</select></div>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Pólizas</h1><span class="muted">Pólizas colocadas por el bróker y su estado de vigencia.</span></div><button class="btn btn-p" data-newpol>${ic('plus',17,2.2)}Nueva póliza</button></div>
+  <form class="filters" id="polForm">${sel('fpCli','Cliente','Todos los clientes',clis.map(c=>[c,c]),f.cli)}${sel('fpAseg','Aseguradora','Todas las aseguradoras',asgs.map(a=>[a,a]),f.aseg)}${sel('fpSt','Estado','Todos los estados',[['vigente','Vigente'],['polvenc','Vencida'],['cancelada','Cancelada'],['mora','En mora']],f.st)}<button type="button" class="btn btn-q" style="min-height:48px" data-polclear>Limpiar filtros</button></form>
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">${rows.length} pólizas</h2></div>
+  ${rows.length?`<div class="tbl-wrap"><table><thead><tr><th>Número</th><th>Cliente</th><th>Aseguradora</th><th>Ramo</th><th class="r">Prima</th><th>Vigencia</th><th>Estado</th><th class="r">Acciones</th></tr></thead><tbody>
+  ${rows.map(p=>`<tr><td class="num" style="white-space:nowrap"><b>${p.code}</b></td><td>${esc(p.cli)}</td><td>${esc(p.aseg)}</td><td>${ramo(p.rc)}</td><td class="r num"><b>${fmt(p.prima)}</b></td><td class="num"><span style="white-space:nowrap">${p.ini} –</span> <span style="white-space:nowrap">${p.fin}</span></td><td>${polPills(p.code,p.st)}${p.st!=='vigente'?'<span class="solo-lectura">Solo lectura: la póliza ya no está vigente</span>':''}</td><td class="r" style="white-space:nowrap"><button class="btn btn-q" style="min-height:44px" data-pol="${p.code}" aria-label="Plan de cuotas de ${p.code}">Cuotas</button>${p.st==='vigente'?` <button class="btn btn-q" style="min-height:44px;width:44px;padding:0" data-polmenu aria-label="Acciones de ${p.code}">${ic('dots',18,2.4)}</button>`:''}</td></tr>`).join('')}
+  </tbody></table></div>`:`<div style="padding:8px 18px 18px">${vacio('Sin pólizas que coincidan con los filtros','Pruebe con otro cliente, aseguradora o estado.','<button class="btn btn-s" data-polclear>Limpiar filtros</button>')}</div>`}</section>
+  ${leyenda('poliza')}`;
+}
+function cuotasDe(p){const own=Object.values(D.pols).find(x=>x.code===p.code);if(own)return own.cuotas;const [d,m,y]=p.ini.split('/').map(Number);return [{n:1,monto:p.prima,vence:new Date(y,m-1,d),estado:p.st==='vigente'?(enMora(p.code)?'vencida':'pendiente'):'pendiente'}]}
+function sPoliza(){
+  const p=D.polizas.find(x=>x.code===UI.staff.p)||{code:UI.staff.p,cli:'—',aseg:'—',rc:ramoDe(UI.staff.p),prima:0,ini:'—',fin:'—',st:'vigente'};
+  const cs=cuotasDe(p),pagadas=cs.some(c=>c.estado==='pagada');
+  return `<div><span class="crumb"><button data-go="polizas">Pólizas</button> / ${p.code}</span></div>
+  <div class="head"><div style="display:flex;flex-direction:column;gap:6px"><h1 class="num">${p.code}</h1><span class="muted">${esc(p.cli)} · ${esc(p.aseg)} · vigencia <span class="num">${p.ini} – ${p.fin}</span></span><span style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">${ramo(p.rc)}${polPills(p.code,p.st)}</span>${p.st==='vigente'&&enMora(p.code)?'<span class="mora-txt">Tiene una cuota vencida sin pagar: aparece en la cartera.</span>':''}</div>
+   ${p.st==='vigente'?`<button class="btn btn-s" data-plan ${pagadas?'disabled aria-describedby="planNota"':''}>Editar plan de cuotas</button>`:''}</div>
+  ${p.st!=='vigente'?`<div class="alert s-void">${ic('lock',20,2)}<span>Solo lectura: la póliza ya no está vigente.</span></div>`:pagadas?`<p class="muted" id="planNota" style="margin:0;font-size:14px">El plan ya tiene pagos validados, así que no se puede reemplazar.</p>`:''}
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">Plan de cuotas · ${cs.length} ${cs.length===1?'cuota':'cuotas'}</h2></div><div class="tbl-wrap"><table><thead><tr><th class="r">Cuota</th><th>Vence</th><th class="r">Valor</th><th>Estado</th></tr></thead><tbody>
+  ${cs.map(c=>`<tr><td class="r num">${c.n}</td><td class="num">${dstr(c.vence)}</td><td class="r num"><b>${fmt(c.monto)}</b></td><td>${pill(c.estado)}</td></tr>`).join('')}
+  </tbody><tfoot><tr><td colspan="2">Prima total</td><td class="r num">${fmt(cs.reduce((s,c)=>s+c.monto,0))}</td><td></td></tr></tfoot></table></div></section>
+  ${leyenda('cuota')}`;
+}
+function bindPolizas(){const f=$('#polForm');if(!f)return;
+  $('#fpCli').onchange=e=>{UI.polF.cli=e.target.value;render()};$('#fpAseg').onchange=e=>{UI.polF.aseg=e.target.value;render()};$('#fpSt').onchange=e=>{UI.polF.st=e.target.value;render()};f.onsubmit=e=>e.preventDefault()}
+
+/* ---------- RECIBOS Y VERIFICACION ---------- */
+const verifEstado=p=>!p?'noenc':p.anc==='anul'?'anul':(p.anc==='proc'||p.anc==='fall')?'vproc':p.alt?'nocoin':'aut';
+const TITULO_VERIF={aut:'Recibo auténtico',anul:'Recibo anulado',vproc:'Recibo en proceso',noenc:'Recibo no encontrado',nocoin:'El recibo no coincide'};
+const TONO_VERIF={aut:['var(--ok-bg)','var(--ok)','shield'],anul:['var(--void-bg)','var(--void)','void'],vproc:['var(--info-bg)','var(--info)','clock'],noenc:['var(--bad-bg)','var(--bad)','searchX'],nocoin:['var(--bad-bg)','var(--bad)','shieldX']};
+function sVerificar(){
+  const r=UI.verify,p=r?findRec(r):null,st=r?verifEstado(p):null,[bg,fg,icn]=st?TONO_VERIF[st]:[];
+  const tx=p&&st!=='vproc'?'0x'+hash(p.rec+'tx')+hash(p.rec+'ty')+hash(p.rec+'tz')+'…':'—';
+  return `<div style="max-width:680px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:20px">
+  <div style="display:flex;flex-direction:column;gap:4px"><h1 style="font-size:30px;font-weight:var(--dw)">Verificar recibo</h1><span class="muted">Compruebe la autenticidad de un recibo con su código o el QR impreso.</span></div>
+  <section class="card" style="padding:20px"><form id="vS" class="field" novalidate><label for="vS-in">Código del recibo</label><span class="verify-box"><input class="inp" id="vS-in" placeholder="OAS-2026-000000" autocomplete="off" spellcheck="false" value="${esc(r||'')}" style="text-transform:uppercase"><button class="btn btn-p" type="submit" style="min-height:48px">${ic('search',18,2)}Verificar</button></span></form>
+  <p class="muted" style="margin:10px 0 0;font-size:13px">Prototipo: OAS-2026-000212 es auténtico, …000213 no coincide, …000215 está en proceso y …000195 está anulado.</p></section>
+  ${st?`<section class="card vres" style="animation:fadeUp .3s var(--ease)"><div class="vh"><span class="ic" style="background:${bg};color:${fg}">${ic(icn,24,2)}</span><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><h2 style="font-size:17px">${TITULO_VERIF[st]}</h2>${pill(st)}</span><span class="muted">${DESC[st]}</span>${st==='anul'&&p.motivoAnul?`<span><b>Motivo:</b> ${esc(p.motivoAnul)}</span>`:''}</div></div>
+   <dl><div><dt>Código</dt><dd class="num">${esc(p?p.rec:r.toUpperCase())}</dd></div><div><dt>hashRecibo (recalculado)</dt><dd class="mono">${p?huella(p.rec+(p.alt?'x':'')):'—'}</dd></div><div><dt>hash en cadena</dt><dd class="mono">${p&&st!=='vproc'?huella(p.rec):'—'}</dd></div><div><dt>Anclado</dt><dd class="num">${p&&st!=='vproc'?p.fecha+' 16:05':'—'}</dd></div><div><dt>Transacción</dt><dd class="mono">${tx}</dd></div></dl>
+   ${p&&st!=='vproc'?'<a href="#" data-explorer style="font-weight:600;align-self:flex-start;min-height:44px;display:inline-flex;align-items:center">Ver en el explorador</a>':''}
+   <span class="muted" style="font-size:13px">Verificado el 06/10/2026 09:30 · Red 80002 · Contrato <span style="font-family:ui-monospace,monospace;word-break:break-all">0x5f3c…a91e</span></span></section>`:''}
+  </div>`;
 }
 function sRecibos(){
   const recs=D.pays.filter(p=>p.rec).sort((a,b)=>b.rec.localeCompare(a.rec));
-  return `<div class="head"><h1>Recibos emitidos</h1></div>
-  <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px"><h2 style="font-size:17px">Verificar un recibo</h2>${verifyBlock('vS')}</section>
-  <ul class="plist">${recs.map((p,i)=>`<li class="card" style="animation-delay:${i*30}ms"><span class="av">${p.ini}</span><span class="main"><b>${p.rec}</b><br><span>${esc(p.cli)} · ${p.code} · ${p.fecha}</span></span><span class="amt">${fmt(p.monto)}</span>${pill(recSt(p))}<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Abrir</button></li>`).join('')}</ul>`;
+  return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Recibos</h1><span class="muted">Recibos emitidos y el estado de su registro verificable. La lista se actualiza sola.</span></div><button class="btn btn-s" data-go="verificar">${ic('scan',17,2)}Verificar recibo</button></div>
+  ${leyenda('recibo')}
+  <section class="card"><div class="ph" style="padding:16px 18px 4px"><h2 style="font-size:17px">${recs.length} recibos</h2></div>
+  ${recs.length?`<div class="tbl-wrap"><table><thead><tr><th>Código</th><th>Estado</th><th>txHash</th><th>Creado</th><th>Anclado</th><th class="r">Acciones</th></tr></thead><tbody>
+  ${recs.map(p=>{const pend=p.anc==='proc'||p.anc==='fall';return `<tr><td class="num" style="white-space:nowrap"><b>${p.rec}</b></td><td>${pill(recSt(p))}</td><td class="muted" style="font:500 12.5px ui-monospace,monospace;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pend?'—':'0x'+hash(p.rec+'tx')+hash(p.rec+'ty')+'…'}</td><td class="num" style="white-space:nowrap">${p.fecha} 16:05</td><td class="num" style="white-space:nowrap">${pend?'—':p.fecha+' 16:05'}</td><td class="r"><button class="btn btn-q" style="min-height:44px;white-space:nowrap" data-rec="${p.rec}" aria-label="Ver detalle del recibo ${p.rec}">Ver detalle</button></td></tr>`}).join('')}
+  </tbody></table></div>`:`<div style="padding:8px 18px 18px">${vacio('Sin recibos todavía','Cada pago validado emite un recibo.','<button class="linkbtn" data-go="pagos">Ir a Pagos</button>')}</div>`}</section>`;
 }
 function receiptDoc(p,compact){
   return `<div class="top"><img src="logo.png" alt="Oasis Seguros"><div style="text-align:right"><span class="muted" style="font-size:13px">Recibo de pago</span><br><b style="font:var(--dw) ${compact?19:22}px var(--display)">${p.rec}</b></div></div>
   <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><span class="muted">Monto recibido</span><b class="num" style="font:var(--dw) ${compact?30:36}px var(--display)">${fmt(p.monto)}</b></div>
   <dl class="kv"><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Póliza</dt><dd>${p.code}</dd><dt>Cuota</dt><dd>${p.cuotas.join(', ')}</dd><dt>Fecha de pago</dt><dd>${p.fecha}</dd><dt>Método</dt><dd>${esc(p.metodo)}</dd><dt>Estado</dt><dd>${p.anc==='anul'?'Anulado':'Validado'}</dd></dl>
-  <div class="verif" ${p.anc==='anul'?'style="background:var(--void-bg);color:var(--void)"':p.anc==='proc'||p.anc==='fall'?'style="background:var(--info-bg);color:var(--info)"':''}>${qr(p.rec)}<div style="min-width:0"><b>${p.anc==='anul'?'Anulado':p.anc==='proc'||p.anc==='fall'?'En proceso':'Verificable'}</b><br><span style="font-size:13px;word-break:break-all">Huella ${huella(p.rec)}</span></div></div>`;
+  <div class="verif" ${p.anc==='anul'?'style="background:var(--void-bg);color:var(--void)"':p.anc==='proc'||p.anc==='fall'?'style="background:var(--info-bg);color:var(--info)"':''}>${qr(p.rec)}<div style="min-width:0"><b>${p.anc==='anul'?'Anulado':p.anc==='proc'||p.anc==='fall'?'En proceso':'Verificable'}</b><br><span style="font-size:13px;word-break:break-all">${compact?`Compruébelo en «Verificar un recibo» con el código ${p.rec}.`:`Huella ${huella(p.rec)}`}</span></div></div>`;
 }
 function anclaje(p){const tx='0x'+hash(p.rec+'tx')+hash(p.rec+'ty')+hash(p.rec+'tz')+hash(p.rec+'tw')+hash(p.rec+'tv'),a=p.anc||'verif';
   const st=[['Creado','al validar el pago','16:05:12','ok'],a==='fall'?['Envío fallido','5 intentos con espera creciente','16:12:40','bad']:['Enviado','transacción firmada','16:05:19','ok'],a==='verif'||a==='anul'?['Anclado','bloque 12.345.678','16:05:41','ok']:a==='proc'?['Anclado','esperando la confirmación de la red','—','wait']:['Anclado','pendiente','—','off']];
@@ -761,11 +923,11 @@ function anclaje(p){const tx='0x'+hash(p.rec+'tx')+hash(p.rec+'ty')+hash(p.rec+'
   <ol class="tl">${st.map(([t,d,h,k])=>`<li><span class="dot ${k==='ok'?'':k}">${ic(icn[k],14,3)}</span><div><b>${t}</b><span>${h==='—'?d:p.fecha+' '+h+' · '+d}</span></div></li>`).join('')}</ol>
   ${a==='fall'||a==='proc'?'':`<dl class="kv" style="font-size:13.5px"><dt>Transacción</dt><dd style="word-break:break-all;font-family:ui-monospace,monospace;font-weight:500">${tx}…</dd><dt>Explorador</dt><dd><a href="#" data-explorer>amoy.polygonscan.com</a></dd></dl>`}`}
 function recActions(p){const a=p.anc||'verif';
-  if(a==='fall')return UI.who==='admin'?`<div class="alert s-warn">${ic('warn',20,2)}<span>El anclaje falló tras 5 intentos. Reintentar lo devuelve a la cola sin intervención técnica.</span></div><button class="btn btn-p" data-retry="${p.rec}" style="align-self:flex-start">${ic('refresh',18,2)}Reintentar anclaje</button>`:`<div class="alert s-warn">${ic('warn',20,2)}<span>El anclaje falló. El administrador puede reintentarlo.</span></div>`;
+  if(a==='fall')return UI.who==='admin'?`<div class="alert s-warn">${ic('warn',20,2)}<span>No se pudo registrar el recibo tras 5 intentos. «Reintentar» lo vuelve a intentar sin intervención técnica.</span></div><button class="btn btn-p" data-retry="${p.rec}" style="align-self:flex-start">${ic('refresh',18,2)}Reintentar</button>`:`<div class="alert s-warn">${ic('warn',20,2)}<span>No se pudo registrar el recibo. Un administrador puede reintentarlo.</span></div>`;
   if(a==='anul')return `<div class="alert s-void">${ic('void',20,2)}<span><b>Motivo de la anulación:</b> ${esc(p.motivoAnul)}</span></div>`;
   if(a!=='verif'||UI.who!=='admin')return '';
   if(!UI.anular)return `<button class="btn btn-bad" data-anulopen style="align-self:flex-start">Anular recibo…</button>`;
-  return `<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--hair);animation:fadeUp .3s var(--ease)"><b>Anular ${p.rec}</b><span class="muted" style="font-size:13.5px">El recibo no se borra: queda anulado, la anulación se registra en el contrato y la verificación mostrará «Anulado».</span><label class="field" for="anulTxt">Motivo<textarea class="inp" id="anulTxt" rows="3" placeholder="Por ejemplo: el pago se validó dos veces"></textarea></label><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-q" data-anulcancel>Volver</button><button class="btn btn-p" style="background:var(--bad)" data-anulok="${p.rec}">Anular recibo</button></div></div>`}
+  return `<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--hair);animation:fadeUp .3s var(--ease)"><b>Anular ${p.rec}</b><span class="muted" style="font-size:13.5px">El recibo no se borra: queda anulado, la anulación también queda registrada y la verificación mostrará «Anulado». El cliente lo verá en su portal.</span><label class="field" for="anulTxt">Motivo<textarea class="inp" id="anulTxt" rows="3" placeholder="Por ejemplo: el pago se validó dos veces"></textarea></label><div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap"><button class="btn btn-q" data-anulcancel>Volver</button><button class="btn btn-p" style="background:var(--bad)" data-anulok="${p.rec}">Anular recibo</button></div></div>`}
 function sRecibo(){
   const p=findRec(UI.staff.p);if(!p)return sRecibos();
   return `<div><span class="crumb"><button data-go="recibos">Recibos</button> / ${p.rec}</span></div>
@@ -782,6 +944,7 @@ function bindStaff(){
   if(UI.staff.v==='cargar')bindCargar();
   if(UI.staff.v==='reportes')bindReportes();
   if(UI.staff.v==='admin')bindAdmin();
+  if(UI.staff.v==='polizas')bindPolizas();
   ['vS'].forEach(id=>{const f=$('#'+id);if(f)f.onsubmit=e=>{e.preventDefault();UI.verify=$('#'+id+'-in').value.trim()||null;render()}});
 }
 
@@ -800,7 +963,7 @@ function sReportes(){
     return `<div class="head"><div style="display:flex;flex-direction:column;gap:4px"><h1>Reportes</h1><span class="muted">Pagos validados del periodo para conciliar las primas con cada aseguradora.</span></div>${exp}</div>${tabs}
     <section class="card" style="padding:18px"><form class="filters" id="repForm"><label class="field" for="fAseg">Aseguradora<select class="inp" id="fAseg"><option value="">Todas</option>${D.asegs.map(a=>`<option ${a.n===f.aseg?'selected':''}>${a.n}</option>`).join('')}</select></label><label class="field" for="fDesde">Desde<input class="inp" type="date" id="fDesde" value="${f.desde}"></label><label class="field" for="fHasta">Hasta<input class="inp" type="date" id="fHasta" value="${f.hasta}"></label></form></section>
     <div class="strip">${Object.entries(by).map(([k,v])=>`<span><b>${esc(k)}</b>&nbsp;<span class="num">${fmt(v)}</span></span>`).join('')||'<span class="muted">Sin pagos en el periodo.</span>'}<span style="margin-left:auto">${rows.length} pagos ·&nbsp;<b class="num">${fmt(tot)}</b></span></div>
-    <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th>Cliente</th><th>Aseguradora</th><th class="r">Monto</th><th>Recibo</th></tr></thead><tbody>${rows.map(p=>`<tr><td class="num">${p.fecha}</td><td>${p.code}</td><td>${esc(p.cli)}</td><td>${esc(asegOf(p))}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td><button class="linkbtn" data-rec="${p.rec}">${p.rec}</button></td></tr>`).join('')||'<tr><td colspan="6" class="muted">No hay pagos validados con estos filtros.</td></tr>'}</tbody>${rows.length?`<tfoot><tr><td colspan="4">Total · ${rows.length} pagos</td><td class="r num">${fmt(tot)}</td><td></td></tr></tfoot>`:''}</table></div></section>
+    ${rows.length?`<section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha</th><th>Póliza</th><th>Ramo</th><th>Cliente</th><th>Aseguradora</th><th class="r">Monto</th><th>Recibo</th></tr></thead><tbody>${rows.map(p=>`<tr><td class="num">${p.fecha}</td><td class="num">${p.code}</td><td>${ramo(ramoDe(p.code))}</td><td>${esc(p.cli)}</td><td>${esc(asegOf(p))}</td><td class="r num"><b>${fmt(p.monto)}</b></td><td><button class="linkbtn" style="min-height:44px" data-rec="${p.rec}">${p.rec}</button></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="5">Total · ${rows.length} pagos</td><td class="r num">${fmt(tot)}</td><td></td></tr></tfoot></table></div></section>`:vacio('No hay pagos validados con estos filtros','Pruebe con otro periodo o con todas las aseguradoras.','<button class="btn btn-s" data-repclear>Quitar filtros</button>')}
     <p class="muted" style="margin:0;font-size:13.5px">Los recibos anulados no entran en la conciliación.</p>`}
   const g={};D.cartera.forEach(c=>{const k=asegByCode(c.code);g[k]=g[k]||{n:k,v:0,q:0,max:0};g[k].v+=c.monto;g[k].q++;g[k].max=Math.max(g[k].max,c.dias)});
   const tot=D.cartera.reduce((s,c)=>s+c.monto,0);
@@ -838,28 +1001,28 @@ function aUsuarios(){const me='u1';
   return `${form}<section class="card"><div style="padding:16px 18px 4px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="font-size:17px">Personal</h2><span class="muted" style="font-size:13px">«Restablecer» envía una contraseña temporal. Desactivar, cambiar el rol o restablecer cierra todas las sesiones del usuario.</span></div>${UI.newUser?'':`<button class="btn btn-p" data-nuopen>${ic('plus',17,2.2)}Nuevo usuario</button>`}</div>
   <div class="tbl-wrap"><table><thead><tr><th>Usuario</th><th>Rol</th><th>Segundo factor</th><th>Estado</th><th>Último ingreso</th><th></th></tr></thead><tbody>
   ${D.users.map(u=>`<tr><td><span style="display:flex;gap:12px;align-items:center"><span class="av" ${u.rol==='ADMIN'?'style="background:var(--rail);color:var(--gold)"':''}>${u.ini}</span><span><b>${esc(u.n)}</b>${u.id===me?' <span class="muted" style="font-size:13px">(usted)</span>':''}<br><span class="muted" style="font-size:13px">${esc(u.cargo)} · ${esc(u.c)}</span></span></span></td><td><span class="tag ${u.rol==='ADMIN'?'adm':''}">${u.rol==='ADMIN'?'Administrador':'Operador'}</span></td><td>${u.rol==='ADMIN'?pill(u.tfa?'tfa':'notfa'):'<span class="muted" style="font-size:13px">No requerido</span>'}</td><td>${pill(u.act?(u.ult==='—'?'pend1':'activo'):'inactivo')}</td><td class="num muted">${u.ult}</td><td class="r" style="white-space:nowrap">${u.id===me?'':`<button class="linkbtn" data-ureset="${u.id}" aria-label="Restablecer la contraseña de ${esc(u.n)}">Restablecer</button> · <button class="linkbtn" data-utoggle="${u.id}" aria-label="${u.act?'Desactivar':'Activar'} a ${esc(u.n)}" ${u.act?'style="color:var(--bad)"':''}>${u.act?'Desactivar':'Activar'}</button>`}</td></tr>`).join('')}
-  </tbody></table></div></section>
+  </tbody></table></div><div style="padding:0 18px 18px">${leyenda('usuario')}</div></section>
   <section class="card"><div style="padding:16px 18px 4px"><h2 style="font-size:17px">Cuentas de clientes</h2><span class="muted" style="font-size:13px">Una cuenta por cliente, con rol Asegurado y contraseña temporal que se cambia en el primer ingreso.</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>Cliente</th><th>Correo</th><th>Cuenta</th><th>Último ingreso</th><th></th></tr></thead><tbody>
-  ${D.ctas.map((c,i)=>`<tr><td><b>${esc(c.cli)}</b></td><td class="muted">${esc(c.c)}</td><td>${pill(c.st)}</td><td class="num muted">${c.ult}</td><td class="r">${c.st==='sincta'?`<button class="btn btn-q" style="min-height:38px" data-cta="${i}">Crear cuenta</button>`:''}</td></tr>`).join('')}
-  </tbody></table></div></section>`;
+  ${D.ctas.map((c,i)=>`<tr><td><b>${esc(c.cli)}</b></td><td class="muted">${esc(c.c)}</td><td>${pill(c.st)}</td><td class="num muted">${c.ult}</td><td class="r">${c.st==='sincta'?`<button class="btn btn-q" style="min-height:44px" data-cta="${i}">Crear cuenta</button>`:''}</td></tr>`).join('')}
+  </tbody></table></div><div style="padding:0 18px 18px">${leyenda('cuentaCli')}</div></section>`;
 }
 function aAnclaje(){const a=D.anc,fall=D.pays.filter(p=>p.anc==='fall'),proc=D.pays.filter(p=>p.anc==='proc');
   const row=(p,act)=>`<div class="crow"><span class="main"><b>${p.rec}</b><span>${esc(p.cli)} · ${p.code} · ${fmt(p.monto)} · ${p.fecha}</span></span>${pill(recSt(p))}${act}</div>`;
   return `<div class="grid2"><div style="display:flex;flex-direction:column;gap:18px">${ancHealth()}
    <form class="card" id="umbralForm" novalidate style="padding:18px;display:flex;flex-direction:column;gap:10px"><h2 style="font-size:17px">Umbral de alerta</h2><div class="filters"><label class="field" for="umb">Avisar cuando el saldo baje de (POL)<input class="inp num" id="umb" inputmode="decimal" value="${fmtPol(a.umbral)}" ${UI.umbErr?'aria-invalid="true"':''}>${UI.umbErr?`<span class="err" role="alert">${UI.umbErr}</span>`:''}</label><button class="btn btn-s" type="submit">Guardar umbral</button></div><span class="muted" style="font-size:13px">La alerta aparece aquí y en el inicio del administrador, y queda en los registros del servidor.</span></form></div>
    <div style="display:flex;flex-direction:column;gap:18px">
-   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">Requieren atención</h2><span class="muted" style="font-size:13px">Recibos cuyo anclaje falló tras 5 intentos. Reintentar los devuelve a la cola.</span>${fall.map(p=>row(p,`<button class="btn btn-p" style="min-height:40px" data-retry="${p.rec}">${ic('refresh',17,2)}Reintentar</button>`)).join('')||'<p class="muted" style="margin:6px 0 0">Ningún recibo requiere atención.</p>'}</section>
-   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">En proceso</h2><span class="muted" style="font-size:13px">Se consultan cada 10 segundos hasta quedar verificables.</span>${proc.map(p=>row(p,`<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Abrir</button>`)).join('')||'<p class="muted" style="margin:6px 0 0">Ninguno en proceso.</p>'}</section>
+   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">Requieren atención</h2><span class="muted" style="font-size:13px">Recibos cuyo anclaje falló tras 5 intentos. Reintentar los devuelve a la cola.</span>${fall.map(p=>row(p,`<button class="btn btn-p" style="min-height:40px" data-retry="${p.rec}">${ic('refresh',17,2)}Reintentar</button>`)).join('')||vacio('Ningún recibo requiere atención','Si un recibo no se registra tras 5 intentos, aparecerá aquí para reintentarlo.')}</section>
+   <section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><h2 style="font-size:17px">En proceso</h2><span class="muted" style="font-size:13px">Se consultan cada 10 segundos hasta quedar verificables.</span>${proc.map(p=>row(p,`<button class="btn btn-q" style="min-height:40px" data-rec="${p.rec}">Abrir</button>`)).join('')||vacio('Ninguno en proceso','Los recibos recién emitidos aparecen aquí mientras se registran.')}</section>
    <p class="muted" style="margin:0;font-size:13.5px">Para anular un recibo, ábralo desde Recibos: la anulación pide motivo y queda registrada en el contrato.</p></div></div>`;
 }
 function aBitacora(){const f=UI.bit,us=[...new Set(D.log.map(l=>l[1]))],acs=[...new Set(D.log.map(l=>l[2]))];
   const rows=D.log.filter(l=>(!f.u||l[1]===f.u)&&(!f.a||l[2]===f.a));
   return `<section class="card" style="padding:18px"><form class="filters" id="bitForm"><label class="field" for="bU">Usuario<select class="inp" id="bU"><option value="">Todos</option>${us.map(u=>`<option ${u===f.u?'selected':''}>${esc(u)}</option>`).join('')}</select></label><label class="field" for="bA">Acción<select class="inp" id="bA"><option value="">Todas</option>${acs.map(a=>`<option value="${a}" ${a===f.a?'selected':''}>${a}</option>`).join('')}</select></label><label class="field" for="bF">Desde<input class="inp" type="date" id="bF" value="2026-10-01"></label></form></section>
-  <section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>IP</th></tr></thead><tbody>${rows.map(l=>`<tr><td class="num" style="white-space:nowrap">${l[0]}</td><td>${esc(l[1])}</td><td><b>${esc(l[3])}</b><br><span class="muted" style="font:500 12px ui-monospace,monospace">${l[2]}</span></td><td>${esc(l[4])}</td><td class="num muted">${l[5]}</td></tr>`).join('')||'<tr><td colspan="5" class="muted">Ningún registro coincide con los filtros.</td></tr>'}</tbody></table></div></section>
+  ${rows.length?`<section class="card"><div class="tbl-wrap"><table><thead><tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>IP</th></tr></thead><tbody>${rows.map(l=>`<tr><td class="num" style="white-space:nowrap">${l[0]}</td><td>${esc(l[1])}</td><td><b>${esc(l[3])}</b><br><span class="muted" style="font:500 12px ui-monospace,monospace">${l[2]}</span></td><td>${esc(l[4])}</td><td class="num muted">${l[5]}</td></tr>`).join('')}</tbody></table></div></section>`:vacio('Ningún registro coincide con los filtros','Pruebe con otro usuario o acción.','<button class="btn btn-s" data-bitclear>Quitar filtros</button>')}
   <p class="muted" style="margin:0;font-size:13.5px;display:flex;gap:8px;align-items:center">${ic('lock',16,2)}Solo lectura: los registros no se pueden modificar ni eliminar desde la aplicación.</p>`;
 }
-function aCatalogos(){const sw=(kind,i,x)=>`<div class="crow"><span class="main"><b>${esc(x.n)}</b><span>${x.act?(x.uso?'En uso: no se elimina, solo se desactiva':'Activo'):'Desactivado: no aparece en los formularios'}</span></span><button type="button" class="switch" role="switch" aria-checked="${x.act}" aria-label="${esc(x.n)}" data-sw="${kind}:${i}"></button></div>`;
+function aCatalogos(){const sw=(kind,i,x)=>`<div class="crow"><span class="main"><b>${x.rc?`<span class="ramo">${ramoIc(x.rc)}${esc(x.n)}</span>`:esc(x.n)}</b><span>${x.act?(x.uso?'En uso: no se elimina, solo se desactiva':'Activo'):'Desactivado: no aparece en los formularios'}</span></span><button type="button" class="switch" role="switch" aria-checked="${x.act}" aria-label="${esc(x.n)}" data-sw="${kind}:${i}"></button></div>`;
   const card=(t,sub,body,act='')=>`<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2 style="font-size:17px">${t}</h2>${act}</div><span class="muted" style="font-size:13px">${sub}</span>${body}</section>`;
   return `<div class="grid3c">${card('Aseguradoras','Son datos de las pólizas; no tienen acceso al sistema.',D.asegs.map((a,i)=>`<div class="crow"><span class="main"><b>${esc(a.n)}</b><span class="num">RUC ${a.ruc}</span></span><button class="linkbtn" data-editaseg="${i}">Editar</button></div>`).join(''),`<button class="btn btn-s" style="min-height:40px" data-newaseg>${ic('plus',16,2.2)}Nueva</button>`)}
   ${card('Ramos de seguro','Aparecen al registrar una póliza.',D.ramos.map((x,i)=>sw('ramos',i,x)).join(''))}
@@ -896,7 +1059,7 @@ function mNav(cur){
 function vClient(){
   const c=mCur(),scr=({datos:mDatos,inicio:mInicio,polizas:mPolizas,poliza:mPoliza,reportar:mReportar,reportado:mReportado,pagos:mPagos,recibo:mRecibo,verificar:mVerificar,cuenta:mCuenta})[c.s](c.p);
   return `<div class="mwrap"><aside class="guide"><h2>Pruebe el portal del asegurado</h2>
-  <ol><li>En el aviso de la cuota vencida de Vida, use <b>Reportar pago</b> y adjunte un comprobante.</li><li>Cambie a <b>Personal</b> arriba y valide o rechace ese pago en la mesa de validación.</li><li>Vuelva a <b>Asegurado</b>: verá el aviso y, si lo validó, el recibo nuevo en Recibos.</li><li>En Recibos, use <b>Verificar un recibo</b> con el código impreso.</li></ol>
+  <ol><li>En el aviso de la cuota vencida de Vida, use <b>Reportar pago</b> y adjunte un comprobante.</li><li>Cambie a <b>Operación</b> arriba y valide o rechace ese pago desde Pagos.</li><li>Vuelva a <b>Asegurado</b>: en Recibos verá el seguimiento del pago en tres pasos y, si lo validó, su recibo.</li><li>En Recibos, use <b>Verificar un recibo</b> con el código impreso.</li></ol>
   <div class="note">Los datos son de ejemplo y se comparten entre las dos vistas mientras la página esté abierta. «Reiniciar datos» los devuelve al inicio.</div></aside>
   <div class="phone"><span class="notch" aria-hidden="true"></span><div class="scr ${UI.m.dir||''}" id="scr">${scr}</div></div></div>`;
 }
@@ -911,59 +1074,74 @@ function mInicio(){
   const notes=myPays().filter(p=>p.notice);
   const por=myPays().filter(p=>p.estado==='por');
   return `${mTop('Hola, María Fernanda',false,`<button class="ibtn" aria-label="Notificaciones" data-mtab="pagos">${ic('bell',21,1.8)}${notes.length||por.length?'<span class="dot"></span>':''}</button>`)}
-  <div class="mbody"><span class="muted" style="margin-top:-12px;font-size:14px">Martes, 6 de octubre</span>
-  ${notes.map(p=>p.estado==='rech'?`<div class="note-m s-bad">${ic('x',20,2.2)}<div><b>Pago rechazado</b><span>${fmt(p.monto)} de ${p.code}. ${esc(p.motivo)}</span><br><button data-mgo="reportar" data-mp="${p.pol}">Reportar de nuevo</button></div></div>`:`<div class="note-m s-ok">${ic('check',20,2.4)}<div><b>Pago validado</b><span>${fmt(p.monto)} de ${p.code}. Su recibo ${p.rec} está listo.</span><br><button data-mgo="recibo" data-mp="${p.rec}">Ver recibo</button></div></div>`).join('')}
-  ${venc?`<section class="hero"><span>${pill('vencida')}</span><span class="m" style="margin-top:4px">Seguro de vida · cuota ${venc.n} de 12</span><b class="big">${fmt(venc.monto)}</b><span class="m">Venció el ${dstr(venc.vence)}. La aseguradora aún no notifica el cobro; si ya pagó por otro medio, repórtelo.</span><div class="acts"><button class="gold" data-mgo="reportar" data-mp="vida">Reportar pago</button><button class="line" data-mgo="poliza" data-mp="vida">Ver cuotas</button></div></section>`
-   :`<section class="hero"><span class="m">Próxima cuota</span>${(()=>{const n=nextDue(D.pols.veh);return n?`<b class="big">${fmt(n.monto)}</b><span class="m">Vehículo · cuota ${n.n} · vence ${dstr(n.vence)}</span>`:'<b class="big">Al día</b>'})()}<div class="acts"><button class="gold" data-mgo="poliza" data-mp="veh">Ver póliza</button><button class="line" data-mgo="reportar" data-mp="veh">Reportar pago</button></div></section>`}
-  ${por.map(p=>`<div class="note-m s-info">${ic('clock',20,2)}<div><b>Pago en validación</b><span>Recibimos ${fmt(p.monto)} de ${p.code}. Le avisaremos por correo.</span></div></div>`).join('')}
+  <div class="mbody"><span class="muted" style="margin-top:-12px;font-size:14px">Consulte sus pólizas y el estado de sus pagos.</span>
+  ${notes.map(p=>p.estado==='rech'?`<div class="note-m s-bad">${ic('x',20,2.2)}<div><b>Pago rechazado</b><span>${fmt(p.monto)} de ${p.code}. Motivo del rechazo: ${esc(p.motivo)}</span><br><button data-mgo="reportar" data-mp="${p.pol}">Reportar de nuevo</button></div></div>`:`<div class="note-m s-ok">${ic('check',20,2.4)}<div><b>Pago validado</b><span>${fmt(p.monto)} de ${p.code}. Su recibo ${p.rec} es verificable.</span><br><button data-mgo="recibo" data-mp="${p.rec}">Ver recibo</button></div></div>`).join('')}
+  ${venc?`<section class="hero"><span class="pills">${pill('vencida')}</span><span class="m" style="margin-top:4px">${ramoIc('VIDA')} Vida · cuota ${venc.n} de 12</span><b class="big">${fmt(venc.monto)}</b><span class="m">Venció el ${dstr(venc.vence)}. Si ya pagó por otro medio, repórtelo; si no, comuníquese con Oasis Seguros para ponerse al día.</span><div class="acts"><button class="gold" data-mgo="reportar" data-mp="vida">Reportar pago</button><button class="line" data-mgo="poliza" data-mp="vida">Ver cuotas</button></div></section>`
+   :`<section class="hero"><span class="m">Próxima cuota</span>${(()=>{const n=nextDue(D.pols.veh);return n?`<b class="big">${fmt(n.monto)}</b><span class="m">Vehículos · cuota ${n.n} · vence ${dstr(n.vence)}</span>`:'<b class="big">Al día</b>'})()}<div class="acts"><button class="gold" data-mgo="poliza" data-mp="veh">Ver póliza</button><button class="line" data-mgo="reportar" data-mp="veh">Reportar pago</button></div></section>`}
+  ${por.map(p=>`<div class="note-m s-info">${ic('clock',20,2)}<div><b>Pago por validar · ${fmt(p.monto)}</b><span>Oasis Seguros está revisando este pago. Aquí verá el resultado.</span><br><button data-mtab="pagos">Ver mis pagos</button></div></div>`).join('')}
   <h2 class="h2m">Mis pólizas</h2>${polCards()}</div>${mNav('inicio')}`;
 }
-function polCards(){return Object.values(D.pols).map(p=>{const e=polEstado(p),n=nextDue(p),v=p.cuotas.filter(c=>c.estado==='vencida').length;
-  return `<button class="pol" data-mgo="poliza" data-mp="${p.id}"><span class="ic">${ic(p.icon)}</span><span class="main"><span style="display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--ink)"><b>${p.ramo}</b>${pill(e)}</span><span>Saldo ${fmt(saldo(p))} · ${v?v+' cuota vencida':n?'próxima '+dstr(n.vence).slice(0,5):'al día'}</span></span>${ic('chev',20,2,'class="chev"')}</button>`}).join('')}
+const MORA_TXT='Tiene una cuota vencida. Comuníquese con Oasis Seguros para ponerse al día.';
+function polCards(){const ps=Object.values(D.pols);if(!ps.length)return vacio('Sin pólizas','Cuando Oasis Seguros registre una póliza a su nombre, aparecerá aquí.');
+  return ps.map(p=>{const mora=polEstado(p)==='mora',n=nextDue(p);
+  return `<button class="pol" data-mgo="poliza" data-mp="${p.id}"><span class="ic">${ramoIc(p.rc,22)}</span><span class="main"><span style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;color:var(--ink)"><b>${p.ramo}</b><span class="pills">${pill('vigente')}${mora?pill('mora'):''}</span></span><span>${p.code} · saldo ${fmt(saldo(p))}${!mora&&n?' · próxima '+dstr(n.vence).slice(0,5):''}</span>${mora?`<span class="mora-txt">${MORA_TXT}</span>`:''}</span>${ic('chev',20,2,'class="chev"')}</button>`}).join('')}
 function mPolizas(){return `${mTop('Mis pólizas',false)}<div class="mbody">${polCards()}</div>${mNav('polizas')}`}
 function mPoliza(id){
-  const p=D.pols[id],pr=prima(p),pg=pagado(p);
+  const p=D.pols[id],pr=prima(p),pg=pagado(p),mora=polEstado(p)==='mora';
   return `${mTop(p.ramo)}<div class="mbody">
-  <section class="card sumbox"><div style="display:flex;justify-content:space-between;align-items:center"><b>${p.code}</b>${pill(polEstado(p))}</div><span class="muted" style="font-size:14px">${p.detalle} · ${p.aseg}</span>
+  <section class="card sumbox"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><b>${ramo(p.rc)} · <span class="num">${p.code}</span></b><span class="pills">${pill('vigente')}${mora?pill('mora'):''}</span></div>${mora?`<span class="mora-txt">${MORA_TXT}</span>`:''}<span class="muted" style="font-size:14px">${p.detalle} · ${p.aseg}</span>
   <div style="display:flex;justify-content:space-between;font-size:14px;margin-top:6px"><span class="muted">Pagado ${fmt(pg)}</span><span class="muted">Prima ${fmt(pr)}</span></div><span class="prog"><i style="width:${Math.round(pg/pr*100)}%"></i></span>
   <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="muted">Saldo pendiente</span><b class="num" style="font:var(--dw) 26px var(--display)">${fmt(saldo(p))}</b></div></section>
   <h2 class="h2m">Cuotas</h2>
+  ${leyenda('cuota')}
   ${p.cuotas.map((c,i)=>`<div class="cuota" style="animation:fadeUp .35s ${i*25}ms var(--ease) both"><span class="main"><b>Cuota ${c.n}</b><span>Vence ${dstr(c.vence)}</span></span><b class="num">${fmt(c.monto)}</b>${pill(c.estado)}</div>`).join('')}
   </div><div class="mfoot"><span class="muted" style="font-size:13.5px">La aseguradora debita las cuotas de su cuenta. Si pagó una por otro medio, repórtela.</span><button class="btn btn-p btn-lg" data-mgo="reportar" data-mp="${p.id}" ${payable(p).length?'':'disabled'}>Reportar un pago</button></div>`;
 }
 function mReportar(id){
   id=id||'veh';const p=D.pols[id],cs=payable(p),r=UI.rep;
+  const H={pol:'Solo aparecen sus pólizas vigentes.',mo:'En dólares, con punto decimal.',fe:'El día en que pagó; no puede ser posterior a hoy.',ref:'Está en su comprobante. No se repite en la misma póliza.'};
   return `${mTop('Reportar pago')}<form class="mbody" id="repForm" novalidate>
-  <span class="muted" style="font-size:14.5px">¿Pagó una cuota por un medio distinto del débito bancario? Envíe el comprobante y el personal lo validará.</span>
-  <label class="field" for="rpPol">Póliza<select class="inp" id="rpPol">${Object.values(D.pols).map(x=>`<option value="${x.id}" ${x.id===id?'selected':''}>${x.ramo} · ${x.code}</option>`).join('')}</select></label>
-  <label class="field" for="rpCu">Cuota<select class="inp" id="rpCu">${cs.map(c=>`<option value="${c.n}">Cuota ${c.n} · ${fmt(c.monto)}${c.estado==='vencida'?' · vencida':''}</option>`).join('')}</select></label>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="field" for="rpMo">Monto<input class="inp num" id="rpMo" inputmode="decimal" value="${(cs[0]?cs[0].monto:0).toFixed(2).replace('.',',')}"></label><label class="field" for="rpFe">Fecha<input class="inp" id="rpFe" type="date" value="2026-10-06"></label></div>
-  <label class="field" for="rpMet">Medio de pago<select class="inp" id="rpMet"><option>Transferencia</option><option>Depósito</option><option>Efectivo en oficina</option></select></label>
-  <label class="field" for="rpBa">Banco<select class="inp" id="rpBa"><option>Banco Pichincha</option><option>Banco Guayaquil</option><option>Produbanco</option><option>Banco del Pacífico</option><option>Cooperativa JEP</option></select></label>
-  <label class="field" for="rpRef">Número de referencia<input class="inp" id="rpRef" inputmode="numeric" placeholder="Está en su comprobante" ${r.err?'aria-invalid="true"':''}>${r.err?`<span class="err" role="alert">${r.err}</span>`:''}</label>
-  <label class="drop" for="rpFile"><span class="ic">${ic('up',22)}</span><span><b>Adjuntar comprobante</b><br><span class="muted" style="font-size:13px" id="rpFileName">Foto o PDF</span></span><input type="file" id="rpFile" class="sr" accept="image/*,.pdf"></label>
+  <span class="muted" style="font-size:14.5px">¿Pagó una cuota por un medio distinto del débito bancario? Envíe el comprobante y Oasis Seguros lo revisará.</span>
+  <div class="field"><label for="rpPol">Póliza</label><select class="inp" id="rpPol" ${ayudaDe('rpPol',H.pol)}>${Object.values(D.pols).map(x=>`<option value="${x.id}" ${x.id===id?'selected':''}>${x.ramo} · ${x.code}</option>`).join('')}</select>${pieCampo('rpPol',H.pol)}</div>
+  <div class="field"><label for="rpCu">Cuota</label><select class="inp" id="rpCu">${cs.map(c=>`<option value="${c.n}">Cuota ${c.n} · ${fmt(c.monto)}${c.estado==='vencida'?' · vencida':''}</option>`).join('')}</select></div>
+  <div class="field"><label for="rpMo">Monto</label><input class="inp num" id="rpMo" inputmode="decimal" value="${(cs[0]?cs[0].monto:0).toFixed(2)}" ${ayudaDe('rpMo',H.mo)}>${pieCampo('rpMo',H.mo)}</div>
+  <div class="field"><label for="rpFe">Fecha de pago</label><input class="inp" id="rpFe" type="date" value="2026-10-06" max="2026-10-06" ${ayudaDe('rpFe',H.fe)}>${pieCampo('rpFe',H.fe)}</div>
+  <div class="field"><label for="rpMet">Medio de pago</label><select class="inp" id="rpMet"><option>Transferencia</option><option>Depósito</option><option>Efectivo en oficina</option></select></div>
+  <div class="field"><label for="rpBa">Banco</label><select class="inp" id="rpBa"><option>Banco Pichincha</option><option>Banco Guayaquil</option><option>Produbanco</option><option>Banco del Pacífico</option><option>Cooperativa JEP</option></select></div>
+  <div class="field"><label for="rpRef">Número de referencia</label><input class="inp" id="rpRef" inputmode="numeric" ${r.err?'aria-invalid="true"':''} ${ayudaDe('rpRef',H.ref,r.err)}>${pieCampo('rpRef',H.ref,r.err)}</div>
+  <label class="drop" for="rpFile"><span class="ic">${ic('up',22)}</span><span><b>Adjuntar comprobante</b><br><span class="muted" style="font-size:13px" id="rpFileName">Foto o PDF de hasta 5 MB</span></span><input type="file" id="rpFile" class="sr" accept="image/*,.pdf"></label>
   <button type="submit" class="sr">Enviar</button></form>
   <div class="mfoot"><button class="btn btn-p btn-lg" id="repBtn">Enviar reporte</button></div>`;
 }
 function mReportado(id){
   const p=D.pays.find(x=>x.id===id);
   return `<div class="done"><svg class="big" viewBox="0 0 100 100" aria-hidden="true"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--info)" stroke-width="5"/><path class="tick" d="M50 28v24l14 9" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round"/></svg>
-  <h1>Recibimos su reporte</h1><b class="amt-big burst">${fmt(p.monto)}</b><span class="muted" style="max-width:280px">El personal de Oasis lo revisará y le avisaremos por correo. Mientras tanto la cuota ${p.cuotas.join(', ')} queda «En validación».</span></div>
-  <div class="mfoot"><button class="btn btn-p btn-lg" data-mtab="inicio">Volver al inicio</button></div>`;
+  <h1>Recibimos su reporte</h1><b class="amt-big burst">${fmt(p.monto)}</b><span class="muted" style="max-width:280px">Oasis Seguros está revisando este pago. En «Mis pagos» verá cada paso y el resultado; también le avisaremos por correo.</span></div>
+  <div class="mfoot"><button class="btn btn-p btn-lg" data-mtab="pagos">Ver mis pagos</button></div>`;
+}
+/* Seguimiento del pago en tres pasos (SeguimientoPago): el estado de cada paso va en texto. */
+function segPago(p){
+  const reg=['Registrado','Completado','s-ok','check',p.reg||p.fecha];
+  const pasos=p.estado==='por'?[reg,['En revisión por Oasis Seguros','En curso','s-info','clock'],['Resultado','Pendiente','s-void','circle']]
+    :[reg,['En revisión por Oasis Seguros','Completado','s-ok','check'],p.estado==='val'?['Validado · recibo verificable','Completado','s-ok','check',p.res||p.fecha]:['Rechazado','Rechazado','s-bad','x',p.res||p.fecha,p.motivo]];
+  return `<ol class="segp" aria-label="Seguimiento del pago">${pasos.map(([t,e,tono,icn,f,mot])=>`<li><span class="dot ${tono}" aria-hidden="true">${ic(icn,14,2.6)}</span><span><b>${t}</b><span class="st">${e}${f?` · <span class="num">${f}</span>`:''}</span>${mot?`<span class="mot"><b style="display:inline">Motivo del rechazo:</b> ${esc(mot)}</span>`:''}</span></li>`).join('')}</ol>`;
 }
 function mPagos(){
   myPays().forEach(p=>{if(p.notice)p.notice=false});
   const l=myPays();
   return `${mTop('Mis pagos',false)}<div class="mbody"><button class="listrow" data-mgo="verificar">${ic('shield',22,2,'style="color:var(--ok);flex:none"')}<span class="main"><b>Verificar un recibo</b><span>Compruebe que un recibo es auténtico</span></span>${ic('chev',20,2,'class="chev" style="color:var(--ink2)"')}</button>
-  ${l.map((p,i)=>`<button class="listrow" style="animation:fadeUp .35s ${i*30}ms var(--ease) both" ${p.rec?`data-mgo="recibo" data-mp="${p.rec}"`:'disabled'}><span class="main"><b>${D.pols[p.pol].ramo} · cuota ${p.cuotas.join(', ')}</b><span>${p.fecha}${p.rec?' · '+p.rec:''}${p.estado==='rech'?' · '+esc(p.motivo):''}</span></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><b class="num">${fmt(p.monto)}</b>${pill(p.estado==='val'?'val':p.estado)}</span></button>`).join('')}</div>${mNav('pagos')}`;
+  ${leyenda('pago')}
+  ${l.length?l.map((p,i)=>`<section class="card pagom" style="animation:fadeUp .35s ${i*30}ms var(--ease) both"><span class="main"><b>${ramo(D.pols[p.pol].rc)} · cuota ${p.cuotas.join(', ')}</b><span>Póliza <span class="num">${p.code}</span> · pagado el <span class="num">${p.fecha}</span></span></span><span class="right"><b class="num">${fmt(p.monto)}</b>${pill(p.estado)}</span>${segPago(p)}${p.rec?`<button class="btn btn-s" style="flex-basis:100%" data-mgo="recibo" data-mp="${p.rec}">Ver recibo ${p.rec}</button>`:''}</section>`).join('')
+   :vacio('Sin pagos','Cuando Oasis Seguros valide un pago de sus pólizas, aparecerá aquí con su recibo verificable.')}
+  <p class="muted" style="margin:0;font-size:14px;display:flex;gap:8px;align-items:flex-start">${ic('shield',16,2.2,'style="color:var(--ok);flex:none;margin-top:2px"')}Cada pago validado emite un recibo verificable de Oasis Seguros.</p></div>${mNav('pagos')}`;
 }
 function mRecibo(code){const p=findRec(code);return `${mTop('Recibo')}<div class="mbody"><section class="card mrec receipt" style="padding:18px">${receiptDoc(p,true)}</section><button class="btn btn-s" data-mmail="${p.rec}">${ic('mail',18)}Enviar a mi correo</button></div>`}
-function mVerifOther(p,st){const anul=st==='anul';return `<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--${anul?'void':'info'})" stroke-width="5"/>${anul?'<path class="tick" d="M31 31l38 38" fill="none" stroke="var(--void)" stroke-width="7" stroke-linecap="round"/>':'<path class="tick" d="M50 28v24l14 9" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round"/>'}</svg><h1 style="font-size:22px">${anul?'Recibo anulado':'En proceso'}</h1><span class="muted">${anul?'Oasis Seguros anuló este recibo. Motivo: '+esc(p.motivoAnul):'El recibo existe y todavía se está registrando. Vuelva a verificarlo en unos minutos.'}</span></div>`}
+const SVG_VERIF={aut:['ok','<path class="tick" d="M30 52l13 13 27-29" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>'],anul:['void','<path class="tick" d="M31 31l38 38" fill="none" stroke="var(--void)" stroke-width="7" stroke-linecap="round"/>'],vproc:['info','<path class="tick" d="M50 28v24l14 9" fill="none" stroke="var(--info)" stroke-width="7" stroke-linecap="round"/>'],nocoin:['bad','<path class="tick" d="M36 36l28 28M64 36 36 64" fill="none" stroke="var(--bad)" stroke-width="7" stroke-linecap="round"/>'],noenc:['bad','<path class="tick" d="M36 36l28 28M64 36 36 64" fill="none" stroke="var(--bad)" stroke-width="7" stroke-linecap="round"/>']};
 function mVerificar(){
-  const r=UI.verify;let p=r?findRec(r):null;if(p&&!p.mine)p=null;const st=p?(p.anc==='anul'?'anul':(p.anc==='proc'||p.anc==='fall')?'proc':'ok'):null;
-  return `${mTop('Verificar recibo')}<div class="mbody">${!r?`<span class="muted" style="font-size:14.5px">Escriba el código que aparece en el recibo, por ejemplo OAS-2026-000212.</span>`:''}
-  ${r&&p&&st!=='ok'?mVerifOther(p,st):''}${r&&p&&st==='ok'?`<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--ok)" stroke-width="5"/><path class="tick" d="M30 52l13 13 27-29" fill="none" stroke="var(--ok)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg><h1 style="font-size:22px">Recibo auténtico</h1><span class="muted">Emitido por Oasis Seguros y registrado en la red.</span></div><section class="card mrec"><dl class="kv"><dt>Recibo</dt><dd>${p.rec}</dd><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Monto</dt><dd>${fmt(p.monto)}</dd><dt>Fecha</dt><dd>${p.fecha}</dd></dl></section>`:''}
-  ${r&&!p?`<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--bad)" stroke-width="5"/><path class="tick" d="M36 36l28 28M64 36 36 64" fill="none" stroke="var(--bad)" stroke-width="7" stroke-linecap="round"/></svg><h1 style="font-size:22px">Recibo no encontrado</h1><span class="muted">Revise el código. Solo puede verificar los recibos de sus propias pólizas.</span></div>`:''}
+  const r=UI.verify;let p=r?findRec(r):null;if(p&&!p.mine)p=null;const st=r?verifEstado(p):null;
+  const res=st?`<div class="done" style="flex:none;padding:12px 0"><svg class="big" viewBox="0 0 100 100" aria-hidden="true" style="width:90px;height:90px"><circle class="ring" cx="50" cy="50" r="46" fill="none" stroke="var(--${SVG_VERIF[st][0]})" stroke-width="5"/>${SVG_VERIF[st][1]}</svg><h1 style="font-size:22px">${TITULO_VERIF[st]}</h1>${pill(st)}<span class="muted">${DESC[st]}${st==='noenc'?' Solo puede verificar los recibos de sus propias pólizas.':''}${st==='anul'&&p.motivoAnul?' Motivo: '+esc(p.motivoAnul):''}</span></div>${p&&st==='aut'?`<section class="card mrec"><dl class="kv"><dt>Recibo</dt><dd>${p.rec}</dd><dt>Cliente</dt><dd>${esc(p.cli)}</dd><dt>Monto</dt><dd>${fmt(p.monto)}</dd><dt>Fecha</dt><dd>${p.fecha}</dd></dl></section>`:''}`:'';
+  return `${mTop('Verificar recibo')}<div class="mbody">${!r?`<span class="muted" style="font-size:14.5px">Escriba el código que aparece en el recibo, por ejemplo OAS-2026-000187.</span>`:''}
+  ${res}
   <form id="mvForm" style="display:flex;flex-direction:column;gap:10px"><label class="field" for="mvIn">Código del recibo<input class="inp" id="mvIn" placeholder="OAS-2026-000000" value="${esc(r||'')}"></label><button class="btn btn-p btn-lg" type="submit">Verificar</button></form></div>`;
 }
 function mCuenta(){return `${mTop('Mi cuenta',false)}<div class="mbody"><section class="card sumbox" style="align-items:center;text-align:center"><span class="av" style="width:64px;height:64px;font-size:20px;background:var(--gold);color:var(--on-gold)">MG</span><b style="font-size:18px">María Fernanda Guamán</b><span class="muted">mf.guaman@correo.ec</span></section><button class="listrow" data-logout>${ic('out',22,2)}<span class="main"><b>Cerrar sesión</b></span></button></div>${mNav('cuenta')}`}
@@ -973,11 +1151,11 @@ function bindClient(){
   if(s==='datos'){const cb=$('#mOk'),b=$('#mAccept');cb.onchange=()=>b.disabled=!cb.checked;b.onclick=()=>{D.consent=true;mTab('inicio');toast('Gracias. Ya puede ver sus pólizas.')}}
   if(s==='reportar'){
     $('#rpPol').onchange=e=>{mCur().p=e.target.value;UI.m.dir=null;render()};
-    $('#rpCu').onchange=()=>{const pol=D.pols[$('#rpPol').value],c=payable(pol).find(x=>String(x.n)===$('#rpCu').value);$('#rpMo').value=c.monto.toFixed(2).replace('.',',')};
-    $('#rpFile').onchange=e=>{const f=e.target.files[0];$('#rpFileName').textContent=f?f.name:'Foto o PDF'};
+    $('#rpCu').onchange=()=>{const pol=D.pols[$('#rpPol').value],c=payable(pol).find(x=>String(x.n)===$('#rpCu').value);$('#rpMo').value=c.monto.toFixed(2)};
+    $('#rpFile').onchange=e=>{const f=e.target.files[0];$('#rpFileName').textContent=f?f.name:'Foto o PDF de hasta 5 MB'};
     const send=e=>{e&&e.preventDefault();const ref=$('#rpRef').value.trim();
       if(!ref){UI.rep={err:'Escriba el número de referencia de su comprobante.'};const keep=[$('#rpCu').value,$('#rpMo').value];UI.m.dir=null;render();$('#rpCu').value=keep[0];$('#rpMo').value=keep[1];$('#rpRef').focus();return}
-      UI.rep={};const id=$('#rpPol').value,pol=D.pols[id],n=+$('#rpCu').value,m=parseFloat($('#rpMo').value.replace(/\./g,'').replace(',','.'))||0,f=$('#rpFile').files[0],fd=$('#rpFe').value.split('-');
+      UI.rep={};const id=$('#rpPol').value,pol=D.pols[id],n=+$('#rpCu').value,m=parseFloat($('#rpMo').value.replace(',','.'))||0,f=$('#rpFile').files[0],fd=$('#rpFe').value.split('-');
       const q=pol.cuotas.find(x=>x.n===n);q.estado='validacion';
       const np={id:'n'+Date.now(),cli:'María Fernanda Guamán',ini:'MG',mine:true,pol:id,code:pol.code,cuotas:[n],monto:m,fecha:fd[2]+'/'+fd[1]+'/'+fd[0],metodo:$('#rpMet').value,banco:$('#rpBa').value,ref,origen:'Comprobante del cliente',por:'cliente',estado:'por',hace:'ahora',file:f?f.name:null,comp:f?true:false};
       D.pays.unshift(np);D.cartera=D.cartera.filter(x=>!(x.mine&&x.code===pol.code&&x.cuota===n));
@@ -992,7 +1170,7 @@ document.addEventListener('click',e=>{
   const t=e.target.closest('button,a');if(!t||!$('#app').contains(t))return;
   const d=t.dataset;
   if('logout' in d){UI.logErr=false;setRole('login');return}
-  if(d.go){if(d.go==='registrar')UI.regErr=null;if(d.go==='cargar')UI.carga={step:'form',aseg:UI.carga.aseg,ids:[]};go(d.go);return}
+  if(d.go){if(d.filtro)UI.tab=d.filtro;if(d.go==='registrar')UI.regErr=null;if(d.go==='cargar')UI.carga={step:'form',aseg:UI.carga.aseg,ids:[]};go(d.go);return}
   if(d.goadm){UI.adm=d.goadm;go('admin');return}
   if(d.adm){UI.adm=d.adm;UI.newUser=false;UI.codes=null;render();return}
   if(d.rp){UI.rp=d.rp;render();return}
@@ -1002,7 +1180,7 @@ document.addEventListener('click',e=>{
   if(d.ureset){const u=D.users.find(x=>x.id===d.ureset);logA('RESTABLECER_CONTRASENA','Restableció una contraseña',u.n);toast(`Enviamos una contraseña temporal a ${esc(u.c)} y cerramos sus sesiones.`);return}
   if(d.utoggle){const u=D.users.find(x=>x.id===d.utoggle);u.act=!u.act;logA(u.act?'ACTIVAR_USUARIO':'DESACTIVAR_USUARIO',u.act?'Activó un usuario':'Desactivó un usuario',u.n);toast(u.act?`${esc(u.n)} puede volver a ingresar.`:`${esc(u.n)} ya no puede ingresar; cerramos sus sesiones.`);render();return}
   if(d.cta){const c=D.ctas[+d.cta];c.st='pend1';logA('CREAR_CUENTA_CLIENTE','Creó la cuenta de un cliente',c.cli);toast(`Cuenta creada. La contraseña temporal llegó a ${esc(c.c)}.`);render();return}
-  if(d.retry){const p=findRec(d.retry);p.anc='proc';logA('REINTENTAR_ANCLAJE','Reintentó el anclaje de un recibo','Recibo '+p.rec);toast(`Recibo ${p.rec} devuelto a la cola de anclaje.`);render();
+  if(d.retry){const p=findRec(d.retry);p.anc='proc';logA('REINTENTAR_ANCLAJE','Reintentó el anclaje de un recibo','Recibo '+p.rec);toast(`Se volverá a intentar el registro del recibo ${p.rec}.`);render();
     setTimeout(()=>{p.anc=undefined;D.anc.anclados++;logA('ANCLAR','Ancló un recibo','Recibo '+p.rec,'Sistema');if(UI.role==='staff')render()},2200);return}
   if('anulopen' in d){UI.anular=true;render();$('#anulTxt').focus();return}
   if('anulcancel' in d){UI.anular=false;render();return}
@@ -1010,10 +1188,13 @@ document.addEventListener('click',e=>{
     if(!msg){$('#anulTxt').setAttribute('aria-invalid','true');$('#anulTxt').focus();return}
     p.anc='anul';p.motivoAnul=msg;UI.anular=false;logA('ANULAR','Anuló un recibo','Recibo '+p.rec);toast(`Recibo ${p.rec} anulado. La verificación mostrará «Anulado».`);render();return}
   if(d.sw){const [k,i]=d.sw.split(':'),x=D[k][+i];x.act=!x.act;logA('EDITAR_CATALOGO',(x.act?'Activó ':'Desactivó ')+(k==='ramos'?'un ramo':'un método de pago'),x.n);render();return}
+  if('newpol' in d){toast('Abriría el formulario de la póliza: cliente, aseguradora, ramo, prima y vigencia.');return}
+  if('newcli' in d){toast('Abriría el formulario del cliente: identificación, nombre, correo y teléfono.');return}
+  if('plan' in d){toast('Abriría el plan de cuotas: número de cuotas y una propuesta editable que debe sumar la prima.');return}
   if('newaseg' in d||d.editaseg){toast('Abriría el formulario de la aseguradora: nombre y RUC de 13 dígitos.');return}
   if('codes' in d){UI.codes=Array.from({length:10},(_,i)=>{const h=hash('rc'+i+Date.now()).toUpperCase();return h.slice(0,4)+'-'+h.slice(4,8)});logA('REGENERAR_CODIGOS','Generó códigos de recuperación','Cuenta propia');render();return}
   if('closeoth' in d){toast('Cerramos sus otras sesiones.');return}
-  if('explorer' in d){e.preventDefault();toast('Abriría la transacción en el explorador público de Polygon.');return}
+  if('explorer' in d){e.preventDefault();toast('Abriría la transacción en el explorador público.');return}
   if('plantilla' in d){toast('Descargaría la plantilla de cobros (.xlsx).');return}
   if('cargareset' in d){UI.carga={step:'form',aseg:UI.carga.aseg,ids:[]};render();return}
   if('cargaok' in d){const c=UI.carga,ids=[];cargaFilas(c.aseg).filter(r=>r.ok).forEach((r,i)=>{const id='c'+Date.now()+i;ids.push(id);D.pays.unshift({id,cli:r.cli,ini:r.cli.split(' ').filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join(''),code:r.pol,cuotas:[1],monto:r.monto,fecha:r.fecha,metodo:'Débito bancario',banco:c.aseg,ref:r.ref,origen:'Archivo de la aseguradora',por:'Andrea Villacís',estado:'por',hace:'ahora',deb:true,arch:c.file,fila:r.f})});c.ids=ids;c.step='done';logA('IMPORTAR','Cargó la notificación de cobros',c.aseg+' · '+ids.length+' filas');toast(`${ids.length} pagos registrados. Quedan por validar.`);render();return}
@@ -1021,21 +1202,27 @@ document.addEventListener('click',e=>{
   if('cargano' in d){UI.carga.confirm=false;render();return}
   if('cargaval' in d){D.pays.filter(p=>UI.carga.ids.includes(p.id)&&p.estado==='por').forEach(p=>{p.estado='val';p.rec=newRec();p.hoy=true;D.recaudado+=p.monto});UI.carga.confirm=false;toast('Pagos validados. Se emitieron sus recibos.');render();return}
   if(d.tab){UI.tab=d.tab;render();return}
-  if(d.val){go('validar',d.val);return}
+  if(d.val){UI.valErr=false;go('validar',d.val);return}
+  if(d.valrej){UI.valErr=false;UI.rej={open:true,chip:null};go('validar',d.valrej);return}
+  if(d.pol){go('poliza',d.pol);return}
+  if('polmenu' in d){toast('Abriría el menú de la póliza: Editar, Marcar vencida o Cancelar póliza.');return}
+  if('polclear' in d){UI.polF={cli:'',aseg:'',st:''};render();return}
+  if('bitclear' in d){UI.bit={u:'',a:''};render();return}
+  if('repclear' in d){UI.repF={aseg:'',desde:'2026-09-01',hasta:'2026-10-06'};render();return}
   if(d.rec){go('recibo',d.rec);return}
   if(d.cli){go('cliente',d.cli);return}
   if('rejopen' in d){UI.rej.open=true;render();return}
   if('rejcancel' in d){UI.rej={open:false,chip:null};render();return}
   if(d.chip){UI.rej.chip=d.chip;render();return}
-  if(d.valok){const p=D.pays.find(x=>x.id===d.valok);t.disabled=true;t.innerHTML=ic('check',18,2.6)+'Validado';
+  if(d.valok){const p=D.pays.find(x=>x.id===d.valok);if(!$('#valConf').checked){UI.valErr=true;render();$('#valConf').focus();return}UI.valErr=false;t.disabled=true;t.innerHTML=ic('check',18,2.6)+'Validado';
     setTimeout(()=>{p.estado='val';p.rec=newRec();p.hoy=true;p.notice=!!p.mine;D.recaudado+=p.monto;logA('VALIDAR','Validó un pago','Pago '+p.code+' · cuota '+p.cuotas.join(', '));
       if(p.mine){const pol=D.pols[p.pol];p.cuotas.forEach(n=>{const q=pol.cuotas.find(x=>x.n===n);if(q)q.estado='pagada'})}
-      toast(`Pago validado. Recibo ${p.rec} emitido y enviado a ${esc(p.cli.split(' ')[0])}.`);go('recibo',p.rec)},450);return}
+      p.res='06/10/2026';toast(`Recibo ${p.rec} emitido. El recibo se está registrando para que pueda verificarse.`);go('recibo',p.rec)},450);return}
   if(d.rejok){const p=D.pays.find(x=>x.id===d.rejok);const msg=($('#rejTxt').value||'').trim();
-    if(!msg){$('#rejTxt').setAttribute('aria-invalid','true');$('#rejTxt').focus();return}
-    p.estado='rech';p.motivo=msg;p.notice=!!p.mine;logA('RECHAZAR','Rechazó un pago','Pago '+p.code+' · cuota '+p.cuotas.join(', '));
+    if(msg.length<5||msg.length>300){$('#rejTxt').setAttribute('aria-invalid','true');$('#rejTxt').focus();return}
+    p.estado='rech';p.motivo=msg;p.res='06/10/2026';p.notice=!!p.mine;logA('RECHAZAR','Rechazó un pago','Pago '+p.code+' · cuota '+p.cuotas.join(', '));
     if(p.mine){const pol=D.pols[p.pol];p.cuotas.forEach(n=>{const q=pol.cuotas.find(x=>x.n===n);if(q)q.estado=q.vence<TODAY?'vencida':'pendiente'})}
-    UI.rej={open:false,chip:null};toast(`Pago rechazado. Avisamos a ${esc(p.cli.split(' ')[0])} con el motivo.`);UI.tab='por';go('pagos');return}
+    UI.rej={open:false,chip:null};toast(`Pago rechazado. ${esc(p.cli.split(' ')[0])} verá el motivo en su portal.`);UI.tab='por';go('pagos');return}
   if(d.remind){const c=D.cartera.find(x=>x.id===d.remind);c.rem=true;toast(`Recordatorio enviado a ${esc(c.cli)}.`);render();return}
   if('remindall' in d){D.cartera.forEach(c=>c.rem=true);toast(`Recordatorios enviados a ${D.cartera.length} clientes.`);render();return}
   if(d.mail){toast(`Recibo ${d.mail} enviado por correo.`);return}

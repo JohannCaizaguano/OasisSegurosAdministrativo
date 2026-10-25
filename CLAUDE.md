@@ -125,8 +125,10 @@ leyendo varios archivos.
   salvo `TransaccionPagoLinea` (ADR-014), que HU-48 habría agregado (HU-48 se retiró del alcance); no tiene borrados en cascada
   (RN-09). `Usuario.nombre` es una columna con el nombre visible de cada cuenta (S2), que auth lee
   directamente.
-- `@oasis/shared` se consume compilado (`dist/`, CommonJS): tras cambiar `packages/shared/src`,
-  ejecuta `pnpm --filter @oasis/shared build` para que el API y la SPA vean el cambio.
+- `@oasis/shared` se consume compilado: el build emite CommonJS en `dist/` (condición `default`,
+  para el API y Node) y ESM en `dist/esm/` (condición `module`, que solo leen los bundlers), para
+  que la SPA haga tree-shaking de zod (ADR-029). Tras cambiar `packages/shared/src`, ejecuta
+  `pnpm --filter @oasis/shared build` para que el API y la SPA vean el cambio.
 
 ## Contrato
 
@@ -165,7 +167,19 @@ leyendo varios archivos.
 - Todo estado se muestra con `components/EstadoInsignia.tsx` (`dominio` + `estado`). El vocabulario
   está en `components/estados.ts`, tipado contra los enums de `@oasis/shared`: omitir un estado
   rompe el `typecheck`. El texto es el nombre accesible y el código técnico queda en
-  `data-estado`, que es lo que leen las pruebas.
+  `data-estado`, que es lo que leen las pruebas. Cada estado lleva además una `descripcion` (el
+  tipo `Presentacion` la exige); `components/LeyendaEstados.tsx` la muestra en un `<details>`
+  nativo, sin tooltips, en Pagos, Recibos y Pólizas, y `VerificacionPage` explica con ella cada
+  resultado.
+- `components/RamoEtiqueta.tsx` pinta el ícono del ramo según `ramoCodigo` (mapa fijo en
+  `components/ramos.ts`, con `Shield` para un código desconocido) junto al nombre, que es el dato
+  accesible.
+- `AvisoVacio` (`components/DataState.tsx`) recibe el título como `children` y, opcionales,
+  `descripcion` y `accion`; `TablaDatos` le pasa `vacioDescripcion`.
+- El filtro de `PagosPage` vive en la URL (`?estado=`, validado contra `ESTADOS_PAGO` y escrito con
+  `replace`): la cifra «Por validar» del inicio abre `/pagos?estado=REGISTRADO`. En el portal,
+  `features/dashboard/components/SeguimientoPago.tsx` muestra los tres pasos de cada pago con su
+  estado en texto.
 - Montos y fechas se formatean solo con `lib/format.ts` (`formatearMoneda`, `formatearFecha`,
   `formatearFechaHoraEcuador`, `acortarHash`); las fechas sin hora salen en `dd/mm/aaaa` sin
   pasar por `Date`.

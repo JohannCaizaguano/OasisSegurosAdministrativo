@@ -23,6 +23,7 @@ Sistema de Registro de Pagos de Primas (SRPP)
 | 1.2         | 29/09/2026 | Actualización de fechas del proyecto (cierre el 08/01/2027)                                                                                                                                                                   | J. Caizaguano |
 | 1.3         | 06/10/2026 | Acceso solo con inicio de sesión para el personal de Oasis Seguros y sus clientes; sin verificación pública ni actor aseguradora. Pago en línea con PayPhone (ADR-014 y ADR-015); tabla 11-1 completada con ADR-010 a ADR-013 | J. Caizaguano |
 | 1.4         | 23/10/2026 | Tabla 11-1 completada con ADR-016 a ADR-028; ADR-014 retirada por el backlog v1.5 (sin pago en línea) | J. Caizaguano |
+| 1.5         | 25/10/2026 | Tabla 11-1 completada con ADR-029 (`@oasis/shared` también en ESM para el bundler) | J. Caizaguano |
 
 # 1. INTRODUCCIÓN
 ## 1.1. Propósito
@@ -506,6 +507,7 @@ Cada decisión se registra en docs/adr/ del repositorio.
 | ADR-026 | Respaldos cifrados con restic en almacenamiento externo                                    | Aceptada   |
 | ADR-027 | Segundo factor TOTP para el administrador                                                  | Aceptada   |
 | ADR-028 | Generación de reportes en CSV y PDF en el servidor                                         | Aceptada   |
+| ADR-029 | `@oasis/shared` en CommonJS y en ESM para el bundler de la SPA                              | Aceptada   |
 
 # 12. ESCENARIOS DE CALIDAD
 **Tabla 12-1:** Escenarios de calidad

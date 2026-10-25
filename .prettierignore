@@ -22,3 +22,5 @@ packages/contracts/REPORTE-GAS.md
 apps/api/prisma/migrations
 playwright-report
 test-results
+# Caché local del hook de impeccable: no es fuente del proyecto.
+.impeccable/hook.cache.json

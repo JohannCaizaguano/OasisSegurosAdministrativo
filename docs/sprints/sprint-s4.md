@@ -6,7 +6,7 @@
   operadora y HT-15 Seguridad del contrato y de la cuenta operadora.
 - **Épicas:** EP-07 (HT-13, HT-14), EP-04 (HU-16, HU-18, HU-19), EP-03 (HU-35, HU-37) y EP-05
   (HU-22, HU-23, HU-42, HT-15).
-- **Rama:** `feat/sprint-s4-pagos-recibos`.
+- **Rama:** `feat/sprint-s4-pagos-recibos`; la Etapa C, en `feat/sprint-s4-claridad-ui` (sección 13).
 - **Fechas:** 19/10/2026 – 30/10/2026 (tabla 6-1 del backlog).
 - **Commits:** `545441f` Etapa A (HT-13, integrada en `main` con el PR #9), `8b2931e` deuda de la
   Etapa A y el commit de la Etapa B.
@@ -287,6 +287,7 @@ validación (S7) y contadores del límite de tasa en Redis (HT-08, S8).
       (`docs/despliegue.md` §4.1) y anotar aquí los dos txHash. Con esto se cumple HT-15.1.
 - [ ] Hacer las pruebas manuales con teclado y lector de pantalla (sección 11).
 - [ ] Presentar el sprint al Product Owner el 30/10.
+- [x] ADR-029 (`@oasis/shared` en CJS y ESM) agregado a la tabla 11-1 de la arquitectura (v1.5).
 
 ## 11. Pruebas manuales
 
@@ -315,3 +316,85 @@ pnpm --filter @oasis/api seed
 pnpm test:e2e
 pnpm --filter @oasis/web test:e2e
 ```
+
+## 13. Etapa C · claridad de la interfaz
+
+- **Plan:** [`sprint-s4-etapa-c-plan.md`](sprint-s4-etapa-c-plan.md), pedido del autor el 25/10/2026.
+  Refina HT-13, HU-16, HU-18, HU-19 y HU-35; no abre historias nuevas.
+- **Rama:** `feat/sprint-s4-claridad-ui`, desde `main`.
+- **Ejecución:** sesión principal con `subagent-driven-development` y los agentes de
+  `.opencode/agents/`.
+
+### 13.1 Entregables
+
+| Mejora                                     | Entregable                                                                            | Ubicación                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| M1 Ícono por ramo                          | `ramoCodigo` en `polizaSchema` y en `GET /polizas`, `/polizas/:id` y `/mis-polizas`   | `packages/shared/src/schemas/poliza.schema.ts`, `apps/api/src/modules/polizas/`                                         |
+|                                            | `RamoEtiqueta` con el mapa fijo de nueve íconos                                       | `apps/web/src/components/{RamoEtiqueta.tsx,ramos.ts}`                                                                   |
+| M2 Qué significa cada estado               | `descripcion` en cada estado y leyenda `<details>` en Pagos, Recibos y Pólizas        | `apps/web/src/components/{estados.ts,LeyendaEstados.tsx}`                                                               |
+| M3 Estados vacíos con descripción y acción | `AvisoVacio` con `descripcion` y `accion`; textos en el portal, Pagos, Recibos, panel | `apps/web/src/components/{DataState,TablaDatos}.tsx`                                                                    |
+| M4 Ayudas permanentes                      | Ayuda bajo cada campo del formulario de pago                                          | `apps/web/src/features/pagos/components/FormularioPago.tsx`                                                             |
+| M5 Cifra que filtra                        | «Revisar los pagos» abre `/pagos?estado=REGISTRADO`; el filtro vive en la URL         | `features/dashboard/components/PanelPersonal.tsx`, `features/pagos/pages/PagosPage.tsx`                                 |
+| M6 Seguimiento del pago                    | `rechazadoEn` en `GET /mis-pagos`; tres pasos por pago en el portal                   | `apps/api/src/modules/pagos/presentation/http/pagos.controller.ts`, `features/dashboard/components/SeguimientoPago.tsx` |
+| M7 «En mora» en el portal                  | Insignia y frase bajo la póliza en mora                                               | `features/dashboard/components/PanelCliente.tsx`                                                                        |
+| M8 Lenguaje llano                          | Diálogos de validar y rechazar, aviso de solo lectura en Pólizas, verificación, toast | `features/pagos/components/`, `features/pagos/hooks.ts`, `features/polizas/pages/`, `features/verificacion/pages/`      |
+| O1 Optimización del bundle                 | `@oasis/shared` en CJS y ESM (ADR-029)                                                | `packages/shared/{package.json,tsconfig.esm.json}`                                                                      |
+| Diseño                                     | Componentes y reglas nuevas; prototipo con M1–M8 en todas sus pantallas               | `apps/web/DESIGN.md`, `docs/diseno/prototipo/index.html`                                                                |
+| Documentación                              | Mapa técnico y ADR-029                                                                | `CLAUDE.md`, `docs/adr/ADR-029-shared-cjs-esm.md`                                                                       |
+
+### 13.2 Pedidos del autor durante la ejecución
+
+- **Mostrar la contraseña:** ya existía desde HT-13 (`components/CampoContrasena.tsx`, botón
+  «Mostrar»/«Ocultar» con `aria-pressed`); no hubo cambio.
+- **«¿Olvidó su contraseña?»:** queda en HU-31 (S7), por decisión del autor.
+- **Avatar ovalado:** la causa está en el prototipo, no en la SPA. `.rail .me` es un `<button>` y
+  heredaba `min-height: 56px` y el padding de `.rail button`, así que medía 40 × 56 px. En la SPA el
+  avatar mide 44 × 44 px en cinco tamaños de pantalla, para el personal y el CLIENTE (8 casos en
+  `claridad.spec.ts`); el prototipo se corrigió a un círculo de 44 × 44 px.
+- **Medir y optimizar:** mediciones de 13.3 y optimización O1 (ADR-029).
+- **Actualizar la interfaz documentada:** `DESIGN.md` y el prototipo describen la interfaz actual;
+  el PDF de `docs/diseno/` se regenera con capturas del prototipo.
+
+### 13.3 Mediciones
+
+Chunk único de la SPA (`pnpm --filter @oasis/web build`):
+
+| Medición                   | JS            | JS gzip       | CSS      | CSS gzip |
+| -------------------------- | ------------- | ------------- | -------- | -------- |
+| `main` antes de la Etapa C | 1.289,18 kB   | 340,96 kB     | 44,84 kB | 9,73 kB  |
+| Rama, M1–M8                | 1.299,58 kB   | 344,67 kB     | 45,22 kB | 9,84 kB  |
+| Rama, M1–M8 + O1           | **825,31 kB** | **253,05 kB** | 45,22 kB | 9,84 kB  |
+
+- M1–M8 suman 10,40 kB (3,71 kB con gzip, +1,1 %); `RamoEtiqueta` con sus nueve íconos, 3,68 kB.
+- Antes de O1, zod ocupaba 508 kB del chunk (65 archivos de idioma, 218 kB), porque
+  `@oasis/shared` era solo CommonJS. O1 reduce el JS un 36,5 % (26,6 % con gzip) frente a `main`
+  más la Etapa C.
+- Peticiones: la rama no agrega consultas (`useQuery`) ni llamadas al API en `apps/web/src`, así que
+  ninguna pantalla hace peticiones nuevas.
+
+### 13.4 Evidencia por mejora
+
+| Mejora | Prueba automatizada                                                                                                                                  |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| M1     | `RamoEtiqueta.test.tsx`; `prisma-polizas.repository.spec.ts` (sin otra consulta); `polizas.e2e-spec.ts` (`ramoCodigo` en detalle, listado y portal)  |
+| M2     | `LeyendaEstados.test.tsx`; `VerificacionPage.test.tsx`; `claridad.spec.ts` (leyenda con el teclado); `diseno.spec.ts` (Pagos con la leyenda abierta) |
+| M3     | `DataState.test.tsx`; `TablaDatos.test.tsx`; `PanelPersonal.test.tsx`; `RecibosPage.test.tsx`; `PagosPage.test.tsx` («Quitar filtro»)                |
+| M4     | `FormularioPago.test.tsx` (ayuda y error enlazados con `aria-describedby`)                                                                           |
+| M5     | `PanelPersonal.test.tsx`; `PagosPage.test.tsx` (URL, valor desconocido e historial); `claridad.spec.ts` (Panel → Pagos filtrado)                     |
+| M6     | `SeguimientoPago.test.tsx`; `PanelCliente.test.tsx`; `pagos.e2e-spec.ts` caso 7 (`rechazadoEn`); `claridad.spec.ts` (portal con tres pagos)          |
+| M7     | `PanelCliente.test.tsx`                                                                                                                              |
+| M8     | `ValidarPagoDialog.test.tsx`; `RechazarPagoDialog.test.tsx`; `PolizasPage.test.tsx` (solo lectura)                                                   |
+
+Totales: 299 pruebas de Vitest en la SPA, 244 unitarias y 187 e2e del API, y 36 de Playwright más
+las 8 de geometría del avatar. `diseno.spec.ts` (axe AA, foco, 360 px y 44 px) cubre las pantallas
+tocadas.
+
+### 13.5 Deuda
+
+| Deuda                                                                                    | Sprint destino |
+| ---------------------------------------------------------------------------------------- | -------------- |
+| `PagosPage` no vuelve a la página 1 si la URL cambia desde fuera (D15)                   | S5             |
+| El aviso «Sin recibos todavía» está duplicado en `RecibosPage` y `PanelPersonal`         | —              |
+| `ReciboDetallePage` conserva «Polygon» en el bloque técnico                              | —              |
+| La mora no tiene e2e: solo la marca el worker (`VencimientoCuotasTask`); queda en Vitest | —              |
+| Chunk único, sin división del código por rutas                                           | —              |

@@ -35,6 +35,12 @@ function montar() {
 }
 
 describe('RechazarPagoDialog (HU-19, D10)', () => {
+  it('resalta en negrita que el cliente verá el motivo en su portal', () => {
+    montar();
+
+    expect(screen.getByText('El cliente verá el motivo en su portal.').tagName).toBe('STRONG');
+  });
+
   it('sin motivo no habilita «Rechazar pago»', () => {
     montar();
     expect(screen.getByTestId('confirmar-rechazar')).toBeDisabled();
