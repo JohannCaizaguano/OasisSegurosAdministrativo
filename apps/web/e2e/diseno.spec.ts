@@ -165,6 +165,8 @@ async function abrir(page: Page, ruta: string, pantalla: Pantalla): Promise<void
 }
 
 async function sinViolacionesAxe(page: Page, contexto: string): Promise<void> {
+  // A mitad del fundido de entrada el texto aún es translúcido y axe mediría un contraste falso.
+  await enReposo(page);
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   const resumen = violations.map((v) => ({
     regla: v.id,
