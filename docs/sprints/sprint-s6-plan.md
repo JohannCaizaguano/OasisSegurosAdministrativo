@@ -221,6 +221,8 @@ campos de S4 y la regla del oro. El portal del cliente sigue la sección «Porta
 | D21 | **Pruebas:** TDD de dominio (anonimización, reversión de aplicaciones, validación de filas, normalización), guards, plantillas de correo (contenido, escape y texto plano) y casos de uso; e2e `cuentas-cliente`, `politica`, `importacion`, `solicitudes-titular`, `anulacion`, `portal-idor` y `notificaciones` (lee Mailpit por su API `GET /api/v1/messages`); Vitest de las páginas nuevas; Playwright `portal.spec.ts`, `importacion.spec.ts`, `anulacion.spec.ts` y `diseno.spec.ts` extendido. Solo Chromium.                                                                                                                                                                                                                                                                                                                                                                                                                                     | Evidencia por criterio (sección 12).                                                                                                 |
 | D22 | **Punto de control visual** antes del único commit (T25): capturas a 1280 y 360 px de las pantallas nuevas y de los tres correos en Mailpit (HTML y texto).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Grilling del 24/10.                                                                                                                  |
 | D23 | **Horas:** el informe reporta solo las horas de backlog por historia (sección 13).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Grilling del 24/10.                                                                                                                  |
+| D24 | **Saldo antes de actuar** (de la Etapa C de S4 ([sprint-s4-etapa-c-plan.md](sprint-s4-etapa-c-plan.md))): con `saldo` en `polizaSchema` (D6), `FormularioPago` muestra «Saldo pendiente: $X» bajo la póliza elegida y la ayuda del monto pasa a «No puede superar $X»; `ValidarPagoDialog` suma «Saldo tras validar: $Y».                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | El operador ve el límite de RN-02 antes de escribir el monto.                                                                        |
+| D25 | **Avance y mora explicados en el portal** (de la Etapa C de S4 ([sprint-s4-etapa-c-plan.md](sprint-s4-etapa-c-plan.md))): `GET /mis-polizas` y `GET /mis-polizas/:id` suman `proximaCuota: { numero, valor, fechaVencimiento } \| null` (primera no PAGADA que aún no vence) y `cuotaVencida: { numero, pendiente, fechaVencimiento } \| null` (la más antigua VENCIDA), calculadas en la misma consulta con las cuotas no PAGADAS (sin N+1). Cada póliza del portal muestra «Pagado $X de $Y» con una barra (`role="progressbar"`, `aria-valuenow` en porcentaje y el texto visible), «Próxima cuota: 15/12 · $120,00» y, si está en mora, «Venció la cuota 2 el 15/10 · faltan $120,00» en lugar del texto genérico de la Etapa C. El héroe de D19 usa `cuotaVencida` para «lo urgente primero».                                                                                                                                                        | El cliente entiende qué pagó, qué sigue y por qué está en mora sin llamar al bróker (PRODUCT.md, principio 4).                       |
 
 ## 3. Estado de partida (a confirmar en T0)
 
@@ -278,6 +280,8 @@ campos de S4 y la regla del oro. El portal del cliente sigue la sección «Porta
 - `saldo` en `polizaSchema`; `cuenta` en el detalle de cliente; `listarRecibosQuerySchema` con
   `clienteId`; esquemas de detalle del portal (`miPolizaDetalleSchema`, `miPagoDetalleSchema`,
   `miReciboSchema`); `normalizarBusqueda(texto)` en `validacion/`.
+- `misPolizaSchema` = `polizaSchema` + `proximaCuota` y `cuotaVencida` (D25), usado por
+  `/mis-polizas` y su detalle.
 - **Pruebas primero:** `normalizarBusqueda('José Pérez ÑUÑO')` → `'jose perez nuno'`; espacios
   múltiples → uno; `null` o vacío → `''`.
 
@@ -471,6 +475,9 @@ export function pagoRechazado(d: DatosPlantilla<'pago-rechazado'>): Correo {
 
 - Rutas de D19 con `MisPolizasController`, `MisPagosController` y `MisRecibosController`; cada
   consulta lleva `clienteId` en el `where`.
+- `proximaCuota` y `cuotaVencida` (D25) en `/mis-polizas` y `/mis-polizas/:id`. Pruebas primero:
+  una póliza con la cuota 1 pagada, la 2 vencida y la 3 por vencer devuelve la 2 como vencida y la 3
+  como próxima; una póliza pagada por completo devuelve `null` en ambas.
 - **Pruebas primero:** un CLIENTE pide el detalle de una póliza, un pago y un recibo de otro → 404 en
   los tres (spec de casos de uso; la e2e es T21).
 - **Cierre:** `lint`, `typecheck`, `test`, `deps:check`; coberturas de `@Roles` y `@Auditar` con las
@@ -505,6 +512,8 @@ Una línea de trabajo, en orden: T16 → T20.
 - **Ficha (D7):** contacto; cuenta (insignia y acción); pólizas (estado, saldo, mora); pagos
   (estado); recibos (enlace al detalle y al imprimible); solicitudes del titular.
 - **Saldo:** cifra tabular en `PolizasPage` y en el portal; panel de noche en el detalle.
+- **Saldo antes de actuar (D24):** en `FormularioPago` y `ValidarPagoDialog`. Pruebas primero: al
+  elegir una póliza con saldo $518,40 aparece «Saldo pendiente: $518,40» y la ayuda del monto lo cita.
 - **Pruebas primero:** la ficha muestra las seis secciones; el saldo cambia tras validar (mock que
   invalida la consulta); los enlaces de recibos llevan al detalle.
 
@@ -539,6 +548,9 @@ Una línea de trabajo, en orden: T16 → T20.
 - Con `frontend-design` sobre DESIGN.md: héroe del portal, una columna, cuerpo de 16 px, pie fijo con
   la acción del paso; estados con `EstadoInsignia`; saldo por póliza; recibos con estado y enlace al
   imprimible; en Cuenta, la política aceptada con su fecha.
+- **Avance y mora (D25):** barra «Pagado $X de $Y», próxima cuota y la cuota vencida con su fecha;
+  `SeguimientoPago` (Etapa C) en el detalle del pago. Pruebas primero: la barra expone su porcentaje
+  a lectores de pantalla; una póliza en mora muestra el número y la fecha de la cuota vencida.
 - **Pruebas primero:** el inicio prioriza la cuota vencida sobre el resto; cada pestaña de la barra
   inferior lleva a su página; un 404 del API muestra «No encontrado» sin datos.
 
