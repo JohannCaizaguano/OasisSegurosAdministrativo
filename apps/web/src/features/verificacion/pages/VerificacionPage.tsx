@@ -1,46 +1,128 @@
 import type { VerificacionRecibo } from '@oasis/shared';
-import { CheckCircle2, CircleHelp, ExternalLink, Search, ShieldAlert, ShieldX } from 'lucide-react';
+import { ExternalLink, Search, ShieldX } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { Badge } from '@/components/ui/badge';
+import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { CLASES_TONO, presentacionDe } from '@/components/estados';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatearFecha } from '@/lib/format';
 
 import { useVerificacion } from '../hooks';
 
-const LEYENDAS: Record<
-  VerificacionRecibo['estado'],
-  { texto: string; variante: 'success' | 'warning' | 'destructive' | 'secondary'; detalle: string }
-> = {
+const LEYENDAS: Record<VerificacionRecibo['estado'], { titulo: string; detalle: string }> = {
   VALIDO: {
-    texto: 'Recibo válido',
-    variante: 'success',
+    titulo: 'Recibo auténtico',
     detalle: 'El hash recalculado coincide con el registrado en la blockchain.',
   },
   ANULADO: {
-    texto: 'Recibo anulado',
-    variante: 'warning',
+    titulo: 'Recibo anulado',
     detalle: 'El emisor anuló este recibo en la cadena.',
   },
   NO_ANCLADO: {
-    texto: 'Aún no anclado',
-    variante: 'warning',
+    titulo: 'Recibo en proceso',
     detalle: 'El recibo existe pero su anclaje todavía no está confirmado en la cadena.',
   },
   NO_ENCONTRADO: {
-    texto: 'Recibo no encontrado',
-    variante: 'destructive',
+    titulo: 'Recibo no encontrado',
     detalle: 'No existe un recibo con ese código en el sistema.',
   },
   HASH_INCONSISTENTE: {
-    texto: 'Hash inconsistente',
-    variante: 'destructive',
+    titulo: 'El recibo no coincide',
     detalle: 'El contenido del recibo no coincide con lo registrado en la cadena.',
   },
 };
+
+function Dato({
+  termino,
+  children,
+  testId,
+}: {
+  termino: string;
+  children: string;
+  testId?: string;
+}) {
+  return (
+    <div>
+      <dt className="text-caption text-muted-foreground">{termino}</dt>
+      <dd className="font-mono text-caption break-all" data-testid={testId}>
+        {children}
+      </dd>
+    </div>
+  );
+}
+
+function Resultado({ verificacion }: { verificacion: VerificacionRecibo }) {
+  const leyenda = LEYENDAS[verificacion.estado];
+  const { tono, icono: Icono } = presentacionDe('verificacion', verificacion.estado);
+
+  return (
+    <Card
+      data-testid="resultado-verificacion"
+      data-estado={verificacion.estado}
+      className="animate-aviso"
+    >
+      <CardContent className="grid gap-5 pt-5">
+        <div className="flex items-start gap-4">
+          <span
+            className={`grid size-14 shrink-0 place-items-center rounded-full ${CLASES_TONO[tono]}`}
+          >
+            <Icono className="size-7" aria-hidden="true" />
+          </span>
+          <div className="grid min-w-0 gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-title font-bold">{leyenda.titulo}</h2>
+              <EstadoInsignia dominio="verificacion" estado={verificacion.estado} />
+            </div>
+            <p className="text-muted-foreground">{leyenda.detalle}</p>
+          </div>
+        </div>
+
+        <dl className="grid gap-3.5">
+          <div>
+            <dt className="text-caption text-muted-foreground">Código</dt>
+            <dd className="cifra font-semibold">{verificacion.codigo}</dd>
+          </div>
+          <Dato termino="hashRecibo (recalculado)" testId="hash-verificado">
+            {verificacion.hashRecibo}
+          </Dato>
+          <Dato termino="hash en cadena">{verificacion.hashOnchain ?? '—'}</Dato>
+          <div>
+            <dt className="text-caption text-muted-foreground">Anclado</dt>
+            <dd className="font-semibold">{formatearFecha(verificacion.ancladoEn)}</dd>
+          </div>
+          <Dato termino="Transacción">{verificacion.txHash ?? '—'}</Dato>
+        </dl>
+
+        {verificacion.explorerUrl && (
+          <a
+            className="inline-flex min-h-control items-center gap-1.5 self-start font-semibold text-link underline underline-offset-3"
+            href={verificacion.explorerUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Ver en el explorador
+            <ExternalLink className="size-4" aria-hidden="true" />
+            <span className="sr-only">(se abre en una pestaña nueva)</span>
+          </a>
+        )}
+        <p className="text-caption text-muted-foreground">
+          Verificado el {formatearFecha(verificacion.verificadoEn)} · Red {verificacion.chainId}
+          {verificacion.contractAddress ? (
+            <>
+              {' · Contrato '}
+              <span className="font-mono break-all">{verificacion.contractAddress}</span>
+            </>
+          ) : null}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function VerificacionPage() {
   const { codigo } = useParams<{ codigo: string }>();
@@ -65,108 +147,53 @@ export function VerificacionPage() {
     }
   };
 
-  const leyenda = consulta.data ? LEYENDAS[consulta.data.estado] : null;
-
   return (
-    <div className="mx-auto grid w-full max-w-2xl content-start gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Verificar recibo</h1>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-          Compruebe la autenticidad de un recibo con su código o el QR impreso.
-        </p>
-      </div>
+    <div className="mx-auto grid w-full max-w-2xl content-start gap-5">
+      <Encabezado
+        titulo="Verificar recibo"
+        descripcion="Compruebe la autenticidad de un recibo con su código o el QR impreso."
+      />
 
       <Card>
         <CardContent className="pt-5">
-          <form className="flex gap-2" onSubmit={enviar}>
-            <Input
-              value={entrada}
-              onChange={(evento) => setEntrada(evento.target.value)}
-              placeholder="RC-XXXXXXXXXXXX"
-              aria-label="Código del recibo"
-              data-testid="input-codigo"
-            />
-            <Button type="submit" data-testid="boton-verificar">
-              <Search className="size-4" aria-hidden="true" /> Verificar
-            </Button>
+          <form className="grid gap-1.5" onSubmit={enviar}>
+            <Label htmlFor="codigo-recibo">Código del recibo</Label>
+            <div className="flex flex-wrap gap-2.5">
+              <Input
+                id="codigo-recibo"
+                value={entrada}
+                onChange={(evento) => setEntrada(evento.target.value)}
+                placeholder="RC-XXXXXXXXXXXX"
+                autoComplete="off"
+                spellCheck={false}
+                className="flex-[1_1_220px] uppercase placeholder:normal-case"
+                data-testid="input-codigo"
+              />
+              <Button type="submit" className="min-h-input" data-testid="boton-verificar">
+                <Search aria-hidden="true" /> Verificar
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
 
       {consulta.isFetching && (
-        <p role="status" className="text-sm">
+        <p role="status" className="text-muted-foreground">
           Consultando la cadena…
         </p>
       )}
 
       {consulta.isError && (
-        <Card role="alert">
-          <CardContent className="flex items-center gap-3 pt-5 text-sm">
-            <ShieldX className="size-5 text-[var(--destructive)]" aria-hidden="true" />
-            No fue posible verificar el recibo. Revise el código e intente nuevamente.
-          </CardContent>
-        </Card>
+        <p
+          role="alert"
+          className="flex animate-aviso items-start gap-2.5 rounded-md bg-estado-error-fondo px-4 py-3 font-medium text-estado-error"
+        >
+          <ShieldX className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+          No fue posible verificar el recibo. Revise el código e intente nuevamente.
+        </p>
       )}
 
-      {consulta.data && leyenda && (
-        <Card data-testid="resultado-verificacion">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              {consulta.data.estado === 'VALIDO' ? (
-                <CheckCircle2 className="size-5 text-emerald-600" aria-hidden="true" />
-              ) : consulta.data.estado === 'NO_ENCONTRADO' ? (
-                <CircleHelp className="size-5 text-[var(--muted-foreground)]" aria-hidden="true" />
-              ) : (
-                <ShieldAlert className="size-5 text-amber-600" aria-hidden="true" />
-              )}
-              <CardTitle className="text-base">{leyenda.texto}</CardTitle>
-              <Badge variant={leyenda.variante}>{consulta.data.estado}</Badge>
-            </div>
-            <CardDescription>{leyenda.detalle}</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 text-sm">
-            <dl className="grid gap-3">
-              <div>
-                <dt className="text-[var(--muted-foreground)]">Código</dt>
-                <dd className="font-mono text-xs">{consulta.data.codigo}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">hashRecibo (recalculado)</dt>
-                <dd className="break-all font-mono text-xs" data-testid="hash-verificado">
-                  {consulta.data.hashRecibo}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">hash en cadena</dt>
-                <dd className="break-all font-mono text-xs">{consulta.data.hashOnchain ?? '—'}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">Anclado</dt>
-                <dd>{formatearFecha(consulta.data.ancladoEn)}</dd>
-              </div>
-              <div>
-                <dt className="text-[var(--muted-foreground)]">Transacción</dt>
-                <dd className="break-all font-mono text-xs">{consulta.data.txHash ?? '—'}</dd>
-              </div>
-            </dl>
-            {consulta.data.explorerUrl && (
-              <a
-                className="inline-flex items-center gap-1 text-sm text-[var(--primary)] underline"
-                href={consulta.data.explorerUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Ver en el explorador <ExternalLink className="size-3" aria-hidden="true" />
-              </a>
-            )}
-            <p className="text-xs text-[var(--muted-foreground)]">
-              Verificado el {formatearFecha(consulta.data.verificadoEn)} · Red{' '}
-              {consulta.data.chainId}
-              {consulta.data.contractAddress ? ` · Contrato ${consulta.data.contractAddress}` : ''}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      {consulta.data && <Resultado verificacion={consulta.data} />}
     </div>
   );
 }

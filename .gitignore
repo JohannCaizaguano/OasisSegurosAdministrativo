@@ -63,6 +63,7 @@ apps/api/src/generated/
 # OpenCode instala aquí sus plugins; solo se versiona .opencode/agents/.
 .opencode/node_modules/
 .opencode/package.json
+.opencode/skills/
 .opencode/bun.lock
 .github/skills/
 skills-lock.json

@@ -13,7 +13,7 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --workspace-concurrency=1 test",
     "test:e2e": "pnpm --filter @oasis/api test:e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

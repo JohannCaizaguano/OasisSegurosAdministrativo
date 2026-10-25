@@ -26,8 +26,8 @@ export function TablaDatos({
 }: TablaDatosProps) {
   return (
     <Card className="min-w-0">
-      <CardHeader>
-        <CardTitle className="text-base">{titulo}</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle>{titulo}</CardTitle>
       </CardHeader>
       <CardContent>
         {cargando ? (
@@ -53,14 +53,17 @@ interface PaginacionProps {
 
 export function Paginacion({ pagina, totalPaginas, cargando = false, alCambiar }: PaginacionProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
+    <nav
+      aria-label="Paginación"
+      className="flex flex-wrap items-center justify-between gap-2 text-muted-foreground"
+    >
       <p>
         Página {pagina} de {totalPaginas}
       </p>
       <div className="flex gap-2">
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           aria-label="Página anterior"
           disabled={pagina <= 1 || cargando}
@@ -70,7 +73,7 @@ export function Paginacion({ pagina, totalPaginas, cargando = false, alCambiar }
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
           aria-label="Página siguiente"
           disabled={pagina >= totalPaginas || cargando}
@@ -79,6 +82,6 @@ export function Paginacion({ pagina, totalPaginas, cargando = false, alCambiar }
           Siguiente
         </Button>
       </div>
-    </div>
+    </nav>
   );
 }

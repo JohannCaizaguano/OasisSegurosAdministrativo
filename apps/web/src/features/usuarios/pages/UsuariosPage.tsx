@@ -1,8 +1,10 @@
 import type { Usuario } from '@oasis/shared';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Paginacion, TablaDatos } from '@/components/TablaDatos';
 import {
   AlertDialog,
@@ -14,7 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -40,6 +41,7 @@ import {
 import { ApiError } from '@/lib/api-client';
 import { useAuthStore } from '@/lib/auth-store';
 import { formatearFecha } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 import { DialogoContrasenaTemporal } from '../components/DialogoContrasenaTemporal';
 import { FormularioUsuario } from '../components/FormularioUsuario';
@@ -73,6 +75,21 @@ const CONFIRMACIONES: Record<
     boton: 'Restablecer',
   },
 };
+
+/** El rol no es un estado (DESIGN.md §Administración): rectángulo sin icono, oro sobre la noche para el administrador. */
+function EtiquetaRol({ rol }: { rol: Usuario['rol'] }) {
+  const esAdmin = rol === 'ADMIN';
+  return (
+    <span
+      className={cn(
+        'inline-flex h-6 items-center rounded-sm px-[9px] text-mini font-bold tracking-[0.04em] whitespace-nowrap',
+        esAdmin ? 'bg-sidebar text-sidebar-primary' : 'bg-secondary text-foreground',
+      )}
+    >
+      {esAdmin ? 'Administrador' : 'Operador'}
+    </span>
+  );
+}
 
 export function UsuariosPage() {
   const [pagina, setPagina] = useState(1);
@@ -128,18 +145,16 @@ export function UsuariosPage() {
   const confirmacionActual = confirmacion ? CONFIRMACIONES[confirmacion.accion] : null;
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Usuarios</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Cuentas del personal del bróker: administradores y operadores.
-          </p>
-        </div>
+    <div className="grid gap-5">
+      <Encabezado
+        titulo="Usuarios"
+        descripcion="Cuentas del personal del bróker: administradores y operadores."
+      >
         <Button data-testid="boton-nuevo-usuario" onClick={() => abrirFormulario(null)}>
+          <Plus aria-hidden="true" />
           Nuevo usuario
         </Button>
-      </div>
+      </Encabezado>
 
       <TablaDatos
         titulo={meta ? `${meta.total} usuarios` : 'Usuarios'}
@@ -163,29 +178,30 @@ export function UsuariosPage() {
           <TableBody>
             {usuarios.map((usuario) => (
               <TableRow key={usuario.id}>
-                <TableCell className="font-medium">{usuario.nombre}</TableCell>
+                <TableCell className="font-semibold">{usuario.nombre}</TableCell>
                 <TableCell>{usuario.email}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
-                    {usuario.rol === 'ADMIN' ? 'Administrador' : 'Operador'}
-                  </Badge>
+                  <EtiquetaRol rol={usuario.rol} />
                 </TableCell>
                 <TableCell>
-                  <Badge variant={usuario.activo ? 'success' : 'secondary'}>
-                    {usuario.activo ? 'Activo' : 'Inactivo'}
-                  </Badge>
+                  <EstadoInsignia
+                    dominio="cuenta"
+                    estado={usuario.activo ? 'ACTIVA' : 'DESACTIVADA'}
+                  />
                 </TableCell>
-                <TableCell>{formatearFecha(usuario.createdAt)}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatearFecha(usuario.createdAt)}
+                </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="ghost"
+                        variant="quiet"
                         size="icon"
                         aria-label={`Acciones de ${usuario.nombre}`}
                         data-testid={`menu-usuario-${usuario.id}`}
                       >
-                        <MoreHorizontal className="size-4" />
+                        <MoreHorizontal aria-hidden="true" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">

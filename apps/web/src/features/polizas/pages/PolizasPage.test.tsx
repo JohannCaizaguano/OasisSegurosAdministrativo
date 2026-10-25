@@ -157,6 +157,31 @@ describe('PolizasPage', () => {
     );
   });
 
+  it('el icono de Vigencia indica la dirección del orden', async () => {
+    montar();
+    await screen.findByText('POL-0001');
+    const encabezado = () => screen.getByRole('columnheader', { name: /Vigencia/ });
+
+    expect(encabezado()).toHaveAttribute('scope', 'col');
+    expect(encabezado().querySelector('.lucide-arrow-up-down')).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Vigencia/ }));
+    await waitFor(() => expect(encabezado()).toHaveAttribute('aria-sort', 'ascending'));
+    expect(encabezado().querySelector('.lucide-arrow-up')).toHaveAttribute('aria-hidden', 'true');
+
+    fireEvent.click(screen.getByRole('button', { name: /Vigencia/ }));
+    await waitFor(() => expect(encabezado()).toHaveAttribute('aria-sort', 'descending'));
+    expect(encabezado().querySelector('.lucide-arrow-down')).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('muestra el estado de la póliza con su insignia', async () => {
+    montar();
+    await screen.findByText('POL-0001');
+
+    const fila = screen.getByRole('row', { name: /POL-0001/ });
+    expect(within(fila).getByText('Vigente')).toHaveAttribute('data-estado', 'VIGENTE');
+  });
+
   it('los filtros de cliente, aseguradora y estado envían sus parámetros', async () => {
     montar();
     await screen.findByText('POL-0001');

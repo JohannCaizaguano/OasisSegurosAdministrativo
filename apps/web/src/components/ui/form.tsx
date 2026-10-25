@@ -84,7 +84,7 @@ export function FormLabel({ className, ...props }: ComponentProps<typeof LabelPr
   const { error, formItemId } = useFormField();
   return (
     <Label
-      className={cn(error && 'text-[var(--destructive)]', className)}
+      className={cn(error && 'text-destructive', className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -108,7 +108,7 @@ export function FormDescription({ className, ...props }: ComponentProps<'p'>) {
   return (
     <p
       id={formDescriptionId}
-      className={cn('text-xs text-[var(--muted-foreground)]', className)}
+      className={cn('text-caption text-muted-foreground', className)}
       {...props}
     />
   );
@@ -126,7 +126,7 @@ export function FormMessage({ className, children, ...props }: ComponentProps<'p
     <p
       id={formMessageId}
       role="alert"
-      className={cn('text-sm text-[var(--destructive)]', className)}
+      className={cn('text-caption font-medium text-destructive', className)}
       {...props}
     >
       {mensaje}

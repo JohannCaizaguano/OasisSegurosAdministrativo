@@ -1,9 +1,10 @@
-import type { EstadoPago, Pago } from '@oasis/shared';
+import type { EstadoPago, MetodoPago, Pago } from '@oasis/shared';
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AvisoError, EsqueletoTabla } from '@/components/DataState';
-import { Badge } from '@/components/ui/badge';
+import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -35,11 +36,12 @@ const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
   { valor: 'RECHAZADO', texto: 'Rechazados' },
 ];
 
-function varianteEstado(estado: EstadoPago) {
-  if (estado === 'VALIDADO') return 'success' as const;
-  if (estado === 'RECHAZADO') return 'destructive' as const;
-  return 'warning' as const;
-}
+const ETIQUETAS_METODO: Record<MetodoPago, string> = {
+  TRANSFERENCIA: 'Transferencia',
+  DEPOSITO: 'Depósito',
+  EFECTIVO: 'Efectivo',
+  TARJETA: 'Tarjeta',
+};
 
 export function PagosPage() {
   const idFiltro = useId();
@@ -67,15 +69,14 @@ export function PagosPage() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Pagos</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Valide un pago para emitir su recibo y anclarlo en Polygon.
-          </p>
-        </div>
-        <div className="grid gap-1.5">
+    <div className="grid gap-5">
+      <Encabezado
+        titulo="Pagos"
+        descripcion="Valide un pago para emitir su recibo y anclarlo en Polygon."
+      />
+
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="grid w-full gap-1.5 sm:w-56">
           <Label htmlFor={idFiltro}>Filtrar por estado</Label>
           <Select
             value={estado}
@@ -84,7 +85,7 @@ export function PagosPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id={idFiltro} className="w-52" data-testid="filtro-estado-pagos">
+            <SelectTrigger id={idFiltro} data-testid="filtro-estado-pagos">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
@@ -99,8 +100,8 @@ export function PagosPage() {
       </div>
 
       <Card className="min-w-0">
-        <CardHeader>
-          <CardTitle className="text-base">{meta ? `${meta.total} pagos` : 'Pagos'}</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle>{meta ? `${meta.total} pagos` : 'Pagos'}</CardTitle>
         </CardHeader>
         <CardContent>
           {consulta.isLoading ? (
@@ -124,17 +125,26 @@ export function PagosPage() {
                 {consulta.data && consulta.data.data.length === 0 && (
                   <TableEmpty mensaje="No hay pagos con este filtro" />
                 )}
-                {consulta.data?.data.map((pago) => (
-                  <TableRow key={pago.id} data-testid={`fila-pago-${pago.id}`}>
-                    <TableCell>{formatearFecha(pago.fechaPago)}</TableCell>
-                    <TableCell className="font-mono text-xs">{pago.numeroPoliza ?? '—'}</TableCell>
+                {consulta.data?.data.map((pago, indice) => (
+                  <TableRow
+                    key={pago.id}
+                    data-testid={`fila-pago-${pago.id}`}
+                    style={{ animationDelay: `${indice * 35}ms` }}
+                    className="animate-fila"
+                  >
+                    <TableCell className="whitespace-nowrap">
+                      {formatearFecha(pago.fechaPago)}
+                    </TableCell>
+                    <TableCell className="cifra font-semibold whitespace-nowrap">
+                      {pago.numeroPoliza ?? '—'}
+                    </TableCell>
                     <TableCell>{pago.referencia ?? '—'}</TableCell>
-                    <TableCell>{pago.metodo}</TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell>{ETIQUETAS_METODO[pago.metodo]}</TableCell>
+                    <TableCell className="cifra text-right font-semibold whitespace-nowrap">
                       {formatearMoneda(pago.monto)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={varianteEstado(pago.estado)}>{pago.estado}</Badge>
+                      <EstadoInsignia dominio="pago" estado={pago.estado} />
                     </TableCell>
                     <TableCell className="text-right">
                       {pago.estado === 'REGISTRADO' ? (
@@ -142,6 +152,7 @@ export function PagosPage() {
                           <Button
                             type="button"
                             size="sm"
+                            variant="quiet"
                             data-testid={`boton-validar-${pago.id}`}
                             disabled={enCurso}
                             onClick={() => setPendiente({ pago, accion: 'validar' })}
@@ -151,7 +162,7 @@ export function PagosPage() {
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
+                            variant="danger-outline"
                             data-testid={`boton-rechazar-${pago.id}`}
                             disabled={enCurso}
                             onClick={() => setPendiente({ pago, accion: 'rechazar' })}
@@ -160,7 +171,7 @@ export function PagosPage() {
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-xs text-[var(--muted-foreground)]">
+                        <span className="text-caption whitespace-nowrap text-muted-foreground">
                           {pago.validadoEn ? formatearFecha(pago.validadoEn) : '—'}
                         </span>
                       )}
@@ -173,24 +184,27 @@ export function PagosPage() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--muted-foreground)]">
+      <nav
+        aria-label="Paginación"
+        className="flex flex-wrap items-center justify-between gap-2 text-muted-foreground"
+      >
         <span data-testid="contador-registrados">{registrados} validables en esta página</span>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             size="sm"
             disabled={pagina <= 1 || consulta.isFetching}
             onClick={() => setPagina((valor) => valor - 1)}
           >
             Anterior
           </Button>
-          <span className="py-1.5">
+          <span>
             Página {meta?.page ?? 1} de {meta?.totalPages ?? 1}
           </span>
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             size="sm"
             // Sin `meta` no se sabe si hay página siguiente.
             disabled={!meta || meta.page >= meta.totalPages || consulta.isFetching}
@@ -199,11 +213,11 @@ export function PagosPage() {
             Siguiente
           </Button>
         </div>
-      </div>
+      </nav>
 
-      <p className="text-xs text-[var(--muted-foreground)]">
+      <p className="text-muted-foreground">
         ¿Necesita ver un recibo?{' '}
-        <Link className="underline" to="/recibos">
+        <Link className="font-semibold text-link underline" to="/recibos">
           Ir a Recibos
         </Link>
       </p>

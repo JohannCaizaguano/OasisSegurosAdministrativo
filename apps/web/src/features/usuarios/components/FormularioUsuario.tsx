@@ -97,7 +97,11 @@ export function FormularioUsuario({ usuario, actorId, alGuardar }: FormularioUsu
             {...formulario.register('email')}
           />
           {errores.email && (
-            <p id="usuario-email-error" role="alert" className="text-sm text-[var(--destructive)]">
+            <p
+              id="usuario-email-error"
+              role="alert"
+              className="text-caption font-medium text-destructive"
+            >
               {errores.email.message}
             </p>
           )}
@@ -112,7 +116,11 @@ export function FormularioUsuario({ usuario, actorId, alGuardar }: FormularioUsu
           {...formulario.register('nombre')}
         />
         {errores.nombre && (
-          <p id="usuario-nombre-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p
+            id="usuario-nombre-error"
+            role="alert"
+            className="text-caption font-medium text-destructive"
+          >
             {errores.nombre.message}
           </p>
         )}
@@ -141,12 +149,16 @@ export function FormularioUsuario({ usuario, actorId, alGuardar }: FormularioUsu
           </SelectContent>
         </Select>
         {esPropio && (
-          <p id="usuario-rol-ayuda" className="text-sm text-[var(--muted-foreground)]">
+          <p id="usuario-rol-ayuda" className="text-caption text-muted-foreground">
             No puede cambiar su propio rol.
           </p>
         )}
         {errores.rol && (
-          <p id="usuario-rol-error" role="alert" className="text-sm text-[var(--destructive)]">
+          <p
+            id="usuario-rol-error"
+            role="alert"
+            className="text-caption font-medium text-destructive"
+          >
             {errores.rol.message}
           </p>
         )}

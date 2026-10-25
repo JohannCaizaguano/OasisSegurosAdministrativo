@@ -1,8 +1,11 @@
 import type { EstadoPoliza, OrdenPoliza, Poliza } from '@oasis/shared';
 import { ESTADOS_POLIZA } from '@oasis/shared';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
 
+import { EstadoInsignia } from '@/components/EstadoInsignia';
+import { presentacionDe } from '@/components/estados';
+import { Encabezado } from '@/components/layout/Encabezado';
 import { Paginacion, TablaDatos } from '@/components/TablaDatos';
 import {
   AlertDialog,
@@ -14,7 +17,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -53,34 +55,24 @@ import { useCambiarEstadoPoliza, useCatalogoAseguradoras, usePolizas } from '../
 
 const TODAS = 'TODAS';
 
-const ETIQUETAS_ESTADO: Record<EstadoPoliza, string> = {
-  VIGENTE: 'Vigente',
-  VENCIDA: 'Vencida',
-  CANCELADA: 'Cancelada',
-};
-
 const CONFIRMACIONES: Record<
   'VENCIDA' | 'CANCELADA',
   { titulo: string; descripcion: string; boton: string }
 > = {
   VENCIDA: {
     titulo: 'Marcar póliza como vencida',
-    descripcion: 'Esta acción es definitiva: la póliza quedará VENCIDA y no admitirá nuevos pagos.',
+    descripcion: 'Esta acción es definitiva: la póliza quedará vencida y no admitirá nuevos pagos.',
     boton: 'Marcar vencida',
   },
   CANCELADA: {
     titulo: 'Cancelar póliza',
     descripcion:
-      'Esta acción es definitiva: la póliza quedará CANCELADA y no admitirá nuevos pagos.',
+      'Esta acción es definitiva: la póliza quedará cancelada y no admitirá nuevos pagos.',
     boton: 'Cancelar póliza',
   },
 };
 
-function varianteEstado(estado: EstadoPoliza) {
-  if (estado === 'VIGENTE') return 'success' as const;
-  if (estado === 'CANCELADA') return 'destructive' as const;
-  return 'warning' as const;
-}
+const ICONOS_ORDEN = { ascending: ArrowUp, descending: ArrowDown, none: ArrowUpDown } as const;
 
 export function PolizasPage() {
   const [clienteId, setClienteId] = useState<string | undefined>(undefined);
@@ -111,6 +103,7 @@ export function PolizasPage() {
   const confirmacionActual = confirmacion ? CONFIRMACIONES[confirmacion.estado] : null;
   const ariaSort =
     orden === 'fechaFinAsc' ? 'ascending' : orden === 'fechaFinDesc' ? 'descending' : 'none';
+  const IconoOrden = ICONOS_ORDEN[ariaSort];
 
   function abrirFormulario(poliza: Poliza | null) {
     setEnEdicion(poliza);
@@ -144,18 +137,16 @@ export function PolizasPage() {
   }
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Pólizas</h1>
-          <p className="text-sm text-[var(--muted-foreground)]">
-            Pólizas colocadas por el bróker y su estado de vigencia.
-          </p>
-        </div>
+    <div className="grid gap-5">
+      <Encabezado
+        titulo="Pólizas"
+        descripcion="Pólizas colocadas por el bróker y su estado de vigencia."
+      >
         <Button data-testid="boton-nueva-poliza" onClick={() => abrirFormulario(null)}>
+          <Plus aria-hidden="true" />
           Nueva póliza
         </Button>
-      </div>
+      </Encabezado>
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="grid w-full gap-1.5 sm:w-64">
@@ -170,7 +161,7 @@ export function PolizasPage() {
           />
         </div>
 
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-56">
           <Label htmlFor="filtro-aseguradora-polizas">Aseguradora</Label>
           <Select
             value={aseguradoraId}
@@ -179,7 +170,7 @@ export function PolizasPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id="filtro-aseguradora-polizas" className="w-56">
+            <SelectTrigger id="filtro-aseguradora-polizas">
               <SelectValue placeholder="Aseguradora" />
             </SelectTrigger>
             <SelectContent>
@@ -193,7 +184,7 @@ export function PolizasPage() {
           </Select>
         </div>
 
-        <div className="grid gap-1.5">
+        <div className="grid w-full gap-1.5 sm:w-44">
           <Label htmlFor="filtro-estado-polizas">Estado</Label>
           <Select
             value={estado}
@@ -202,21 +193,21 @@ export function PolizasPage() {
               setPagina(1);
             }}
           >
-            <SelectTrigger id="filtro-estado-polizas" className="w-44">
+            <SelectTrigger id="filtro-estado-polizas">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={TODAS}>Todos los estados</SelectItem>
               {ESTADOS_POLIZA.map((valor) => (
                 <SelectItem key={valor} value={valor}>
-                  {ETIQUETAS_ESTADO[valor]}
+                  {presentacionDe('poliza', valor).texto}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <Button type="button" variant="outline" onClick={limpiarFiltros}>
+        <Button type="button" variant="quiet" className="min-h-input" onClick={limpiarFiltros}>
           Limpiar filtros
         </Button>
       </div>
@@ -241,11 +232,11 @@ export function PolizasPage() {
                 <button
                   type="button"
                   onClick={alternarOrden}
-                  className="flex items-center gap-1 uppercase"
+                  className="-mx-1.5 inline-flex min-h-control items-center gap-1.5 rounded-sm px-1.5 tracking-[inherit] uppercase hover:text-foreground"
                   data-testid="orden-vigencia"
                 >
                   Vigencia
-                  <ArrowUpDown className="size-3.5" aria-hidden="true" />
+                  <IconoOrden className="size-3.5" aria-hidden="true" />
                 </button>
               </TableHead>
               <TableHead>Estado</TableHead>
@@ -255,28 +246,32 @@ export function PolizasPage() {
           <TableBody>
             {polizas.map((poliza) => (
               <TableRow key={poliza.id}>
-                <TableCell className="font-mono text-xs">{poliza.numero}</TableCell>
+                <TableCell className="cifra font-semibold whitespace-nowrap">
+                  {poliza.numero}
+                </TableCell>
                 <TableCell>{poliza.clienteNombre ?? '—'}</TableCell>
                 <TableCell>{poliza.aseguradoraNombre ?? '—'}</TableCell>
                 <TableCell>{poliza.ramo}</TableCell>
-                <TableCell className="text-right">{formatearMoneda(poliza.primaTotal)}</TableCell>
-                <TableCell className="whitespace-nowrap text-xs">
-                  {formatearFecha(poliza.fechaInicio)} — {formatearFecha(poliza.fechaFin)}
+                <TableCell className="cifra text-right font-semibold whitespace-nowrap">
+                  {formatearMoneda(poliza.primaTotal)}
+                </TableCell>
+                <TableCell className="whitespace-nowrap">
+                  {formatearFecha(poliza.fechaInicio)} – {formatearFecha(poliza.fechaFin)}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={varianteEstado(poliza.estado)}>{poliza.estado}</Badge>
+                  <EstadoInsignia dominio="poliza" estado={poliza.estado} />
                 </TableCell>
                 <TableCell className="text-right">
                   {poliza.estado === 'VIGENTE' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
-                          variant="ghost"
+                          variant="quiet"
                           size="icon"
                           aria-label={`Acciones de ${poliza.numero}`}
                           data-testid={`menu-poliza-${poliza.id}`}
                         >
-                          <MoreHorizontal className="size-4" />
+                          <MoreHorizontal aria-hidden="true" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -340,7 +335,7 @@ export function PolizasPage() {
             <DialogDescription>
               {enEdicion
                 ? `Póliza ${enEdicion.numero} de ${enEdicion.clienteNombre ?? 'un cliente'}. El cliente no se puede cambiar.`
-                : 'La póliza se registra en estado VIGENTE; la prima debe ser mayor que cero.'}
+                : 'La póliza se registra como vigente; la prima debe ser mayor que cero.'}
             </DialogDescription>
           </DialogHeader>
           <FormularioPoliza
@@ -373,6 +368,7 @@ export function PolizasPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
+              variant="danger"
               onClick={confirmarEstado}
               disabled={cambiarEstado.isPending}
               data-testid="confirmar-accion-poliza"

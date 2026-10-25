@@ -165,8 +165,9 @@ esta tabla. Cada uno trae sus skills, sus reglas y su verificación, y edita sol
 - **Acceso y auditoría**: todo handler declara `@Roles(...)` o `@Public()`, y toda mutación
   `@Auditar(accion, entidad)`; las rutas públicas y las exenciones están en
   `apps/api/src/modules/README.md`.
-- **SPA**: una página nueva se registra en `router.tsx` con sus roles y se enlaza desde el menú
-  lateral de `AppLayout`; las páginas de la cuenta del usuario, desde su menú en el encabezado.
+- **SPA**: una página nueva se registra en `router.tsx` con sus roles y se enlaza desde `ENLACES`
+  (`components/layout/RielPersonal.tsx`) o, si es del cliente, desde `BarraInferiorCliente.tsx`;
+  las páginas de la cuenta del usuario, desde `MenuUsuario.tsx`.
 - **Hexagonal**: cada módulo usa `domain/ application/{ports,use-cases}/
 infrastructure/ presentation/http/`; puertos como interfaz + token `Symbol`; sin
   `process.env` fuera de `config/`; errores de dominio tipados (`shared-kernel/`).

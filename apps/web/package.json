@@ -14,6 +14,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/figtree": "5.3.0",
+    "@fontsource-variable/outfit": "5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@oasis/shared": "workspace:*",
     "@radix-ui/react-alert-dialog": "^1.1.23",
@@ -38,6 +40,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",

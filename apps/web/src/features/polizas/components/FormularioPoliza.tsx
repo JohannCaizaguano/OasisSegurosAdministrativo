@@ -68,12 +68,12 @@ function Campo({ id, label, error, ayuda, children }: CampoProps) {
         'aria-describedby': descrito || undefined,
       })}
       {ayuda && (
-        <p id={`${id}-ayuda`} className="text-xs text-[var(--muted-foreground)]">
+        <p id={`${id}-ayuda`} className="text-caption text-muted-foreground">
           {ayuda}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-sm text-[var(--destructive)]">
+        <p id={`${id}-error`} role="alert" className="text-caption font-medium text-destructive">
           {error}
         </p>
       )}

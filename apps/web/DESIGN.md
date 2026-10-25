@@ -384,7 +384,7 @@ Isologo de 150–236px, título display y subtítulo centrados sobre la foto del
 - **Don't** poner dos acciones doradas en la misma vista.
 - **Don't** escribir texto sobre la fotografía sin el velo medido, ni usar la fotografía fuera de la bienvenida.
 - **Don't** añadir grises, azules o acentos nuevos: los neutros son arena y tinta, y el azul solo existe como tono de «proceso».
-- **Don't** usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity, por debajo de 300ms.
+- **Don't** usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity. Las respuestas a una acción duran menos de 300ms; las entradas del prototipo (bienvenida de 0,6–0,8s, vista de 0,35s y filas escalonadas de 30–35ms) se conservan y nunca bloquean la interacción. El catálogo está en las utilidades `animate-*` de `src/index.css`.
 - **Don't** mostrar «blockchain», «hash» ni datos técnicos del anclaje al cliente; el personal sí ve la transacción y el explorador.
 - **Don't** usar el rojo sólido para acciones que se pueden deshacer.
 - **Don't** marcar ítems, tarjetas ni avisos con bordes laterales de color de más de 1px.

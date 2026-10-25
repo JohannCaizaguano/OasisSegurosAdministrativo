@@ -51,7 +51,7 @@ export function DialogoContrasenaTemporal({
           <DialogDescription>Esta contraseña no se volverá a mostrar.</DialogDescription>
         </DialogHeader>
         <p
-          className="select-all break-all rounded-md border bg-[var(--muted)] p-3 font-mono text-sm"
+          className="rounded-md bg-secondary p-3.5 font-mono text-base break-all select-all"
           data-testid="contrasena-temporal"
         >
           {contrasena}
@@ -60,7 +60,7 @@ export function DialogoContrasenaTemporal({
           <Button
             ref={botonCopiar}
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => void copiar()}
             data-testid="boton-copiar-contrasena"
           >

@@ -23,13 +23,13 @@ export function AvisoError({ error, alReintentar }: { error: unknown; alReintent
   return (
     <div
       role="alert"
-      className="flex flex-wrap items-center gap-3 rounded-lg border border-[var(--destructive)]/40 bg-[var(--destructive)]/5 p-4 text-sm"
+      className="flex flex-wrap items-center gap-3 rounded-md bg-estado-error-fondo px-4 py-3 text-estado-error"
     >
-      <AlertTriangle className="size-4 shrink-0 text-[var(--destructive)]" aria-hidden="true" />
-      <p className="flex-1">{mensaje}</p>
+      <AlertTriangle className="size-5 shrink-0" aria-hidden="true" />
+      <p className="min-w-0 flex-1 font-medium">{mensaje}</p>
       {alReintentar ? (
-        <Button type="button" size="sm" variant="outline" onClick={alReintentar}>
-          <RefreshCw className="size-3" aria-hidden="true" />
+        <Button type="button" size="sm" variant="secondary" onClick={alReintentar}>
+          <RefreshCw aria-hidden="true" />
           Reintentar
         </Button>
       ) : null}
@@ -39,9 +39,9 @@ export function AvisoError({ error, alReintentar }: { error: unknown; alReintent
 
 export function AvisoVacio({ children }: { children: string }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed p-8 text-center">
-      <Inbox className="size-5 text-[var(--muted-foreground)]" aria-hidden="true" />
-      <p className="text-sm text-[var(--muted-foreground)]">{children}</p>
+    <div className="flex flex-col items-center gap-2 rounded-md bg-secondary px-4 py-8 text-center">
+      <Inbox className="size-6 text-muted-foreground" aria-hidden="true" />
+      <p className="text-muted-foreground">{children}</p>
     </div>
   );
 }

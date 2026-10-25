@@ -29,12 +29,12 @@ function SoloInvitados() {
 function NoEncontrado() {
   return (
     <div className="mx-auto grid min-h-screen max-w-lg content-center gap-4 p-6 text-center">
-      <h1 className="text-2xl font-semibold">Página no encontrada</h1>
-      <p className="text-sm text-[var(--muted-foreground)]">
+      <h1 className="text-headline font-bold">Página no encontrada</h1>
+      <p className="text-caption text-muted-foreground">
         La dirección solicitada no corresponde a ninguna sección de Oasis Seguros.
       </p>
       <div className="flex justify-center gap-2">
-        <Link className="underline" to="/">
+        <Link className="font-semibold text-link underline" to="/">
           Ir al inicio
         </Link>
       </div>

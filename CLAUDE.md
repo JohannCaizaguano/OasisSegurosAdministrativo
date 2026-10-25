@@ -113,10 +113,23 @@ leyendo varios archivos.
 ## SPA
 
 - Diseño Claroscuro (ADR-019): tokens y reglas en `apps/web/DESIGN.md`, contexto de producto en
-  `apps/web/PRODUCT.md` y prototipo navegable en `docs/diseno/prototipo/`. HT-13 lleva los tokens
-  a `src/index.css`; la correspondencia con las variables de shadcn/ui está en `docs/diseno/README.md`.
-- Rutas y protección por rol en `src/app/router.tsx` (`RutaProtegida roles={[...]}`); el menú
-  lateral (`ENLACES`) y el menú del usuario viven en `components/layout/AppLayout.tsx`.
+  `apps/web/PRODUCT.md` y prototipo navegable en `docs/diseno/prototipo/`. Los tokens viven en
+  `src/index.css` (correspondencia con shadcn/ui en `docs/diseno/README.md`); `--color-*: initial`
+  anula la paleta de Tailwind, así que `bg-red-500` o `bg-white` no generan CSS. El punto de corte
+  `riel:` es 760 px.
+- Rutas y protección por rol en `src/app/router.tsx` (`RutaProtegida roles={[...]}`).
+  `components/layout/AppLayout.tsx` elige la navegación según el rol: el personal ve
+  `RielPersonal` (menú `ENLACES`, 92 px en la noche; barra superior desplazable bajo 760 px) y el
+  CLIENTE, una cabecera con `MenuUsuario` y `BarraInferiorCliente`, cuyas pestañas Pólizas y
+  Recibos son anclas `/#polizas` y `/#pagos` del `PanelCliente`. Las páginas con sesión ponen su
+  título con `Encabezado` (el `h1`, con las acciones como `children`).
+- Todo estado se muestra con `components/EstadoInsignia.tsx` (`dominio` + `estado`). El vocabulario
+  está en `components/estados.ts`, tipado contra los enums de `@oasis/shared`: omitir un estado
+  rompe el `typecheck`. El texto es el nombre accesible y el código técnico queda en
+  `data-estado`, que es lo que leen las pruebas.
+- Montos y fechas se formatean solo con `lib/format.ts` (`formatearMoneda`, `formatearFecha`,
+  `formatearFechaHoraEcuador`, `acortarHash`); las fechas sin hora salen en `dd/mm/aaaa` sin
+  pasar por `Date`.
 - `lib/api-client.ts` envía el access token y, ante un 401, renueva la sesión una sola vez,
   deduplicada en la pestaña y serializada entre pestañas con Web Locks; si no puede, cierra la
   sesión con el motivo `expirada`, que el login muestra.
@@ -140,7 +153,13 @@ leyendo varios archivos.
 - `test/rutas-declaradas.ts` descubre las rutas del grafo de `AppModule` y alimenta la cobertura de
   `@Roles` y `@Auditar`, además del e2e de acceso por rol.
 - Playwright arranca `apps/api/test/start-servicios.mjs` (nodo Hardhat, `dev:chain`, API y
-  worker) y el `pnpm dev` de la SPA, y reutiliza los servidores que ya estén corriendo.
+  worker) y el `pnpm dev` de la SPA, y reutiliza los servidores que ya estén corriendo. Si :8545
+  ya responde (el nodo de `dev:infra`), lo reutiliza sin redesplegar, para no cambiar
+  `CONTRACT_ADDRESS`. En POSIX los hijos comparten el grupo de procesos del lanzador: así el
+  `SIGKILL` que Playwright envía al grupo los alcanza y la corrida termina.
+- `apps/web/e2e/diseno.spec.ts` recorre el arreglo `PANTALLAS` con axe (`wcag2a`/`wcag2aa`), foco
+  visible al tabular, sin desborde a 360 px, recursos del mismo origen y objetivos de 44 × 44 px
+  en el portal del CLIENTE. Una pantalla nueva se agrega a `PANTALLAS`.
 - `pnpm deps:check:negativo` demuestra que la regla hexagonal falla cuando debe.
 
 ## Trampas conocidas

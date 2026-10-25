@@ -19,6 +19,13 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
   const accionesCliente = () => page.getByRole('button', { name: `Acciones de ${nombreCompleto}` });
   const filaPoliza = () => page.getByRole('row', { name: new RegExp(numeroPoliza) });
   const accionesPoliza = () => page.getByRole('button', { name: `Acciones de ${numeroPoliza}` });
+  // Con debounce, el resultado vuelve a pintar la tabla y cerraría un menú abierto sobre la lista
+  // anterior; la respuesta puede venir de la caché, así que se espera al DOM y no a la red.
+  const buscarCliente = async () => {
+    await page.getByLabel('Buscar clientes').fill(cedula);
+    await expect(page.locator('tbody tr')).toHaveCount(1);
+    await expect(filaCliente()).toBeVisible();
+  };
 
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.8.0.41' });
   await iniciarSesion(page, 'operador@oasis.com', 'Operador.Oasis1');
@@ -34,8 +41,7 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
   await page.getByTestId('boton-guardar-cliente').click();
   await expect(page.getByText('Cliente creado')).toBeVisible();
 
-  await page.getByLabel('Buscar clientes').fill(cedula);
-  await expect(filaCliente()).toBeVisible();
+  await buscarCliente();
 
   // 2. Lo edita (correo y teléfono).
   await accionesCliente().click();
@@ -58,7 +64,7 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
   await expect(filaCliente()).toHaveCount(0);
 
   await page.locator('#filtro-estado-clientes').click();
-  await page.getByRole('option', { name: 'Inactivos' }).click();
+  await page.getByRole('option', { name: 'Desactivados' }).click();
   await expect(filaCliente()).toHaveCount(1);
 
   await page.locator('#filtro-estado-clientes').click();
@@ -78,8 +84,8 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
   // 5. Reactiva al cliente y registra una póliza con él.
   await page.getByRole('link', { name: 'Clientes' }).click();
   await page.locator('#filtro-estado-clientes').click();
-  await page.getByRole('option', { name: 'Inactivos' }).click();
-  await page.getByLabel('Buscar clientes').fill(cedula);
+  await page.getByRole('option', { name: 'Desactivados' }).click();
+  await buscarCliente();
   await accionesCliente().click();
   await page.getByRole('menuitem', { name: 'Reactivar' }).click();
   await expect(page.getByRole('alertdialog')).toContainText(
@@ -120,7 +126,7 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
 
   await page.locator('#filtro-estado-polizas').click();
   await page.getByRole('option', { name: 'Vigente' }).click();
-  await expect(filaPoliza()).toContainText('VIGENTE');
+  await expect(filaPoliza().locator('[data-estado="VIGENTE"]')).toHaveText('Vigente');
 
   // 7. La cancela con confirmación: la fila conserva el historial pero deja de ofrecer acciones.
   await accionesPoliza().click();
@@ -131,7 +137,7 @@ test('el operador gestiona clientes y pólizas de extremo a extremo', async ({ p
 
   await page.locator('#filtro-estado-polizas').click();
   await page.getByRole('option', { name: 'Todos los estados' }).click();
-  await expect(filaPoliza()).toContainText('CANCELADA');
+  await expect(filaPoliza().locator('[data-estado="CANCELADA"]')).toHaveText('Cancelada');
   await expect(accionesPoliza()).toHaveCount(0);
 });
 

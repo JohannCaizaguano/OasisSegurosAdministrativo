@@ -68,11 +68,10 @@ como en DESIGN.md.
   --font-sans: 'Figtree Variable', system-ui, sans-serif;
   --font-heading: 'Outfit Variable', system-ui, sans-serif;
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 8px; /* botones y campos */
-  --radius-xl: 12px; /* tarjetas y diálogos */
-  --radius-2xl: 16px;
-  --radius-4xl: 9999px; /* insignias */
+  --radius-md: 8px; /* botones, campos y filas */
+  --radius-lg: 12px; /* tarjetas y paneles */
+  --radius-xl: 16px; /* diálogos y contenedores grandes */
+  /* las insignias usan rounded-full */
   /* además, cada variable de :root se registra como --color-<nombre>: var(--<nombre>) */
 }
 
@@ -90,16 +89,17 @@ Además de los tokens, el sistema necesita estos ajustes:
 - **Superficies del navegador:** `::selection` en `#f0c878` con `#1a140c`, `caret-color` y
   `accent-color` en tinta, `scrollbar-color: #a59985 transparent`, subrayado con
   `text-underline-offset: 3px`.
-- **Alturas:** botones de 44 px (`h-11`), campos de 48 px (`h-12`), filas de lista de 56 px.
+- **Alturas:** botones de 44 px (`min-h-control`), campos de 48 px (`h-input`), botón de ingreso de
+  56 px (`min-h-login`) y filas de lista de 56 px.
 
 ## Orden de implementación (HT-13)
 
 1. Tokens, fuentes y superficies del navegador en `index.css`.
-2. Variantes de `button`, `input`, `select`, `badge` (cinco tonos de estado con icono), `card`,
-   `table`, `tabs`, `dialog`, `alert-dialog`, `sheet` y el `Toaster` de sonner, con sus pruebas
-   de Vitest.
-3. `components/layout/AppLayout.tsx`: riel de 92 px en la noche con el activo en oro y la píldora
-   de pendientes.
+2. Variantes de `button`, `input`, `select`, `card`, `table`, `tabs`, `dialog`, `alert-dialog`,
+   `sheet`, el `Toaster` de sonner y `components/EstadoInsignia.tsx` (cinco tonos de estado con
+   icono), con sus pruebas de Vitest.
+3. `components/layout/RielPersonal.tsx`: riel de 92 px en la noche con el activo en oro. La
+   píldora de pendientes queda como deuda, porque necesita un conteo.
 4. Ingreso (`features/auth`) con la fotografía y el velo; `logo.png` y `oasis.jpg` pasan a
    `apps/web/src/assets/`.
 5. Páginas existentes sobre los primitivos nuevos, sin cambiar su lógica.

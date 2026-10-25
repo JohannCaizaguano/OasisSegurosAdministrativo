@@ -1,8 +1,8 @@
-import { FileText, Receipt, ShieldCheck } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
 import { AvisoError, EsqueletoTabla } from '@/components/DataState';
-import { Badge } from '@/components/ui/badge';
+import { EstadoInsignia } from '@/components/EstadoInsignia';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -15,38 +15,71 @@ import {
 } from '@/components/ui/table';
 import { formatearFecha } from '@/lib/format';
 
-import { useResumenPagos, useResumenRecibos } from '../hooks';
-import { TarjetaResumen } from './TarjetaResumen';
+import { usePorValidar, useResumenPagos, useResumenRecibos } from '../hooks';
 
-/** Resumen operativo para ADMIN y OPERADOR. */
+function Cifra({ titulo, valor, pie }: { titulo: string; valor: ReactNode; pie: string }) {
+  return (
+    <Card className="flex flex-col gap-1.5 p-[18px]">
+      <h2 className="font-sans text-label font-normal text-muted-foreground">{titulo}</h2>
+      <p className="cifra text-cifra font-bold">{valor}</p>
+      <p className="text-caption text-muted-foreground">{pie}</p>
+    </Card>
+  );
+}
+
+/** Inicio del personal (The Task First Rule): primero lo que hay que validar, luego el resto. */
 export function PanelPersonal() {
+  const porValidar = usePorValidar();
   const pagos = useResumenPagos();
   const recibos = useResumenRecibos();
-  const anclados = recibos.data?.data.filter((recibo) => recibo.estado === 'ANCLADO').length ?? 0;
+  const verificables =
+    recibos.data?.data.filter((recibo) => recibo.estado === 'ANCLADO').length ?? 0;
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <TarjetaResumen
+    <div className="grid gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+        <section
+          data-superficie="noche"
+          aria-labelledby="cifra-por-validar"
+          className="flex flex-col gap-1.5 rounded-lg bg-sidebar bg-[image:var(--night-glow)] p-[18px] text-sidebar-foreground shadow-noche"
+        >
+          <h2
+            id="cifra-por-validar"
+            className="font-sans text-label font-normal text-sidebar-foreground"
+          >
+            Por validar
+          </h2>
+          <p
+            className="cifra text-cifra font-bold text-sidebar-primary"
+            data-testid="cifra-por-validar"
+          >
+            {porValidar.data?.meta.total ?? '…'}
+          </p>
+          <Link
+            to="/pagos"
+            className="mt-auto inline-flex min-h-control items-center self-start font-semibold text-sidebar-primary underline underline-offset-3"
+          >
+            Revisar los pagos
+          </Link>
+        </section>
+        <Cifra
           titulo="Pagos registrados"
           valor={pagos.data?.meta.total ?? '…'}
-          icono={FileText}
+          pie="En todos los estados"
         />
-        <TarjetaResumen
+        <Cifra
           titulo="Recibos emitidos"
           valor={recibos.data?.meta.total ?? '…'}
-          icono={Receipt}
-        />
-        <TarjetaResumen
-          titulo="Recibos anclados (últimos 5)"
-          valor={anclados}
-          icono={ShieldCheck}
+          pie={`Verificables entre los últimos 5: ${verificables}`}
         />
       </div>
 
       <Card className="min-w-0">
-        <CardHeader>
-          <CardTitle className="text-base">Últimos recibos</CardTitle>
+        <CardHeader className="flex-row flex-wrap items-baseline justify-between gap-2 pb-3">
+          <CardTitle>Últimos recibos</CardTitle>
+          <Link to="/recibos" className="font-semibold text-link underline underline-offset-3">
+            Ver todos los recibos
+          </Link>
         </CardHeader>
         <CardContent>
           {recibos.isLoading ? (
@@ -67,15 +100,19 @@ export function PanelPersonal() {
                 {recibos.data?.data.length === 0 && <TableEmpty mensaje="Sin recibos todavía" />}
                 {recibos.data?.data.map((recibo) => (
                   <TableRow key={recibo.id}>
-                    <TableCell className="font-mono text-xs">{recibo.codigo}</TableCell>
+                    <TableCell className="cifra font-semibold">{recibo.codigo}</TableCell>
                     <TableCell>
-                      <Badge variant={recibo.estado === 'ANCLADO' ? 'success' : 'warning'}>
-                        {recibo.estado}
-                      </Badge>
+                      <EstadoInsignia dominio="recibo" estado={recibo.estado} />
                     </TableCell>
-                    <TableCell>{formatearFecha(recibo.ancladoEn)}</TableCell>
+                    <TableCell className="whitespace-nowrap">
+                      {formatearFecha(recibo.ancladoEn)}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Link className="text-sm underline" to={`/recibos/${recibo.id}`}>
+                      <Link
+                        className="inline-flex min-h-control items-center font-semibold text-link underline underline-offset-3"
+                        to={`/recibos/${recibo.id}`}
+                        aria-label={`Ver el recibo ${recibo.codigo}`}
+                      >
                         Ver
                       </Link>
                     </TableCell>

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('rounded-xl border bg-[var(--card)] text-[var(--card-foreground)] shadow-sm', className)}
+      className={cn('rounded-lg bg-card text-card-foreground shadow-sm', className)}
       {...props}
     />
   );
@@ -15,12 +15,13 @@ export function CardHeader({ className, ...props }: HTMLAttributes<HTMLDivElemen
   return <div className={cn('flex flex-col gap-1.5 p-5', className)} {...props} />;
 }
 
+/** Las tarjetas cuelgan del `h1` de la página: su título es un `h2`. */
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('font-semibold leading-none tracking-tight', className)} {...props} />;
+  return <h2 className={cn('text-title font-bold', className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphElement>) {
-  return <p className={cn('text-sm text-[var(--muted-foreground)]', className)} {...props} />;
+  return <p className={cn('text-caption text-muted-foreground', className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

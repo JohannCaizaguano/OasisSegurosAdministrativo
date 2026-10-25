@@ -62,3 +62,5 @@ if (!('DOMRect' in globalThis)) {
     },
   });
 }
+// jsdom declara window.scrollTo pero solo informa «Not implemented».
+window.scrollTo = () => undefined;

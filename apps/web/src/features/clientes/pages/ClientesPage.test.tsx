@@ -123,7 +123,7 @@ describe('ClientesPage', () => {
     const selectEstado = screen.getByLabelText('Estado');
     fireEvent.pointerDown(selectEstado, { button: 0, ctrlKey: false });
     fireEvent.click(selectEstado);
-    fireEvent.click(await screen.findByRole('option', { name: 'Inactivos' }));
+    fireEvent.click(await screen.findByRole('option', { name: 'Desactivados' }));
 
     await waitFor(() =>
       expect(listar).toHaveBeenLastCalledWith(
