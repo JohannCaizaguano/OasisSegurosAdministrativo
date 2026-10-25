@@ -14,7 +14,15 @@ import {
   crearPagoSchema,
   crearPolizaSchema,
   crearUsuarioSchema,
+  cuotaSchema,
+  definirPlanCuotasSchema,
   ESTADOS_CUOTA,
+  ETIQUETAS_METODO_PAGO,
+  fechaEnGuayaquil,
+  METODOS_PAGO,
+  MOTIVOS_RECHAZO_FRECUENTES,
+  pagoSchema,
+  saldoOperadoraSchema,
   listarClientesQuerySchema,
   listarPolizasQuerySchema,
   loginSchema,
@@ -68,12 +76,17 @@ describe('montos decimales', () => {
   });
 });
 
-describe('crearPagoSchema', () => {
+describe('crearPagoSchema (HU-16, D6)', () => {
   const valido = {
     polizaId: POLIZA_ID,
     monto: '120.50',
     fechaPago: '2026-09-01',
     metodo: 'TRANSFERENCIA',
+    referencia: 'TRX-001',
+  };
+  const manana = () => {
+    const [a, m, d] = fechaEnGuayaquil(new Date()).split('-').map(Number);
+    return new Date(Date.UTC(a, m - 1, d + 1)).toISOString().slice(0, 10);
   };
 
   it('acepta un pago válido', () => {
@@ -85,8 +98,75 @@ describe('crearPagoSchema', () => {
     expect(crearPagoSchema.safeParse({ ...valido, fechaPago: '01/09/2026' }).success).toBe(false);
   });
 
-  it('rechaza métodos de pago fuera del catálogo', () => {
+  it('rechaza métodos de pago fuera del catálogo y acepta Débito bancario', () => {
     expect(crearPagoSchema.safeParse({ ...valido, metodo: 'CRIPTOMONEDA' }).success).toBe(false);
+    expect(crearPagoSchema.safeParse({ ...valido, metodo: 'DEBITO_BANCARIO' }).success).toBe(true);
+  });
+
+  it('exige una referencia de 1 a 100 caracteres, recortada', () => {
+    expect(crearPagoSchema.safeParse({ ...valido, referencia: undefined }).success).toBe(false);
+    expect(crearPagoSchema.safeParse({ ...valido, referencia: '   ' }).success).toBe(false);
+    expect(crearPagoSchema.safeParse({ ...valido, referencia: 'x'.repeat(101) }).success).toBe(
+      false,
+    );
+    const recortada = crearPagoSchema.safeParse({ ...valido, referencia: '  TRX-9  ' });
+    expect(recortada.success && recortada.data.referencia).toBe('TRX-9');
+  });
+
+  it('exige un monto mayor que cero con dos decimales como máximo', () => {
+    expect(crearPagoSchema.safeParse({ ...valido, monto: '0' }).success).toBe(false);
+    expect(crearPagoSchema.safeParse({ ...valido, monto: '-1' }).success).toBe(false);
+    expect(crearPagoSchema.safeParse({ ...valido, monto: '10.555' }).success).toBe(false);
+  });
+
+  it('rechaza una fecha de pago futura en Guayaquil y acepta la de hoy', () => {
+    const futura = crearPagoSchema.safeParse({ ...valido, fechaPago: manana() });
+    expect(futura.success).toBe(false);
+    expect(futura.error?.issues[0]?.path).toEqual(['fechaPago']);
+    expect(
+      crearPagoSchema.safeParse({ ...valido, fechaPago: fechaEnGuayaquil(new Date()) }).success,
+    ).toBe(true);
+  });
+});
+
+describe('catálogos de pago (D5, D10)', () => {
+  it('pone Débito bancario primero y etiqueta cada método', () => {
+    expect(METODOS_PAGO[0]).toBe('DEBITO_BANCARIO');
+    expect(ETIQUETAS_METODO_PAGO.DEBITO_BANCARIO).toBe('Débito bancario');
+    expect(Object.keys(ETIQUETAS_METODO_PAGO).sort()).toEqual([...METODOS_PAGO].sort());
+  });
+
+  it('ofrece cuatro motivos frecuentes de rechazo que cumplen el largo del motivo', () => {
+    expect(MOTIVOS_RECHAZO_FRECUENTES).toHaveLength(4);
+    for (const motivo of MOTIVOS_RECHAZO_FRECUENTES) {
+      expect(rechazarPagoSchema.safeParse({ confirmado: true, motivo }).success).toBe(true);
+    }
+  });
+});
+
+describe('fechaEnGuayaquil', () => {
+  it('convierte un instante a la fecha local de Ecuador (UTC−5)', () => {
+    expect(fechaEnGuayaquil(new Date('2026-10-24T04:59:00Z'))).toBe('2026-10-23');
+    expect(fechaEnGuayaquil(new Date('2026-10-24T05:10:00Z'))).toBe('2026-10-24');
+  });
+});
+
+describe('pagoSchema de respuesta (D8)', () => {
+  it('incluye el autor y la fecha del rechazo', () => {
+    const pago = {
+      id: POLIZA_ID,
+      polizaId: POLIZA_ID,
+      monto: '10.00',
+      fechaPago: '2026-09-01',
+      metodo: 'DEBITO_BANCARIO',
+      estado: 'RECHAZADO',
+      rechazadoPorId: CLIENTE_ID,
+      rechazadoEn: '2026-09-02T10:00:00.000Z',
+      createdAt: '2026-09-01T10:00:00.000Z',
+      updatedAt: '2026-09-02T10:00:00.000Z',
+    };
+    const resultado = pagoSchema.safeParse(pago);
+    expect(resultado.success && resultado.data.rechazadoPorId).toBe(CLIENTE_ID);
   });
 });
 
@@ -409,6 +489,7 @@ describe('polizaSchema de respuesta', () => {
     clienteNombre: 'Ana Pérez',
     aseguradoraNombre: 'Aseguradora X',
     tienePagosValidados: false,
+    enMora: false,
     createdAt: '2026-10-05T12:00:00.000Z',
     updatedAt: '2026-10-05T12:00:00.000Z',
   };
@@ -418,6 +499,11 @@ describe('polizaSchema de respuesta', () => {
     expect(polizaSchema.safeParse({ ...respuesta, tienePagosValidados: undefined }).success).toBe(
       false,
     );
+  });
+
+  it('exige enMora (RN-16, D15)', () => {
+    expect(polizaSchema.safeParse({ ...respuesta, enMora: undefined }).success).toBe(false);
+    expect(polizaSchema.safeParse({ ...respuesta, enMora: true }).success).toBe(true);
   });
 
   it('exige clienteId y ramo: la SPA los pinta sin consultas extra', () => {
@@ -464,5 +550,93 @@ describe('estados de cuota (HT-13)', () => {
   it('coincide con el enum EstadoCuota de apps/api/prisma/schema.prisma, en su orden', () => {
     // Si cambia el enum de Prisma, esta lista y ESTADOS_CUOTA cambian juntas.
     expect(ESTADOS_CUOTA).toEqual(['PENDIENTE', 'PARCIAL', 'PAGADA', 'VENCIDA']);
+  });
+});
+
+describe('cuotaSchema (HU-35)', () => {
+  it('tiene número, valor, valor pagado, vencimiento y estado', () => {
+    const cuota = {
+      id: POLIZA_ID,
+      numero: 1,
+      valor: '100.00',
+      valorPagado: '0.00',
+      fechaVencimiento: '2026-01-31',
+      estado: 'PENDIENTE',
+    };
+    expect(cuotaSchema.safeParse(cuota).success).toBe(true);
+    expect(cuotaSchema.safeParse({ ...cuota, estado: 'ATRASADA' }).success).toBe(false);
+  });
+});
+
+describe('definirPlanCuotasSchema (HU-35, D11)', () => {
+  const cuota = (numero: number, fechaVencimiento: string, valor = '10.00') => ({
+    numero,
+    valor,
+    fechaVencimiento,
+  });
+
+  it('acepta de 1 a 24 cuotas consecutivas con fechas crecientes', () => {
+    expect(definirPlanCuotasSchema.safeParse({ cuotas: [cuota(1, '2026-01-31')] }).success).toBe(
+      true,
+    );
+    const veinticuatro = Array.from({ length: 24 }, (_, i) =>
+      cuota(i + 1, `${2026 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}-01`),
+    );
+    expect(definirPlanCuotasSchema.safeParse({ cuotas: veinticuatro }).success).toBe(true);
+  });
+
+  it('rechaza un plan vacío o de más de 24 cuotas', () => {
+    expect(definirPlanCuotasSchema.safeParse({ cuotas: [] }).success).toBe(false);
+    const veinticinco = Array.from({ length: 25 }, (_, i) =>
+      cuota(i + 1, `${2026 + Math.floor(i / 12)}-${String((i % 12) + 1).padStart(2, '0')}-01`),
+    );
+    expect(definirPlanCuotasSchema.safeParse({ cuotas: veinticinco }).success).toBe(false);
+  });
+
+  it('señala el número que rompe la secuencia', () => {
+    const resultado = definirPlanCuotasSchema.safeParse({
+      cuotas: [cuota(1, '2026-01-01'), cuota(3, '2026-02-01')],
+    });
+    expect(resultado.error?.issues[0]?.path).toEqual(['cuotas', 1, 'numero']);
+  });
+
+  it('señala la fecha que no es estrictamente posterior a la anterior', () => {
+    const resultado = definirPlanCuotasSchema.safeParse({
+      cuotas: [cuota(1, '2026-02-01'), cuota(2, '2026-02-01')],
+    });
+    expect(resultado.error?.issues[0]?.path).toEqual(['cuotas', 1, 'fechaVencimiento']);
+  });
+
+  it('exige valores mayores que cero', () => {
+    expect(
+      definirPlanCuotasSchema.safeParse({ cuotas: [cuota(1, '2026-01-01', '0.00')] }).success,
+    ).toBe(false);
+  });
+});
+
+describe('saldoOperadoraSchema (HU-42, D17)', () => {
+  it('acepta el saldo disponible y la ausencia de datos', () => {
+    expect(
+      saldoOperadoraSchema.safeParse({
+        disponible: true,
+        pol: '0.4',
+        umbralPol: '0.5',
+        bajoUmbral: true,
+        actualizadoEn: '2026-10-24T05:10:00.000Z',
+      }).success,
+    ).toBe(true);
+    expect(saldoOperadoraSchema.safeParse({ disponible: false }).success).toBe(true);
+  });
+
+  it('rechaza un saldo sin formato decimal', () => {
+    expect(
+      saldoOperadoraSchema.safeParse({
+        disponible: true,
+        pol: '0,4',
+        umbralPol: '0.5',
+        bajoUmbral: true,
+        actualizadoEn: '2026-10-24T05:10:00.000Z',
+      }).success,
+    ).toBe(false);
   });
 });

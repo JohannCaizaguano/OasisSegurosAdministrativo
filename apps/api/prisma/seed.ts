@@ -54,6 +54,7 @@ const RAMOS = [
 ] as const;
 
 const METODOS_PAGO = [
+  { codigo: 'DEBITO_BANCARIO', nombre: 'Débito bancario' },
   { codigo: 'TRANSFERENCIA', nombre: 'Transferencia' },
   { codigo: 'DEPOSITO', nombre: 'Depósito' },
   { codigo: 'EFECTIVO', nombre: 'Efectivo' },
@@ -154,6 +155,8 @@ async function main() {
       fechaInicio,
       fechaFin,
       estado: 'VIGENTE',
+      // D11: toda póliza nace con una cuota por la prima total.
+      cuotas: { create: { numero: 1, valor: '480.50', fechaVencimiento: fechaInicio } },
     },
   });
 

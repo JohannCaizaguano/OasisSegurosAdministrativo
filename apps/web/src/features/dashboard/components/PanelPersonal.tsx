@@ -13,9 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useAuthStore } from '@/lib/auth-store';
 import { formatearFecha } from '@/lib/format';
 
 import { usePorValidar, useResumenPagos, useResumenRecibos } from '../hooks';
+import { SaludAnclaje } from './SaludAnclaje';
 
 function Cifra({ titulo, valor, pie }: { titulo: string; valor: ReactNode; pie: string }) {
   return (
@@ -32,6 +34,8 @@ export function PanelPersonal() {
   const porValidar = usePorValidar();
   const pagos = useResumenPagos();
   const recibos = useResumenRecibos();
+  // DESIGN.md: lo que es solo del administrador se oculta al operador, no se deshabilita.
+  const esAdmin = useAuthStore((estado) => estado.usuario?.rol === 'ADMIN');
   const verificables =
     recibos.data?.data.filter((recibo) => recibo.estado === 'ANCLADO').length ?? 0;
 
@@ -73,6 +77,8 @@ export function PanelPersonal() {
           pie={`Verificables entre los últimos 5: ${verificables}`}
         />
       </div>
+
+      {esAdmin && <SaludAnclaje />}
 
       <Card className="min-w-0">
         <CardHeader className="flex-row flex-wrap items-baseline justify-between gap-2 pb-3">

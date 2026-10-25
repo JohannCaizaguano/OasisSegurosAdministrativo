@@ -1,4 +1,6 @@
-import type { EstadoPago, MetodoPago, Pago } from '@oasis/shared';
+import type { EstadoPago, Pago } from '@oasis/shared';
+import { ETIQUETAS_METODO_PAGO } from '@oasis/shared';
+import { Plus } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -7,6 +9,13 @@ import { EstadoInsignia } from '@/components/EstadoInsignia';
 import { Encabezado } from '@/components/layout/Encabezado';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -26,8 +35,12 @@ import {
 } from '@/components/ui/table';
 import { formatearFecha, formatearMoneda } from '@/lib/format';
 
-import { ConfirmarPagoDialog, type AccionPago } from '../components/ConfirmarPagoDialog';
+import { FormularioPago } from '../components/FormularioPago';
+import { RechazarPagoDialog } from '../components/RechazarPagoDialog';
+import { ValidarPagoDialog } from '../components/ValidarPagoDialog';
 import { usePagos, useRechazarPago, useValidarPago } from '../hooks';
+
+type AccionPago = 'validar' | 'rechazar';
 
 const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
   { valor: 'TODOS', texto: 'Todos los estados' },
@@ -36,18 +49,12 @@ const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
   { valor: 'RECHAZADO', texto: 'Rechazados' },
 ];
 
-const ETIQUETAS_METODO: Record<MetodoPago, string> = {
-  TRANSFERENCIA: 'Transferencia',
-  DEPOSITO: 'Depósito',
-  EFECTIVO: 'Efectivo',
-  TARJETA: 'Tarjeta',
-};
-
 export function PagosPage() {
   const idFiltro = useId();
   const [estado, setEstado] = useState<EstadoPago | 'TODOS'>('TODOS');
   const [pagina, setPagina] = useState(1);
   const [pendiente, setPendiente] = useState<{ pago: Pago; accion: AccionPago } | null>(null);
+  const [registrando, setRegistrando] = useState(false);
 
   const validar = useValidarPago();
   const rechazar = useRechazarPago();
@@ -72,8 +79,13 @@ export function PagosPage() {
     <div className="grid gap-5">
       <Encabezado
         titulo="Pagos"
-        descripcion="Valide un pago para emitir su recibo y anclarlo en Polygon."
-      />
+        descripcion="Registre los pagos notificados y valídelos para emitir su recibo."
+      >
+        <Button data-testid="boton-nuevo-pago" onClick={() => setRegistrando(true)}>
+          <Plus aria-hidden="true" />
+          Registrar pago
+        </Button>
+      </Encabezado>
 
       <div className="flex flex-wrap items-end gap-3">
         <div className="grid w-full gap-1.5 sm:w-56">
@@ -139,7 +151,7 @@ export function PagosPage() {
                       {pago.numeroPoliza ?? '—'}
                     </TableCell>
                     <TableCell>{pago.referencia ?? '—'}</TableCell>
-                    <TableCell>{ETIQUETAS_METODO[pago.metodo]}</TableCell>
+                    <TableCell>{ETIQUETAS_METODO_PAGO[pago.metodo]}</TableCell>
                     <TableCell className="cifra text-right font-semibold whitespace-nowrap">
                       {formatearMoneda(pago.monto)}
                     </TableCell>
@@ -172,7 +184,7 @@ export function PagosPage() {
                         </div>
                       ) : (
                         <span className="text-caption whitespace-nowrap text-muted-foreground">
-                          {pago.validadoEn ? formatearFecha(pago.validadoEn) : '—'}
+                          {formatearFecha(pago.validadoEn ?? pago.rechazadoEn)}
                         </span>
                       )}
                     </TableCell>
@@ -222,33 +234,60 @@ export function PagosPage() {
         </Link>
       </p>
 
-      {pendiente ? (
-        <ConfirmarPagoDialog
+      <Dialog open={registrando} onOpenChange={setRegistrando}>
+        <DialogContent
+          onEscapeKeyDown={(evento) => {
+            // Escape cierra primero la lista abierta del combobox de pólizas, no el diálogo.
+            const objetivo = evento.target;
+            if (
+              objetivo instanceof HTMLElement &&
+              objetivo.matches('[role="combobox"][aria-expanded="true"]')
+            ) {
+              evento.preventDefault();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Registrar pago</DialogTitle>
+            <DialogDescription>
+              El pago queda por validar. La póliza debe estar vigente y el monto no puede superar su
+              saldo pendiente.
+            </DialogDescription>
+          </DialogHeader>
+          {registrando && <FormularioPago alGuardar={() => setRegistrando(false)} />}
+        </DialogContent>
+      </Dialog>
+
+      {pendiente?.accion === 'validar' && (
+        <ValidarPagoDialog
+          key={pendiente.pago.id}
           pago={pendiente.pago}
-          accion={pendiente.accion}
           abierto
           enCurso={enCurso}
-          alCambiarAbierto={(abierto) => {
-            if (!abierto) {
-              cerrarDialogo();
-            }
-          }}
-          alConfirmar={(datos) => {
-            const { pago, accion } = pendiente;
-            if (accion === 'validar') {
-              validar.mutate(
-                { id: pago.id, entrada: { confirmado: true, nota: datos.nota } },
-                { onSettled: () => setPendiente(null) },
-              );
-            } else {
-              rechazar.mutate(
-                { id: pago.id, entrada: { confirmado: true, motivo: datos.motivo ?? '' } },
-                { onSettled: () => setPendiente(null) },
-              );
-            }
-          }}
+          alCambiarAbierto={(abierto) => !abierto && cerrarDialogo()}
+          alConfirmar={({ nota }) =>
+            validar.mutate(
+              { id: pendiente.pago.id, entrada: { confirmado: true, nota } },
+              { onSettled: () => setPendiente(null) },
+            )
+          }
         />
-      ) : null}
+      )}
+      {pendiente?.accion === 'rechazar' && (
+        <RechazarPagoDialog
+          key={pendiente.pago.id}
+          pago={pendiente.pago}
+          abierto
+          enCurso={enCurso}
+          alCambiarAbierto={(abierto) => !abierto && cerrarDialogo()}
+          alConfirmar={({ motivo }) =>
+            rechazar.mutate(
+              { id: pendiente.pago.id, entrada: { confirmado: true, motivo } },
+              { onSettled: () => setPendiente(null) },
+            )
+          }
+        />
+      )}
     </div>
   );
 }

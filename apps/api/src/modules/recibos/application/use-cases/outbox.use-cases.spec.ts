@@ -160,7 +160,7 @@ describe('AnclarReciboUseCase (idempotencia)', () => {
   });
 });
 
-describe('VerificarReciboUseCase (endpoint público)', () => {
+describe('VerificarReciboUseCase (verificación con sesión, ADR-015)', () => {
   it('devuelve NO_ENCONTRADO sin lanzar aunque no haya contrato desplegado', async () => {
     const repo = new RecibosEnMemoria(null);
     const reg = {
@@ -228,7 +228,7 @@ describe('VerificarReciboUseCase (endpoint público)', () => {
     expect(salida.contractAddress).toBe('0x0000000000000000000000000000000000000009');
   });
 
-  it('no expone la sal ni el payload canónico en la respuesta pública', async () => {
+  it('no expone la sal ni el payload canónico en la respuesta de la verificación con sesión', async () => {
     const recibo = Recibo.nuevo(datosNuevo());
     const repo = new RecibosEnMemoria(recibo);
     const reg = {

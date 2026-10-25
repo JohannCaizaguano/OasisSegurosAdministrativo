@@ -41,6 +41,7 @@ function aRespuesta(poliza: Poliza): PolizaRespuesta {
     clienteNombre: poliza.clienteNombre,
     aseguradoraNombre: poliza.aseguradoraNombre,
     tienePagosValidados: poliza.tienePagosValidados,
+    enMora: poliza.enMora,
     createdAt: poliza.createdAt,
     updatedAt: poliza.updatedAt,
   };

@@ -71,6 +71,7 @@ model Usuario {
   cliente           Cliente?  @relation(fields: [clienteId], references: [id])
   pagosRegistrados  Pago[]    @relation("PagoRegistradoPor")
   pagosValidados    Pago[]    @relation("PagoValidadoPor")
+  pagosRechazados   Pago[]    @relation("PagoRechazadoPor")
   tokensRecuperacion TokenRecuperacion[]
   bitacora          BitacoraAuditoria[]
   createdAt         DateTime  @default(now())
@@ -218,6 +219,9 @@ model Pago {
   registradoPorId String?    @db.Uuid
   validadoPorId   String?    @db.Uuid
   validadoEn      DateTime?
+  // Autor y fecha del rechazo (HU-19, D8): no reutilizan los campos de la validación.
+  rechazadoPorId  String?    @db.Uuid
+  rechazadoEn     DateTime?
   // Motivo obligatorio del rechazo (HU-19).
   motivoRechazo   String?
   // Nota de auditoría del operador al validar (ampliación del proyecto; es
@@ -227,6 +231,7 @@ model Pago {
   metodoPago      MetodoPago  @relation(fields: [metodoPagoId], references: [id])
   registradoPor   Usuario?    @relation("PagoRegistradoPor", fields: [registradoPorId], references: [id])
   validadoPor     Usuario?    @relation("PagoValidadoPor", fields: [validadoPorId], references: [id])
+  rechazadoPor    Usuario?    @relation("PagoRechazadoPor", fields: [rechazadoPorId], references: [id])
   aplicaciones    AplicacionPago[]
   recibo          Recibo?
   createdAt       DateTime    @default(now())
@@ -237,7 +242,10 @@ model Pago {
   @@index([estado])
   @@index([registradoPorId])
   @@index([validadoPorId])
+  @@index([rechazadoPorId])
   @@index([fechaPago])
+  // RN-22 adelantada (D6): una referencia no se repite dentro de la misma póliza.
+  @@unique([polizaId, referencia])
 }
 
 /// Aplicación de un pago a una cuota (HU-36): qué parte de cada pago cubre

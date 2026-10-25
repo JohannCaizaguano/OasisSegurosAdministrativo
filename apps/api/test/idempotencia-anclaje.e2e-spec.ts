@@ -5,7 +5,7 @@ import request from 'supertest';
 import { createPublicClient, createWalletClient, getAddress, http, type PublicClient } from 'viem';
 import { hardhat } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
-import { registroRecibosAbi } from '@oasis/shared';
+import { fechaEnGuayaquil, registroRecibosAbi } from '@oasis/shared';
 
 import { AppModule } from '../src/app.module';
 import { AppConfig } from '../src/config/app.config';
@@ -23,6 +23,7 @@ import { ViemRegistroRecibosAdapter } from '../src/modules/recibos/infrastructur
 import type { Recibo } from '../src/modules/recibos/domain/recibo';
 import type { ClockPort } from '../src/shared-kernel/clock.port';
 import { TOKENS_TRANSVERSALES } from '../src/shared-kernel/tokens';
+import { crearPolizaDePrueba } from './polizas-de-prueba';
 
 /**
  * Idempotencia del anclaje: caída simulada del worker tras enviar la
@@ -75,8 +76,8 @@ describe('Idempotencia del anclaje (e2e)', () => {
       app.get<ClockPort>(TOKENS_TRANSVERSALES.CLOCK),
     );
 
-    const poliza = await prisma.poliza.findFirstOrThrow({ where: { estado: 'VIGENTE' } });
-    polizaId = poliza.id;
+    // Póliza propia (D22): con RN-02 la del seed agotaría su saldo entre corridas.
+    polizaId = await crearPolizaDePrueba(prisma);
 
     const login = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
@@ -96,7 +97,7 @@ describe('Idempotencia del anclaje (e2e)', () => {
       .send({
         polizaId,
         monto: '33.33',
-        fechaPago: new Date().toISOString().slice(0, 10),
+        fechaPago: fechaEnGuayaquil(new Date()),
         metodo: 'EFECTIVO',
         referencia: `IDEM-${Date.now()}`,
       })

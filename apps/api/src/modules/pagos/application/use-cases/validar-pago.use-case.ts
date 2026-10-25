@@ -5,7 +5,7 @@ import { EmitirReciboUseCase } from '../../../recibos/application/use-cases/emit
 import type { Pago } from '../../domain/pago';
 import type { Recibo } from '../../../recibos/domain/recibo';
 import type { PagosRepositoryPort } from '../ports/pagos.repository.port';
-import { exigirPolizaVigente } from './pagos.use-cases';
+import { exigirMontoDentroDelSaldo, exigirPolizaVigente } from './pagos.use-cases';
 
 export interface ResultadoValidacion {
   pago: Pago;
@@ -38,6 +38,7 @@ export class ValidarPagoUseCase {
     }
 
     await exigirPolizaVigente(this.pagos, pago.polizaId);
+    await exigirMontoDentroDelSaldo(this.pagos, pago.polizaId, pago.monto);
 
     const ahora = this.clock.ahora();
     const datosRecibo = this.emitirRecibo.ejecutar({

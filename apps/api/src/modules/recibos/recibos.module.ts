@@ -25,6 +25,10 @@ import { ObtenerReciboUseCase } from './application/use-cases/obtener-recibo.use
 import { ReencolarPendientesUseCase } from './application/use-cases/reencolar-pendientes.use-case';
 import { ReintentarReciboUseCase } from './application/use-cases/reintentar-recibo.use-case';
 import { VerificarReciboUseCase } from './application/use-cases/verificar-recibo.use-case';
+import { SALDO_OPERADORA } from './application/ports/saldo-operadora.port';
+import { ObtenerSaldoOperadoraUseCase } from './application/use-cases/obtener-saldo-operadora.use-case';
+import { RedisSaldoOperadoraAdapter } from './infrastructure/redis/redis-saldo-operadora.adapter';
+import { OperadoraController } from './presentation/http/operadora.controller';
 
 const casosDeUso: Provider[] = [
   {
@@ -97,11 +101,16 @@ const casosDeUso: Provider[] = [
       cadena: ConfiguracionCadenaAdapter,
     ) => new AnularReciboEnCadenaUseCase(repo, registro, hasher, cadena),
   },
+  {
+    provide: ObtenerSaldoOperadoraUseCase,
+    inject: [SALDO_OPERADORA],
+    useFactory: (saldos: RedisSaldoOperadoraAdapter) => new ObtenerSaldoOperadoraUseCase(saldos),
+  },
 ];
 
 @Module({
   imports: [BullModule.registerQueue({ name: COLA_ANCLAJE_RECIBOS })],
-  controllers: [RecibosController],
+  controllers: [RecibosController, OperadoraController],
   providers: [
     { provide: CRIPTO, useClass: NodeCriptoAdapter },
     { provide: HASHER_RECIBOS, useClass: ViemHasherRecibosAdapter },
@@ -109,6 +118,7 @@ const casosDeUso: Provider[] = [
     { provide: RECIBOS_REPOSITORY, useClass: PrismaRecibosRepository },
     { provide: REGISTRO_RECIBOS, useClass: ViemRegistroRecibosAdapter },
     { provide: COLA_ANCLAJE, useClass: BullMqColaAnclajeAdapter },
+    { provide: SALDO_OPERADORA, useClass: RedisSaldoOperadoraAdapter },
     ...casosDeUso,
   ],
   exports: [
@@ -116,6 +126,7 @@ const casosDeUso: Provider[] = [
     REGISTRO_RECIBOS,
     COLA_ANCLAJE,
     CONFIG_CADENA,
+    SALDO_OPERADORA,
     EmitirReciboUseCase,
     AnclarReciboUseCase,
     ReencolarPendientesUseCase,

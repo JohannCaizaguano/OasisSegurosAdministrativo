@@ -9,9 +9,8 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Permisos mínimos: el pipeline solo lee el repositorio.
-permissions:
-  contents: read
+# Sin permisos por defecto: cada job declara los suyos (HT-14).
+permissions: {}
 
 env:
   JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-1234
@@ -21,10 +20,14 @@ jobs:
   calidad:
     name: Lint, build, typecheck y dependency-cruiser
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -37,13 +40,55 @@ jobs:
       - run: pnpm -r typecheck
       - run: pnpm deps:check
 
+  seguridad:
+    name: Seguridad (pnpm audit, Semgrep, gitleaks, zizmor)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          # gitleaks revisa todo el historial, no solo el último commit.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version-file: .nvmrc
+      # Las excepciones viven en `auditConfig` de pnpm-workspace.yaml, con motivo y fecha.
+      - name: pnpm audit (dependencias de producción)
+        run: pnpm audit --prod --audit-level=high
+      - name: Semgrep CE
+        run: >-
+          docker run --rm -v "${PWD}:/src" -w /src semgrep/semgrep:1.180.0
+          semgrep scan --metrics=off --config p/typescript --config p/nodejs
+          --config p/owasp-top-ten --severity ERROR --error apps/api/src apps/web/src
+      - name: gitleaks (todo el historial)
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          archivo="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfLO "${base}/${archivo}"
+          curl -sSfLO "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --check --ignore-missing "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "${archivo}" gitleaks
+          ./gitleaks git --redact --no-banner .
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+      - name: zizmor (workflows de GitHub Actions)
+        run: uvx zizmor@1.30.1 --min-severity high .github/workflows
+
   contratos:
     name: Contratos (compile, tests, cobertura, solhint)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -70,10 +115,14 @@ jobs:
   slither:
     name: Slither (análisis estático)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -94,6 +143,8 @@ jobs:
   api:
     name: API (unitarias y e2e)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     services:
       postgres:
         image: postgres:17-alpine
@@ -112,9 +163,11 @@ jobs:
           --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s
           --health-retries 10
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -152,10 +205,14 @@ jobs:
   web:
     name: SPA (vitest)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -167,10 +224,14 @@ jobs:
   docker:
     name: Imágenes Docker (sin publicar)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/api/Dockerfile
@@ -179,7 +240,7 @@ jobs:
           tags: oasis-api:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/api/Dockerfile
@@ -187,7 +248,7 @@ jobs:
           push: false
           tags: oasis-api-migrator:ci
           cache-from: type=gha
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/web/Dockerfile

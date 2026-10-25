@@ -29,6 +29,7 @@
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.7",
     "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -37,6 +38,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.9",
+    "secretlint": "13.0.7",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1"
   }

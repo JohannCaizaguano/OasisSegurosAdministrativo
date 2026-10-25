@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigestsToSemver", ":semanticCommits"],
+  "timezone": "America/Guayaquil",
+  "schedule": ["before 6am on monday"],
+  "minimumReleaseAge": "14 days",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "labels": ["seguridad"]
+  },
+  "packageRules": [
+    {
+      "matchDepTypes": ["devDependencies"],
+      "rangeStrategy": "pin"
+    },
+    {
+      "groupName": "dependencias npm (menores y parches)",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"]
+    },
+    {
+      "groupName": "GitHub Actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "groupName": "imágenes Docker",
+      "matchManagers": ["dockerfile", "docker-compose"]
+    },
+    {
+      "description": "NestJS 12 es solo ESM y TypeScript 7 no tiene soporte en typescript-eslint ni ts-jest (CLAUDE.md, trampas conocidas).",
+      "matchPackageNames": ["/^@nestjs\\//", "typescript"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    }
+  ]
+}

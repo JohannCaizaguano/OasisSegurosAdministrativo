@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { cabecerasDeSesion, crearPolizaPropia, hoyEnGuayaquil } from './ayudas';
+
 /**
  * E2E de la SPA: login → validar pago → ANCLADO → QR → verificación con sesión;
  * requiere la pila completa (ver README).
@@ -16,32 +18,18 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': IP });
 
   // 0. Preparación por API: asegurar un pago REGISTRADO que validar en la UI.
-  const loginApi = await request.post('/api/v1/auth/login', {
-    headers: { 'X-Forwarded-For': IP },
-    data: { email: EMAIL, password: PASSWORD },
-  });
-  expect(loginApi.ok()).toBeTruthy();
-  const { accessToken } = (await loginApi.json()) as { accessToken: string };
-  const cabeceras = { Authorization: `Bearer ${accessToken}`, 'X-Forwarded-For': IP };
-
-  const polizas =
-    (await // Solo una póliza VIGENTE admite pagos (RN-01): las pruebas del sprint crean
-    // pólizas terminales que pueden ser las más recientes.
-    (
-      await request.get('/api/v1/polizas?page=1&pageSize=1&estado=VIGENTE', { headers: cabeceras })
-    ).json()) as {
-      data: Array<{ id: string }>;
-    };
-  expect(polizas.data.length).toBeGreaterThan(0);
+  const cabeceras = await cabecerasDeSesion(request, IP, { email: EMAIL, password: PASSWORD });
+  // Póliza propia (D22): con RN-02 la más reciente podría no tener saldo.
+  const poliza = await crearPolizaPropia(request, cabeceras);
 
   // Referencia única por ejecución para localizar la fila en la UI.
   const referencia = `E2E-WEB-${Date.now()}`;
   const crearPago = await request.post('/api/v1/pagos', {
     headers: cabeceras,
     data: {
-      polizaId: polizas.data[0].id,
+      polizaId: poliza.id,
       monto: '19.75',
-      fechaPago: new Date().toISOString().slice(0, 10),
+      fechaPago: hoyEnGuayaquil(),
       metodo: 'TRANSFERENCIA',
       referencia,
     },

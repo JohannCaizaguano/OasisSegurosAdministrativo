@@ -216,6 +216,48 @@ contract RegistroRecibosTest is Test {
         registro.pause();
     }
 
+    function test_GrantRole_Revert_OperadoraNoSeOtorgaAdmin() public {
+        bytes32 rolAdmin = registro.DEFAULT_ADMIN_ROLE();
+        vm.prank(registrador);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, registrador, rolAdmin
+            )
+        );
+        registro.grantRole(rolAdmin, registrador);
+    }
+
+    function test_RevokeRole_Revert_SinAdmin() public {
+        bytes32 rolAdmin = registro.DEFAULT_ADMIN_ROLE();
+        bytes32 rolRegistrador = registro.REGISTRADOR_ROLE();
+        vm.prank(intruso);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, intruso, rolAdmin
+            )
+        );
+        registro.revokeRole(rolRegistrador, registrador);
+    }
+
+    function test_RenounceRole_AdminTransferido() public {
+        bytes32 rolAdmin = registro.DEFAULT_ADMIN_ROLE();
+        address fria = address(0xC01D);
+        vm.startPrank(admin);
+        registro.grantRole(rolAdmin, fria);
+        registro.renounceRole(rolAdmin, admin);
+        vm.stopPrank();
+
+        assertTrue(registro.hasRole(rolAdmin, fria));
+        assertFalse(registro.hasRole(rolAdmin, admin));
+        vm.prank(admin);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, admin, rolAdmin
+            )
+        );
+        registro.pause();
+    }
+
     function test_Verificar_NoRegistrado() public view {
         (bool existe, bytes32 hashRecibo, uint64 registradoEn, bool anulado) =
             registro.verificar(ID_RECIBO);

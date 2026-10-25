@@ -1,3 +1,5 @@
+import { keccak256 } from 'viem';
+
 import { serializarCanonico, type PayloadRecibo } from '../../domain/payload-recibo';
 import { ViemHasherRecibosAdapter } from './viem-hasher-recibos.adapter';
 
@@ -22,6 +24,21 @@ describe('ViemHasherRecibosAdapter', () => {
     const hash = hasher.hashRecibo(canonico, SAL_A);
     expect(hash.hash).toMatch(/^0x[0-9a-f]{64}$/);
     expect(hash.sal).toBe(SAL_A);
+  });
+
+  it('hashRecibo = keccak256(sal ‖ payload canónico en UTF-8) (HU-22)', () => {
+    const bytes = Buffer.concat([
+      Buffer.from(SAL_A.slice(2), 'hex'),
+      Buffer.from(canonico, 'utf8'),
+    ]);
+    expect(hasher.hashRecibo(canonico, SAL_A).hash).toBe(keccak256(bytes));
+  });
+
+  it('dos payloads que solo difieren en un byte con letras hexadecimales no colisionan', () => {
+    // '{' = 0x7b y '}' = 0x7d: tratados como texto hexadecimal darían los mismos bytes.
+    expect(hasher.hashRecibo('{"a":1}', SAL_A).hash).not.toBe(
+      hasher.hashRecibo('}"a":1}', SAL_A).hash,
+    );
   });
 
   it('es determinista para el mismo payload y sal', () => {

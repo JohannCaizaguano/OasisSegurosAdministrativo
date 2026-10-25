@@ -163,5 +163,7 @@ export const api = {
       method: 'PATCH',
       body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
     }),
+  put: <T>(ruta: string, cuerpo: unknown) =>
+    apiFetch<T>(ruta, { method: 'PUT', body: JSON.stringify(cuerpo) }),
   delete: <T>(ruta: string) => apiFetch<T>(ruta, { method: 'DELETE' }),
 };

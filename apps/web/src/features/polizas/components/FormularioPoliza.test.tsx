@@ -18,6 +18,8 @@ vi.mock('../api', () => ({
     cambiarEstado: vi.fn(),
     aseguradoras: vi.fn(),
     ramos: vi.fn(),
+    cuotas: vi.fn(),
+    definirCuotas: vi.fn(),
   },
 }));
 
@@ -75,6 +77,7 @@ const POLIZA: Poliza = {
   clienteNombre: 'Ana Pérez',
   aseguradoraNombre: 'Aseguradora del Pacífico C.A.',
   tienePagosValidados: false,
+  enMora: false,
   createdAt: '2026-01-01T12:00:00.000Z',
   updatedAt: '2026-01-01T12:00:00.000Z',
 };
@@ -126,6 +129,7 @@ beforeEach(() => {
   aseguradoras.mockResolvedValue(paginada([ASEGURADORA]));
   ramos.mockResolvedValue([RAMO]);
   listarClientes.mockResolvedValue(paginada([CLIENTE]));
+  vi.mocked(polizasApi.cuotas).mockResolvedValue([]);
 });
 
 afterEach(cleanup);
@@ -181,6 +185,43 @@ describe('FormularioPoliza', () => {
       POLIZA.id,
       expect.not.objectContaining({ clienteId: expect.anything() }),
     );
+  });
+
+  it('al cambiar la prima con un plan de 3 cuotas avisa que se recalculará (D13)', async () => {
+    vi.mocked(polizasApi.cuotas).mockResolvedValue(
+      [1, 2, 3].map((numero) => ({
+        id: `c${numero}`,
+        numero,
+        valor: '500.17',
+        valorPagado: '0.00',
+        fechaVencimiento: `2026-0${numero}-01`,
+        estado: 'PENDIENTE' as const,
+      })),
+    );
+    montar(POLIZA);
+
+    expect(screen.queryByText(/se recalcularán/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Prima total'), { target: { value: '1600.00' } });
+
+    expect(await screen.findByText(/se recalcularán las 3 cuotas/)).toBeInTheDocument();
+  });
+
+  it('con una sola cuota no muestra el aviso de recálculo', async () => {
+    vi.mocked(polizasApi.cuotas).mockResolvedValue([
+      {
+        id: 'c1',
+        numero: 1,
+        valor: '1500.50',
+        valorPagado: '0.00',
+        fechaVencimiento: '2026-01-01',
+        estado: 'PENDIENTE',
+      },
+    ]);
+    montar(POLIZA);
+    fireEvent.change(screen.getByLabelText('Prima total'), { target: { value: '1600.00' } });
+
+    await waitFor(() => expect(polizasApi.cuotas).toHaveBeenCalled());
+    expect(screen.queryByText(/se recalcularán/)).not.toBeInTheDocument();
   });
 
   it('muestra el 409 de número duplicado en el campo', async () => {

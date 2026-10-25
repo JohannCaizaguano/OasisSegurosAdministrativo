@@ -38,6 +38,13 @@ export default defineConfig({
       // Cuenta operadora (REGISTRADOR_ROLE, ADR-006): solo para scripts que firman como el worker.
       accounts: [configVariable('OPERATOR_PRIVATE_KEY')],
     },
+    amoyAdmin: {
+      type: 'http',
+      chainId: 80002,
+      url: configVariable('AMOY_RPC_URL'),
+      // Billetera fría (ADR-021): solo en el keystore del equipo del autor, nunca en el servidor.
+      accounts: [configVariable('ADMIN_FRIA_PRIVATE_KEY')],
+    },
   },
   verify: {
     etherscan: {
