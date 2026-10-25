@@ -2,16 +2,18 @@ import type {
   ActualizarPolizaInput,
   CambiarEstadoPolizaInput,
   CrearPolizaInput,
+  DefinirPlanCuotasInput,
 } from '@oasis/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { polizasApi, type FiltrosPolizas } from './api';
 
-export function usePolizas(filtros: FiltrosPolizas = {}) {
+export function usePolizas(filtros: FiltrosPolizas = {}, habilitada = true) {
   return useQuery({
     queryKey: ['polizas', filtros],
     queryFn: () => polizasApi.listar(filtros),
+    enabled: habilitada,
   });
 }
 
@@ -62,6 +64,26 @@ export function useCambiarEstadoPoliza() {
       toast.success(
         variables.datos.estado === 'CANCELADA' ? 'Póliza cancelada' : 'Póliza marcada como vencida',
       );
+      invalidarPolizas(queryClient);
+    },
+  });
+}
+
+export function useCuotas(polizaId: string | undefined) {
+  return useQuery({
+    queryKey: ['polizas', polizaId, 'cuotas'],
+    queryFn: () => polizasApi.cuotas(polizaId ?? ''),
+    enabled: polizaId !== undefined,
+  });
+}
+
+export function useDefinirCuotas() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, datos }: { id: string; datos: DefinirPlanCuotasInput }) =>
+      polizasApi.definirCuotas(id, datos),
+    onSuccess: () => {
+      toast.success('Plan de cuotas guardado');
       invalidarPolizas(queryClient);
     },
   });

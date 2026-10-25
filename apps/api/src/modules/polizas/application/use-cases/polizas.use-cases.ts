@@ -5,7 +5,9 @@ import {
   ValidacionError,
 } from '../../../../shared-kernel/domain-error';
 import { numeroDuplicado } from '../../domain/errores';
+import { PlanCuotas } from '../../domain/plan-cuotas';
 import type { Poliza } from '../../domain/poliza';
+import type { CuotaDelPlan } from '../../domain/plan-cuotas';
 import type {
   DatosActualizarPoliza,
   DatosCrearPoliza,
@@ -144,7 +146,37 @@ export class ActualizarPolizaUseCase {
       throw numeroDuplicado(datos.numero);
     }
 
-    return this.polizas.actualizar(id, primaCambia ? { ...resto, primaTotal } : resto);
+    const cambios = primaCambia ? { ...resto, primaTotal } : resto;
+    const cuotas = await this.planAjustado(existente, cambios);
+    return cuotas
+      ? this.polizas.actualizar(id, cambios, cuotas)
+      : this.polizas.actualizar(id, cambios);
+  }
+
+  /** D13: el plan sigue a la prima y a la vigencia nuevas; `undefined` si no cambian. */
+  private async planAjustado(
+    existente: Poliza,
+    cambios: DatosActualizarPoliza,
+  ): Promise<CuotaDelPlan[] | undefined> {
+    const { primaTotal, fechaInicio, fechaFin } = cambios;
+    if (primaTotal === undefined && fechaInicio === undefined && fechaFin === undefined) {
+      return undefined;
+    }
+    const poliza = {
+      primaTotal: primaTotal ?? existente.primaTotal,
+      fechaInicio: fechaInicio ?? existente.fechaInicio,
+      fechaFin: fechaFin ?? existente.fechaFin,
+    };
+    const actual = PlanCuotas.de(await this.polizas.listarCuotas(existente.id));
+    if (actual.cuotas.length === 0) {
+      return undefined;
+    }
+    const plan =
+      primaTotal !== undefined || actual.cuotas.length === 1
+        ? actual.recalcularParaPrima(poliza.primaTotal, poliza.fechaInicio)
+        : actual;
+    plan.validarContra(poliza);
+    return [...plan.cuotas];
   }
 }
 

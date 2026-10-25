@@ -60,6 +60,8 @@ export const polizaSchema = z.object({
   clienteNombre: z.string().optional(),
   aseguradoraNombre: z.string().optional(),
   tienePagosValidados: z.boolean(),
+  /** RN-16 (D15): la póliza tiene al menos una cuota VENCIDA. */
+  enMora: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
 });

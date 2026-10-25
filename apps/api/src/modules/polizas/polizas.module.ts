@@ -13,9 +13,14 @@ import {
 import { PrismaPolizasRepository } from './infrastructure/persistence/prisma-polizas.repository';
 import { MisPolizasController, PolizasController } from './presentation/http/polizas.controller';
 import { RamosController } from './presentation/http/ramos.controller';
+import { CuotasController } from './presentation/http/cuotas.controller';
+import {
+  DefinirPlanCuotasUseCase,
+  ObtenerPlanCuotasUseCase,
+} from './application/use-cases/cuotas.use-cases';
 
 @Module({
-  controllers: [PolizasController, MisPolizasController, RamosController],
+  controllers: [PolizasController, MisPolizasController, RamosController, CuotasController],
   providers: [
     { provide: POLIZAS_REPOSITORY, useClass: PrismaPolizasRepository },
     {
@@ -52,6 +57,16 @@ import { RamosController } from './presentation/http/ramos.controller';
       provide: ListarRamosUseCase,
       inject: [POLIZAS_REPOSITORY],
       useFactory: (repo: PrismaPolizasRepository) => new ListarRamosUseCase(repo),
+    },
+    {
+      provide: ObtenerPlanCuotasUseCase,
+      inject: [POLIZAS_REPOSITORY],
+      useFactory: (repo: PrismaPolizasRepository) => new ObtenerPlanCuotasUseCase(repo),
+    },
+    {
+      provide: DefinirPlanCuotasUseCase,
+      inject: [POLIZAS_REPOSITORY],
+      useFactory: (repo: PrismaPolizasRepository) => new DefinirPlanCuotasUseCase(repo),
     },
   ],
   exports: [POLIZAS_REPOSITORY],

@@ -103,6 +103,8 @@ describe('Acceso por rol (e2e)', () => {
         '/api/v1/clientes/:id/desactivar',
         '/api/v1/clientes/:id/reactivar',
         '/api/v1/polizas/:id/estado',
+        '/api/v1/polizas/:id/cuotas',
+        '/api/v1/operadora/saldo',
       ]),
     );
     expect(claves).not.toContain('PolizasController.eliminar');

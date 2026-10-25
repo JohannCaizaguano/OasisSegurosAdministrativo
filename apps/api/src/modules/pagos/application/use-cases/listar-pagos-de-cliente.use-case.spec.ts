@@ -10,6 +10,7 @@ function crearRepo(): PagosRepositoryPort {
     rechazar: jest.fn(),
     buscarMetodoPago: jest.fn(),
     estadoPoliza: jest.fn(),
+    saldoPoliza: jest.fn(),
   };
 }
 

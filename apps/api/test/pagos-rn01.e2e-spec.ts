@@ -1,6 +1,7 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { fechaEnGuayaquil } from '@oasis/shared';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
@@ -71,7 +72,7 @@ describe('RN-01 en el registro de pagos (e2e)', () => {
     return conSesion('post', '/api/v1/pagos').send({
       polizaId,
       monto: '25.00',
-      fechaPago: new Date().toISOString().slice(0, 10),
+      fechaPago: fechaEnGuayaquil(new Date()),
       metodo: 'TRANSFERENCIA',
       referencia: `E2E-RN01-${sufijo}`,
     });

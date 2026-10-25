@@ -1,4 +1,4 @@
-import { validateEnv, validateWorkerEnv } from './env.schema';
+import { umbralSaldoOperadoraDelEntorno, validateEnv, validateWorkerEnv } from './env.schema';
 
 const CLAVE_PRIVADA = `0x${'a'.repeat(64)}`;
 
@@ -76,5 +76,29 @@ describe('Validación del entorno con Zod', () => {
       validateWorkerEnv({ ...ENTORNO_VALIDO, OPERATOR_PRIVATE_KEY: CLAVE_PRIVADA })
         .OPERATOR_PRIVATE_KEY,
     ).toBe(CLAVE_PRIVADA);
+  });
+
+  it('el umbral del saldo de la operadora es del worker, configurable y por defecto 0.5 (HU-42)', () => {
+    const worker = { ...ENTORNO_VALIDO, OPERATOR_PRIVATE_KEY: CLAVE_PRIVADA };
+    expect(validateEnv(ENTORNO_VALIDO)).not.toHaveProperty('UMBRAL_SALDO_OPERADORA_POL');
+    expect(validateWorkerEnv(worker).UMBRAL_SALDO_OPERADORA_POL).toBe('0.5');
+    expect(
+      validateWorkerEnv({ ...worker, UMBRAL_SALDO_OPERADORA_POL: '2.25' })
+        .UMBRAL_SALDO_OPERADORA_POL,
+    ).toBe('2.25');
+    expect(() => validateWorkerEnv({ ...worker, UMBRAL_SALDO_OPERADORA_POL: '0' })).toThrow(
+      /UMBRAL_SALDO_OPERADORA_POL/,
+    );
+    expect(() => validateWorkerEnv({ ...worker, UMBRAL_SALDO_OPERADORA_POL: 'mucho' })).toThrow(
+      /UMBRAL_SALDO_OPERADORA_POL/,
+    );
+  });
+
+  it('lee el umbral del entorno del proceso con el mismo esquema', () => {
+    expect(umbralSaldoOperadoraDelEntorno({})).toBe('0.5');
+    expect(umbralSaldoOperadoraDelEntorno({ UMBRAL_SALDO_OPERADORA_POL: '1000' })).toBe('1000');
+    expect(() => umbralSaldoOperadoraDelEntorno({ UMBRAL_SALDO_OPERADORA_POL: '-1' })).toThrow(
+      /UMBRAL_SALDO_OPERADORA_POL/,
+    );
   });
 });

@@ -69,6 +69,8 @@ GRAFANA_ADMIN_PASSWORD=<secreto>
 ```ini
 # Clave de la cuenta operadora (REGISTRADOR_ROLE). Solo la inyecta el worker.
 OPERATOR_PRIVATE_KEY=<clave de la cuenta operadora>
+# Bajo este saldo en POL, el worker registra `saldo-operadora-bajo` y el panel del ADMIN alerta (HU-42).
+UMBRAL_SALDO_OPERADORA_POL=0.5
 ```
 
 ```bash
@@ -152,6 +154,45 @@ presupuestó el sprint.
 `CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S7): el primero
 al `.env` y la segunda a `.env.worker` (ambos `chmod 600`), y luego
 `docker compose -f compose.prod.yaml up -d`.
+
+### 4.1 Administrador en una billetera fría (HT-15, ADR-021)
+
+`DEFAULT_ADMIN_ROLE` pasa del desplegador a una billetera fría: una cuenta nueva sin otro uso
+(MetaMask o una billetera de hardware) cuya frase semilla vive solo en papel. Los scripts se
+ejecutan desde la raíz con `pnpm --filter @oasis/contracts <script>` (que corre `node` dentro del
+paquete, donde está `hardhat.config.ts`), en la laptop del responsable, y firman con las claves
+del keystore; las direcciones van como argumentos, nunca en un `.env`.
+
+```bash
+# 1. Transferir: otorga el rol a la fría, comprueba que lo tiene y renuncia el del desplegador.
+#    En Amoy pide escribir "renunciar": la renuncia es irreversible.
+pnpm --filter @oasis/contracts transferir-admin --red amoy \
+  --contrato 0x8B35226ee6A233dFe76F91940A7Ae2a4cA69F60b --fria <direccion_fria>
+
+# 2. Desde entonces pausa, reanuda y rota la fría: su clave se carga solo en esta laptop.
+pnpm --filter @oasis/contracts exec hardhat keystore set ADMIN_FRIA_PRIVATE_KEY
+```
+
+Anote los dos `txHash` que imprime el paso 1 en el informe del sprint. Para ensayar en el nodo
+local, use `--red localhost` con las cuentas de Hardhat.
+
+### 4.2 Rotación de la cuenta operadora ante una filtración
+
+1. Genere una cuenta operadora nueva y fondéela (≈ 0,01 POL).
+2. Rote y pause el registro con la billetera fría (otorga el rol a la nueva antes de revocar
+   la anterior, para no dejar el anclaje sin registrador):
+
+   ```bash
+   pnpm --filter @oasis/contracts rotar-operadora --red amoyAdmin \
+     --contrato <direccion> --anterior <operadora_filtrada> --nueva <operadora_nueva> --pausar
+   ```
+
+3. Actualice `OPERATOR_PRIVATE_KEY` en `/opt/oasis/.env.worker` y reinicie el worker.
+4. Reanude el registro con `unpause()` desde la billetera fría (PolygonScan, pestaña «Write
+   Contract») y confirme en el panel del ADMIN que el saldo de la cuenta nueva se lee.
+
+Sin `--pausar`, la rotación es preventiva y el registro no se detiene. El procedimiento completo
+está probado en el nodo local (`packages/contracts/test/administracion.test.ts`).
 
 ## 5. Backups
 
@@ -244,6 +285,10 @@ docker compose -f compose.prod.yaml -f compose.monitoring.yaml down
 - Cola de anclaje: `docker compose ... exec redis redis-cli keys 'bull:anclaje-recibos:*'`.
 - Recibos fallidos: `POST /api/v1/recibos/:id/reintentar` (ADMIN) y, si es definitivo,
   `POST /api/v1/recibos/:id/anular` (ADMIN), que además anula on-chain cuando corresponde.
-- Rotación de la cuenta operadora: genere una cuenta nueva, otorgue `REGISTRADOR_ROLE`
-  (`grant-registrador.ts`), revoque el rol anterior con `revokeRole` (cuenta admin) y
-  actualice `OPERATOR_PRIVATE_KEY` en `.env.worker` y reinicie el worker.
+- Rotación de la cuenta operadora: procedimiento de §4.2 (`rotar-operadora.ts`).
+- Saldo de la operadora: el worker lo lee al arrancar y cada 5 minutos, lo publica en Redis
+  (`operadora:saldo`, TTL de 15 min) y en la métrica `oasis_operadora_saldo_pol`; bajo
+  `UMBRAL_SALDO_OPERADORA_POL` registra `saldo-operadora-bajo` (nivel `warn`).
+- Vencimiento de cuotas: el worker corre todos los días a las 00:05 de Guayaquil y registra
+  `{ tarea: 'vencimiento-cuotas', actualizadas, duracionMs }`; si estuvo apagado, la siguiente
+  ejecución se pone al día.

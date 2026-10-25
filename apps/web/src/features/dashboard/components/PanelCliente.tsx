@@ -157,6 +157,12 @@ export function PanelCliente() {
                   <span className="cifra text-title font-bold">{formatearMoneda(pago.monto)}</span>
                   <EstadoInsignia dominio="pago" estado={pago.estado} />
                 </span>
+                {pago.estado === 'RECHAZADO' && pago.motivoRechazo && (
+                  <p className="basis-full rounded-md bg-estado-error-fondo px-3 py-2 text-label text-estado-error">
+                    <span className="font-semibold">Motivo del rechazo: </span>
+                    {pago.motivoRechazo}
+                  </p>
+                )}
               </li>
             ))}
           </ul>

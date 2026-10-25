@@ -28,6 +28,8 @@ interface FilaPago {
   registradoPorId: string | null;
   validadoPorId: string | null;
   validadoEn: Date | null;
+  rechazadoPorId: string | null;
+  rechazadoEn: Date | null;
   motivoRechazo: string | null;
   nota: string | null;
   createdAt: Date;
@@ -54,6 +56,12 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       });
       return this.mapearPago(fila);
     } catch (error) {
+      if ((error as { code?: string }).code === 'P2002') {
+        throw new ConflictoError('La referencia ya está registrada en esta póliza', {
+          campo: 'referencia',
+          motivo: 'REFERENCIA_DUPLICADA',
+        });
+      }
       if ((error as { code?: string }).code === 'P2003') {
         throw new ConflictoError('La póliza indicada no existe');
       }
@@ -81,7 +89,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       this.prisma.pago.findMany({
         where,
         include: { poliza: true, metodoPago: true },
-        orderBy: { fechaPago: 'desc' },
+        orderBy: [{ fechaPago: 'desc' }, { createdAt: 'desc' }],
         skip: (filtros.pagina - 1) * filtros.porPagina,
         take: filtros.porPagina,
       }),
@@ -113,6 +121,18 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       select: { estado: true },
     });
     return fila?.estado ?? null;
+  }
+
+  async saldoPoliza(polizaId: string): Promise<string | null> {
+    const [poliza, validados] = await Promise.all([
+      this.prisma.poliza.findUnique({ where: { id: polizaId }, select: { primaTotal: true } }),
+      this.prisma.pago.aggregate({
+        where: { polizaId, estado: 'VALIDADO' },
+        _sum: { monto: true },
+      }),
+    ]);
+    if (!poliza) return null;
+    return poliza.primaTotal.minus(validados._sum.monto ?? 0).toFixed(2);
   }
 
   async validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion> {
@@ -168,8 +188,8 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       where: { id, estado: 'REGISTRADO' },
       data: {
         estado: 'RECHAZADO',
-        validadoPorId: rechazadoPorId,
-        validadoEn: cuando,
+        rechazadoPorId,
+        rechazadoEn: cuando,
         motivoRechazo: motivo,
       },
     });
@@ -199,6 +219,8 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       registradoPorId: fila.registradoPorId,
       validadoPorId: fila.validadoPorId,
       validadoEn: fila.validadoEn === null ? null : fila.validadoEn.toISOString(),
+      rechazadoPorId: fila.rechazadoPorId,
+      rechazadoEn: fila.rechazadoEn === null ? null : fila.rechazadoEn.toISOString(),
       motivoRechazo: fila.motivoRechazo,
       nota: fila.nota,
       createdAt: fila.createdAt.toISOString(),

@@ -1,14 +1,13 @@
 import type { ActualizarPolizaInput, CrearPolizaInput, Poliza } from '@oasis/shared';
 import { actualizarPolizaSchema, crearPolizaSchema } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useController, useForm, type Control, type Resolver } from 'react-hook-form';
+import { useController, useForm, useWatch, type Control, type Resolver } from 'react-hook-form';
 import { toast } from 'sonner';
-import type { ReactNode } from 'react';
 
+import { Campo } from '@/components/Campo';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -19,7 +18,13 @@ import {
 import { SelectorCliente } from '@/features/clientes/components/SelectorCliente';
 import { ApiError } from '@/lib/api-client';
 
-import { useCatalogoAseguradoras, useCrearPoliza, useEditarPoliza, useRamos } from '../hooks';
+import {
+  useCatalogoAseguradoras,
+  useCrearPoliza,
+  useCuotas,
+  useEditarPoliza,
+  useRamos,
+} from '../hooks';
 
 const AYUDA_PRIMA_BLOQUEADA = 'No se puede modificar: la póliza tiene pagos validados';
 
@@ -36,49 +41,6 @@ interface DatosFormulario {
 interface FormularioPolizaProps {
   poliza?: Poliza;
   alGuardar: () => void;
-}
-
-interface AtributosCampo {
-  id: string;
-  'aria-invalid'?: true;
-  'aria-describedby'?: string;
-}
-
-interface CampoProps {
-  id: string;
-  label: string;
-  error?: string;
-  /** Ayuda permanente del control; su id se enlaza junto con el del error. */
-  ayuda?: string;
-  children: (atributos: AtributosCampo) => ReactNode;
-}
-
-/** Label, control, ayuda y error de un campo, con el ARIA consistente en un solo sitio. */
-function Campo({ id, label, error, ayuda, children }: CampoProps) {
-  const descrito = [error ? `${id}-error` : null, ayuda ? `${id}-ayuda` : null]
-    .filter(Boolean)
-    .join(' ');
-
-  return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
-      {children({
-        id,
-        'aria-invalid': error ? true : undefined,
-        'aria-describedby': descrito || undefined,
-      })}
-      {ayuda && (
-        <p id={`${id}-ayuda`} className="text-caption text-muted-foreground">
-          {ayuda}
-        </p>
-      )}
-      {error && (
-        <p id={`${id}-error`} role="alert" className="text-caption font-medium text-destructive">
-          {error}
-        </p>
-      )}
-    </div>
-  );
 }
 
 /** El cliente solo existe al crear; editarlo rompería la trazabilidad (D11). */
@@ -130,6 +92,14 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
   });
   const { field: campoRamo } = useController({ control: formulario.control, name: 'ramoId' });
   const errores = formulario.formState.errors;
+  // D13: con un plan de N cuotas, cambiar la prima las recalcula al guardar; se avisa antes.
+  const cuotas = useCuotas(esEdicion ? poliza.id : undefined);
+  const primaEscrita = useWatch({ control: formulario.control, name: 'primaTotal' });
+  const totalCuotas = cuotas.data?.length ?? 0;
+  const avisoRecalculo =
+    esEdicion && totalCuotas > 1 && Number(primaEscrita) !== Number(poliza.primaTotal)
+      ? `Al guardar se recalcularán las ${totalCuotas} cuotas con la prima nueva; sus fechas se conservan.`
+      : null;
 
   // El cliente no se monta en edición (D11): un 422 suyo ahí solo puede ir a toast.
   const camposDelFormulario: ReadonlyArray<keyof DatosFormulario> = esEdicion
@@ -231,6 +201,15 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
           />
         )}
       </Campo>
+
+      {avisoRecalculo && (
+        <p
+          role="status"
+          className="rounded-md bg-estado-aviso-fondo px-3.5 py-2.5 text-label text-estado-aviso"
+        >
+          {avisoRecalculo}
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Campo

@@ -23,5 +23,6 @@ export const ENTIDADES_AUDITADAS = [
   'Poliza',
   'Pago',
   'Recibo',
+  'PlanCuotas',
 ] as const;
 export type EntidadAuditada = (typeof ENTIDADES_AUDITADAS)[number];

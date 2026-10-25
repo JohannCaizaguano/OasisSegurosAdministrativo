@@ -1,4 +1,5 @@
 import type {
+  CrearPagoInput,
   EstadoPago,
   Pago,
   RechazarPagoInput,
@@ -18,6 +19,7 @@ export interface FiltrosPagos {
 }
 
 export const pagosApi = {
+  crear: (datos: CrearPagoInput) => api.post<Pago>('/pagos', datos),
   listar: (filtros: FiltrosPagos) =>
     api.get<RespuestaPaginada<Pago>>(`/pagos${construirQuery({ ...filtros })}`),
   // El API exige `confirmado: true`: es la garantía de que hubo una

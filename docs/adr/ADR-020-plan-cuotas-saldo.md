@@ -23,7 +23,8 @@ que operar.
   fechas se recortan al último día del mes. Reemplazar cuotas sin aplicaciones es el único borrado
   permitido del sistema.
 - **Cambio de prima.** Con una cuota, la cuota toma la prima nueva; con N cuotas, se recalculan los
-  valores y se conservan las fechas.
+  valores y se conservan las fechas. Cambiar la vigencia de modo que alguna cuota quede fuera de
+  ella se rechaza (`PLAN_FUERA_DE_VIGENCIA`).
 - **Saldo.** `saldo = primaTotal − Σ pagos VALIDADOS`. RN-02 se exige al registrar y otra vez al
   validar; desde S5 la comprobación definitiva ocurre dentro de la transacción de validación, con
   las cuotas bloqueadas (`FOR UPDATE`).
@@ -48,6 +49,7 @@ que operar.
 ## Consecuencias
 
 - Positivas: saldo, mora, cartera y recordatorios operan siempre sobre cuotas; ningún pago puede
-  dejar la póliza con saldo negativo, ni siquiera con validaciones simultáneas.
+  dejar la póliza con saldo negativo. En S4, dos validaciones simultáneas sobre la misma póliza
+  aún pueden pasar las dos; el bloqueo de S5 cierra ese caso.
 - Negativas: un plan no se puede cambiar después del primer pago validado; corregirlo exige anular
   los recibos de esos pagos.

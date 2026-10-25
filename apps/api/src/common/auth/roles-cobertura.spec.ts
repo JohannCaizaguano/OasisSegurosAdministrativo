@@ -22,4 +22,12 @@ describe('cobertura de @Roles', () => {
     const sinRoles = rutasDeclaradas().filter((ruta) => !ruta.esPublica && ruta.roles.length === 0);
     expect(sinRoles.map((ruta) => ruta.clave)).toEqual([]);
   });
+
+  it('el plan de cuotas es del personal y el saldo de la operadora solo del ADMIN (S4)', () => {
+    const roles = (clave: string) =>
+      [...(rutasDeclaradas().find((ruta) => ruta.clave === clave)?.roles ?? [])].sort();
+    expect(roles('CuotasController.obtener')).toEqual(['ADMIN', 'OPERADOR']);
+    expect(roles('CuotasController.definir')).toEqual(['ADMIN', 'OPERADOR']);
+    expect(roles('OperadoraController.saldo')).toEqual(['ADMIN']);
+  });
 });

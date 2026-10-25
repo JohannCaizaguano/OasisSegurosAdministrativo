@@ -9,6 +9,9 @@ concurrency:
   group: deploy-produccion
   cancel-in-progress: false
 
+# Sin permisos por defecto: cada job declara los suyos (HT-14).
+permissions: {}
+
 jobs:
   publicar:
     name: Publicar imágenes en GHCR
@@ -19,16 +22,18 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - id: version
         run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/api/Dockerfile
@@ -39,7 +44,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/oasis-api:${{ steps.version.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/api/Dockerfile
@@ -49,7 +54,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/oasis-api-migrator:sha-${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/oasis-api-migrator:${{ steps.version.outputs.tag }}
           cache-from: type=gha
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: apps/web/Dockerfile
@@ -65,9 +70,10 @@ jobs:
     needs: publicar
     runs-on: ubuntu-latest
     environment: produccion
+    permissions: {}
     steps:
       - name: Despliegue por SSH
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
@@ -92,6 +98,7 @@ jobs:
     name: Smoke test /api/v1/health
     needs: desplegar
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Verificar health del API público
         env:

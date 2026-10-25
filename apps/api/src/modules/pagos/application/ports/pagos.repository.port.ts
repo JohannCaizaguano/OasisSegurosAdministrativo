@@ -27,7 +27,7 @@ export interface DatosCrearPago {
   fechaPago: string;
   metodoPagoId: string;
   registradoPorId: string | null;
-  referencia?: string;
+  referencia: string;
 }
 
 /** Entrada de aplicación: el método llega como código del catálogo. */
@@ -66,4 +66,6 @@ export interface PagosRepositoryPort {
   buscarMetodoPago(codigo: MetodoPago): Promise<MetodoPagoResumen | null>;
   /** D14 (RN-01): estado de la póliza del pago; `null` si no existe. */
   estadoPoliza(polizaId: string): Promise<EstadoPoliza | null>;
+  /** D7: `primaTotal − Σ pagos VALIDADOS` como decimal de dos cifras; `null` si no existe. */
+  saldoPoliza(polizaId: string): Promise<string | null>;
 }

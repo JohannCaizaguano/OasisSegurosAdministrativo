@@ -16,6 +16,8 @@ export interface PropsPago {
   registradoPorId: string | null;
   validadoPorId: string | null;
   validadoEn: string | null;
+  rechazadoPorId: string | null;
+  rechazadoEn: string | null;
   /** Motivo obligatorio del rechazo (HU-19). */
   motivoRechazo: string | null;
   /** Nota de auditoría del operador. Interna: nunca se ancla. */
@@ -77,6 +79,14 @@ export class Pago extends Entity<PropsPago> {
     return this.props.validadoEn;
   }
 
+  get rechazadoPorId(): string | null {
+    return this.props.rechazadoPorId;
+  }
+
+  get rechazadoEn(): string | null {
+    return this.props.rechazadoEn;
+  }
+
   get motivoRechazo(): string | null {
     return this.props.motivoRechazo;
   }
@@ -98,6 +108,11 @@ export class Pago extends Entity<PropsPago> {
   }
 
   puedeRechazarse(): boolean {
+    return this.props.estado === 'REGISTRADO';
+  }
+
+  /** HU-18 (D9): hoy no hay edición de pagos; si se agrega, solo aplica a los REGISTRADOS. */
+  puedeEditarse(): boolean {
     return this.props.estado === 'REGISTRADO';
   }
 }

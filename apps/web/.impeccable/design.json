@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-23T21:43:13.188Z",
+  "generatedAt": "2026-10-25T05:13:05.134Z",
   "title": "Design System: SRPP Oasis Seguros · Claroscuro",
   "extensions": {
     "colorMeta": {
@@ -489,9 +489,14 @@
         "purpose": "Respuesta al presionar botones."
       },
       {
+        "name": "transicion",
+        "value": "140ms cubic-bezier(.23,1,.32,1)",
+        "purpose": "Respuestas a una acción (hover, foco, menús); siempre por debajo de 300ms."
+      },
+      {
         "name": "cajon",
         "value": "cubic-bezier(.32,.72,0,1)",
-        "purpose": "Paneles, pasos del teléfono y entradas de vista."
+        "purpose": "Curva de las entradas, los paneles y los pasos del teléfono."
       },
       {
         "name": "ease-out-fuerte",
@@ -499,9 +504,49 @@
         "purpose": "Menús, diálogos y select."
       },
       {
-        "name": "entrada-vista",
-        "value": "opacity + translateY(12px) 350ms",
-        "purpose": "Entrada de cada vista; se reduce con prefers-reduced-motion."
+        "name": "animate-pop",
+        "value": "pop (opacity + scale(.6) rotate(-8deg)) 0.8s cajon 0.15s",
+        "purpose": "Isologo de la bienvenida."
+      },
+      {
+        "name": "animate-rise",
+        "value": "rise (opacity + translateY(-18px)) 0.7s cajon 0.1s; animate-rise-tarde con 0.2s",
+        "purpose": "Título y subtítulo de la bienvenida."
+      },
+      {
+        "name": "animate-formulario",
+        "value": "fade-up (opacity + translateY(12px)) 0.6s cajon 0.1s",
+        "purpose": "Formulario de ingreso."
+      },
+      {
+        "name": "animate-vista",
+        "value": "fade-up 0.35s cajon",
+        "purpose": "Entrada de cada vista."
+      },
+      {
+        "name": "animate-fila",
+        "value": "fade-up 0.35s cajon, escalonada 30–35ms por fila",
+        "purpose": "Filas de listas y tablas."
+      },
+      {
+        "name": "animate-panel",
+        "value": "fade-up 0.4s cajon",
+        "purpose": "Héroe y paneles del portal del cliente."
+      },
+      {
+        "name": "animate-aviso",
+        "value": "fade-up 0.3s cajon",
+        "purpose": "Diálogos y resultados que aparecen (verificación)."
+      },
+      {
+        "name": "animate-velo",
+        "value": "fade 0.2s ease",
+        "purpose": "Velo de diálogos y paneles laterales."
+      },
+      {
+        "name": "movimiento-reducido",
+        "value": "prefers-reduced-motion: las entradas pasan a fade (solo opacidad)",
+        "purpose": "Se quitan desplazamientos y escalados; se conservan opacidad y color."
       }
     ],
     "breakpoints": [
@@ -616,7 +661,7 @@
   ],
   "narrative": {
     "northStar": "El oasis al anochecer",
-    "overview": "El SRPP se ve como la fotografía de marca de Oasis Seguros: un lienzo de arena cálida donde se trabaja de día y, sobre él, paneles negros iluminados por una sola luz dorada, la del isologo. La luz no decora: marca lo que la persona tiene que hacer ahora (validar, registrar, reportar) y las cifras que importan sobre fondo negro. Todo lo demás es tinta, arena y espacio.\n\nEs una herramienta de trabajo (modo Operate) para tres operadores y un gerente que validan pagos toda la jornada, y un portal de consulta para clientes que lo abren desde el celular. Por eso la ambición se expresa en precisión: filas de 56 px, controles de 44 px o más, cifras tabulares, estados que se leen sin color y un único gesto de marca repetido con disciplina. La estructura viene de la propuesta C · Cercano (riel de iconos, resumen del día, mesa de validación en dos paneles); la paleta y la forma, del manual de marca: negro, café y el degradado dorado del logo.\n\nSe rechazan de forma explícita los tecnicismos para el cliente («blockchain», «hash»), los degradados y brillos fuera de la acción principal y del riel, el oro como color de texto sobre fondos claros y el texto sobre la fotografía sin un velo medido.",
+    "overview": "**Creative North Star: \"El oasis al anochecer\"**\n\nEl SRPP se ve como la fotografía de marca de Oasis Seguros: un lienzo de arena cálida donde se trabaja de día y, sobre él, paneles negros iluminados por una sola luz dorada, la del isologo. La luz no decora: marca lo que la persona tiene que hacer ahora (validar, registrar, reportar) y las cifras que importan sobre fondo negro. Todo lo demás es tinta, arena y espacio.\n\nEs una herramienta de trabajo (modo Operate) para tres operadores y un gerente que validan pagos toda la jornada, y un portal de consulta para clientes que lo abren desde el celular. Por eso la ambición se expresa en precisión: filas de 56 px, controles de 44 px o más, cifras tabulares, estados que se leen sin color y un único gesto de marca repetido con disciplina. La estructura viene de la propuesta C · Cercano (riel de iconos, resumen del día, mesa de validación en dos paneles); la paleta y la forma, del manual de marca: negro, café y el degradado dorado del logo.\n\nSe rechazan de forma explícita los tecnicismos para el cliente («blockchain», «hash»), los degradados y brillos fuera de la acción principal y del riel, el oro como color de texto sobre fondos claros y el texto sobre la fotografía sin un velo medido.",
     "keyCharacteristics": [
       "Lienzo de arena (#f6f4f0) con tarjetas de papel y paneles de noche (#14110d) para lo que resume o dirige.",
       "Una sola acción dorada por vista; el resto de botones son papel, arena o contorno.",
@@ -658,7 +703,7 @@
       {
         "name": "The Lamp Rule",
         "body": "Solo los paneles de noche llevan el filo dorado. Una tarjeta de papel nunca brilla.",
-        "section": "elevation"
+        "section": "elevation-depth"
       }
     ],
     "dos": [
@@ -677,7 +722,7 @@
       "Don't poner dos acciones doradas en la misma vista.",
       "Don't escribir texto sobre la fotografía sin el velo medido, ni usar la fotografía fuera de la bienvenida.",
       "Don't añadir grises, azules o acentos nuevos: los neutros son arena y tinta, y el azul solo existe como tono de «proceso».",
-      "Don't usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity, por debajo de 300ms.",
+      "Don't usar cristal, desenfoque, halos de color, brillos animados ni `transition: all`; se animan solo transform y opacity. Las respuestas a una acción duran menos de 300ms; las entradas del prototipo (bienvenida de 0,6–0,8s, vista de 0,35s y filas escalonadas de 30–35ms) se conservan y nunca bloquean la interacción. El catálogo está en las utilidades `animate-*` de `src/index.css`.",
       "Don't mostrar «blockchain», «hash» ni datos técnicos del anclaje al cliente; el personal sí ve la transacción y el explorador.",
       "Don't usar el rojo sólido para acciones que se pueden deshacer.",
       "Don't marcar ítems, tarjetas ni avisos con bordes laterales de color de más de 1px.",

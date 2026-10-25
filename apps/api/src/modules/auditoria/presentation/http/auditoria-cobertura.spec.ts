@@ -30,6 +30,7 @@ const ESPERADAS: Record<string, { accion: string; entidad: string }> = {
   'PolizasController.crear': { accion: 'CREAR', entidad: 'Poliza' },
   'PolizasController.actualizar': { accion: 'MODIFICAR', entidad: 'Poliza' },
   'PolizasController.cambiarEstado': { accion: 'CAMBIAR_ESTADO', entidad: 'Poliza' },
+  'CuotasController.definir': { accion: 'MODIFICAR', entidad: 'PlanCuotas' },
   'PagosController.crear': { accion: 'CREAR', entidad: 'Pago' },
   'PagosController.validar': { accion: 'VALIDAR', entidad: 'Pago' },
   'PagosController.rechazar': { accion: 'RECHAZAR', entidad: 'Pago' },

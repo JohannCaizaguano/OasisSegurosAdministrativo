@@ -71,11 +71,17 @@ export const envSchema = z.object({
 
 export type Env = z.infer<typeof envSchema>;
 
-/** Entorno del worker: agrega la clave de firma custodial. */
+/** Entorno del worker: agrega la clave de firma custodial y el umbral de su saldo. */
 export const workerEnvSchema = envSchema.extend({
   OPERATOR_PRIVATE_KEY: z
     .string()
     .regex(/^0x[0-9a-fA-F]{64}$/, 'OPERATOR_PRIVATE_KEY debe ser una clave privada de 32 bytes'),
+  /** HU-42 (D17): bajo este saldo en POL, el worker alerta en logs y en el panel del ADMIN. */
+  UMBRAL_SALDO_OPERADORA_POL: z
+    .string()
+    .regex(/^\d+(\.\d{1,18})?$/, 'Se espera un decimal en POL')
+    .refine((valor) => Number(valor) > 0, 'Debe ser mayor que cero')
+    .default('0.5'),
 });
 
 export type WorkerEnv = z.infer<typeof workerEnvSchema>;
@@ -119,4 +125,17 @@ export function claveOperadoraDelEntorno(
     );
   }
   return parseo.data as `0x${string}`;
+}
+
+/** Lee y valida el umbral del saldo de la operadora (HU-42); solo lo invoca el worker. */
+export function umbralSaldoOperadoraDelEntorno(raw: Record<string, unknown> = process.env): string {
+  const parseo = workerEnvSchema.shape.UMBRAL_SALDO_OPERADORA_POL.safeParse(
+    raw.UMBRAL_SALDO_OPERADORA_POL,
+  );
+  if (!parseo.success) {
+    throw new Error(
+      `UMBRAL_SALDO_OPERADORA_POL inválido: ${parseo.error.issues.map((i) => i.message).join('; ')}`,
+    );
+  }
+  return parseo.data;
 }

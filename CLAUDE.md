@@ -25,8 +25,18 @@ leyendo varios archivos.
      `QueueModule`) ejecuta `AnclarReciboUseCase`, idempotente: se sincroniza con la cadena antes
      de enviar `registrar` y pasa ENVIADO → ANCLADO. En el último intento fallido marca FALLIDO.
   5. `BarridoPendientesTask` reencola cada 30 s los PENDIENTE_ANCLAJE con más de 60 s.
+     `reinicio-worker.e2e-spec.ts` demuestra que un worker cerrado a mitad del anclaje y uno
+     nuevo dejan cada recibo con un solo evento `ReciboRegistrado`.
   6. `POST /api/v1/recibos/:id/anular` marca ANULADO y, si estaba anclado, encola `anular-recibo`;
      el worker llama a `anular()` en el contrato.
+- **Tareas del worker (S4):** `VencimientoCuotasTask` (`@Cron('5 0 * * *')` en
+  `America/Guayaquil`) ejecuta `MarcarCuotasVencidasUseCase`, que marca VENCIDA toda cuota
+  PENDIENTE o PARCIAL vencida antes de hoy en un `updateMany` idempotente. `SaldoOperadoraTask`
+  lee el saldo al arrancar y cada 5 min, escribe `operadora:saldo` en Redis (TTL 15 min), publica
+  `oasis_operadora_saldo_pol` y, bajo `UMBRAL_SALDO_OPERADORA_POL` (solo en el entorno del worker,
+  `umbralSaldoOperadoraDelEntorno`), un `warn` `saldo-operadora-bajo`. El API solo lee la llave en
+  `GET /operadora/saldo` (ADMIN); sin llave responde `{ disponible: false }`. El worker registra
+  estas tareas con proveedores propios, sin importar los controladores de `PolizasModule`.
 - **Hash y privacidad (ADR-004):** `domain/payload-recibo.ts` arma el JSON canónico (RFC 8785);
   `hashRecibo = keccak256(sal ‖ payload)` con una sal de 32 bytes que solo vive en PostgreSQL, e
   `idOnchain = keccak256(uuid)`. La verificación (`GET /api/v1/recibos/:codigo/verificacion`)
@@ -65,8 +75,29 @@ leyendo varios archivos.
   `PATCH /polizas/:id` solo edita pólizas VIGENTE y no admite `clienteId` ni `estado`; la prima no
   cambia si hay pagos VALIDADOS; `DELETE` no existe (RN-09). Renovar es crear una póliza nueva.
 - RN-01 vive en `CrearPagoUseCase`: póliza inexistente → 404 y no VIGENTE → 422
-  `POLIZA_NO_VIGENTE`, antes de resolver el método de pago (el registro completo de pagos es
-  HU-16, S4).
+  `POLIZA_NO_VIGENTE`, antes de resolver el método de pago.
+
+## Pagos y plan de cuotas (S4)
+
+- RN-01 y RN-02 se exigen al registrar y otra vez al validar (`exigirPolizaVigente` y
+  `exigirMontoDentroDelSaldo` en `pagos.use-cases.ts`). El saldo es
+  `primaTotal − Σ pagos VALIDADOS` (`saldoPoliza`, con `aggregate`); el error lleva
+  `details: { campo: 'monto', motivo: 'MONTO_SUPERA_SALDO', saldo }`. Dos validaciones
+  simultáneas aún pueden pasar las dos hasta HU-36 (S5), marcado con `ponytail:`.
+- La referencia es obligatoria y única por póliza (`@@unique([polizaId, referencia])`): el `P2002`
+  sale como 409 `REFERENCIA_DUPLICADA`. El rechazo guarda `rechazadoPorId`/`rechazadoEn`, nunca
+  los campos de la validación. `Pago.puedeEditarse()` existe aunque no haya edición (D9).
+- Los códigos de negocio viajan en `details.motivo` (el `code` es `REGLA_NEGOCIO`, `CONFLICTO`…);
+  la SPA los pinta bajo el campo de `details.campo`.
+- Plan de cuotas (ADR-020): toda póliza nace con una cuota por la prima (`create` anidado).
+  `PUT /polizas/:id/cuotas` reemplaza el plan en una `$transaction` que vuelve a exigir VIGENTE y
+  cero pagos VALIDADOS (único borrado del sistema); el dominio `PlanCuotas` valida la suma
+  (RN-15, `PLAN_NO_CUADRA`) y la vigencia (`PLAN_FUERA_DE_VIGENCIA`). Editar la prima o la vigencia
+  ajusta el plan en la misma transacción (D13): una cuota sigue a la prima y al inicio; N cuotas
+  se recalculan con `proponerPlanCuotas` y conservan sus fechas.
+- `proponerPlanCuotas`, `sumarMontos` y `fechaEnGuayaquil` viven en `@oasis/shared/dominio`: toda
+  aritmética de dinero va en centavos enteros y "hoy" es la fecha de Guayaquil.
+- Mora (RN-16): `enMora` sale del `_count` de cuotas VENCIDAS en la misma consulta de la póliza.
 
 ## Sesiones (ADR-016)
 
@@ -108,7 +139,15 @@ leyendo varios archivos.
   cuenta #1 de Hardhat y escribe `CONTRACT_ADDRESS`, `OPERATOR_PRIVATE_KEY`, `CHAIN_ID`, `RPC_URL`
   y `EXPLORER_BASE_URL` en `apps/api/.env`.
 - Para Amoy, los secretos van en `hardhat keystore` (`DEPLOYER_PRIVATE_KEY`, `AMOY_RPC_URL`,
-  `ETHERSCAN_API_KEY`), nunca en un `.env`. Pasos en `docs/despliegue.md` §4.
+  `ETHERSCAN_API_KEY`, y `ADMIN_FRIA_PRIVATE_KEY` solo en la laptop del autor), nunca en un `.env`.
+  Pasos en `docs/despliegue.md` §4.
+- Administración en frío (HT-15, ADR-021): la lógica está en `scripts/administracion.ts`
+  (`transferirAdmin`, `rotarOperadora`), probada con el nodo en proceso en
+  `test/administracion.test.ts`. Los envoltorios `transferir-admin.ts` y `rotar-operadora.ts` se
+  ejecutan con `node` (no con `hardhat run`, que rechaza opciones propias como `--pausar`) y por
+  eso los imports relativos llevan `.ts` (`allowImportingTsExtensions`). Se lanzan con
+  `pnpm --filter @oasis/contracts <script>`: con `node` desde la raíz, Hardhat no halla su
+  configuración (HHE3).
 
 ## SPA
 
@@ -134,10 +173,17 @@ leyendo varios archivos.
   deduplicada en la pestaña y serializada entre pestañas con Web Locks; si no puede, cierra la
   sesión con el motivo `expirada`, que el login muestra.
 - En desarrollo, Vite redirige `/api` a `:3000`, igual que Caddy en producción.
-- `features/clientes/components/SelectorCliente.tsx` es el combobox ARIA 1.2 compartido (sin
-  dependencias): busca en el servidor `GET /clientes?q=…&estado=ACTIVOS&pageSize=20` con debounce
-  de 300 ms y lo usan el formulario y el filtro de `PolizasPage`. Dentro de un `Dialog`, el
+- `components/ComboboxBusqueda.tsx` es el combobox ARIA 1.2 compartido (sin dependencias): busca
+  en el servidor con debounce de 300 ms mediante un hook que recibe por props.
+  `SelectorCliente` (clientes activos, formulario y filtro de `PolizasPage`) y `SelectorPoliza`
+  (pólizas VIGENTES del formulario de pago, RN-01) lo envuelven. Dentro de un `Dialog`, el
   `onEscapeKeyDown` del contenido protege la lista abierta del cierre del diálogo.
+- `components/Campo.tsx` pone label, ayuda y error con su ARIA; lo usan `FormularioPoliza` y
+  `FormularioPago`, que llevan el error del API a su campo con `details.campo`.
+- Pagos (S4): `ValidarPagoDialog` (resumen, casilla y «Validar y emitir recibo», tres acciones
+  desde la fila) y `RechazarPagoDialog` (chips de `MOTIVOS_RECHAZO_FRECUENTES`, contador y botón
+  deshabilitado fuera de 5–300). El toast del recibo enlaza a su detalle. `PlanCuotasDialog` se abre
+  con el botón «Cuotas» de cada póliza; `SaludAnclaje` solo se monta para el ADMIN.
 
 ## Pruebas: detalles que no están en AGENTS.md
 
@@ -162,6 +208,17 @@ leyendo varios archivos.
   en el portal del CLIENTE. Una pantalla nueva se agrega a `PANTALLAS`.
 - `pnpm deps:check:negativo` demuestra que la regla hexagonal falla cuando debe.
 
+## Cadena de suministro (HT-14)
+
+- Las acciones de GitHub van fijadas por SHA con su versión en comentario, con `permissions: {}`
+  global y permisos mínimos por job; cada `checkout` usa `persist-credentials: false`. Renovate
+  (`renovate.json`) mantiene los SHA y agrupa por ecosistema.
+- El job `seguridad` de `ci.yml` corre `pnpm audit --prod --audit-level=high` (excepciones con
+  motivo y fecha en `auditConfig` de `pnpm-workspace.yaml`), Semgrep CE, gitleaks sobre todo el
+  historial (falsos positivos en `.gitleaksignore`) y zizmor.
+- `secretlint` corre en lint-staged sobre todo archivo preparado; `.secretlintrc.json` solo permite
+  URLs de PostgreSQL con la contraseña entre `<…>` (ejemplos de la documentación).
+
 ## Trampas conocidas
 
 - No subir a NestJS 12 (solo ESM; el API es CommonJS) ni a TypeScript 7 (sin soporte en
@@ -169,3 +226,9 @@ leyendo varios archivos.
 - pnpm 12: los binarios de un paquete se ejecutan con `pnpm --filter <pkg> exec <bin>`.
 - Prettier respeta `.gitignore` y `.prettierignore`: cualquier archivo no ignorado, aunque no esté
   versionado, entra en `pnpm format:check`.
+- En viem, `concat` con tipos mezclados (bytes y hex) cae en `concatBytes` y copia el texto hex
+  como números: concatene siempre hex con hex (`ViemHasherRecibosAdapter`).
+- Las e2e que crean pagos usan `fechaEnGuayaquil(new Date())`: desde las 19:00 de Ecuador la fecha
+  UTC ya es «mañana» y D6 la rechaza. Las que validan pagos usan una póliza propia
+  (`test/polizas-de-prueba.ts`, `crearPolizaPropia` en `e2e/ayudas.ts`) para que RN-02 no agote
+  la del seed entre corridas.

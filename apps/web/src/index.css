@@ -32,6 +32,7 @@
   --sidebar-primary: #f0c878; /* oro del oasis */
   --sidebar-primary-foreground: #1a140c;
   --sidebar-accent: #26201a; /* noche alta */
+  --alerta-noche: #f3a59d; /* rojo claro sobre la noche (9,6:1): saldo bajo el umbral */
   --overlay: rgb(20 17 13 / 0.55);
   --anillo-campo: rgb(226 173 91 / 0.38);
 
@@ -187,6 +188,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
+  --color-alerta-noche: var(--alerta-noche);
   --color-overlay: var(--overlay);
   --color-estado-exito: var(--estado-exito);
   --color-estado-exito-fondo: var(--estado-exito-fondo);

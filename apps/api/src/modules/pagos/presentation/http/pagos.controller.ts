@@ -141,6 +141,8 @@ export class PagosController {
       registradoPorId: pago.registradoPorId,
       validadoPorId: pago.validadoPorId,
       validadoEn: pago.validadoEn,
+      rechazadoPorId: pago.rechazadoPorId,
+      rechazadoEn: pago.rechazadoEn,
       nota: pago.nota,
       motivoRechazo: pago.motivoRechazo,
       createdAt: pago.createdAt,

@@ -3,6 +3,8 @@ import type {
   Aseguradora,
   CambiarEstadoPolizaInput,
   CrearPolizaInput,
+  Cuota,
+  DefinirPlanCuotasInput,
   EstadoPoliza,
   OrdenPoliza,
   Poliza,
@@ -34,6 +36,9 @@ export const polizasApi = {
   cambiarEstado: (id: string, datos: CambiarEstadoPolizaInput) =>
     api.post<Poliza>(`/polizas/${id}/estado`, datos),
   aseguradoras: () => api.get<RespuestaPaginada<Aseguradora>>('/aseguradoras?page=1&pageSize=100'),
+  cuotas: (id: string) => api.get<Cuota[]>(`/polizas/${id}/cuotas`),
+  definirCuotas: (id: string, datos: DefinirPlanCuotasInput) =>
+    api.put<Cuota[]>(`/polizas/${id}/cuotas`, datos),
   // D10: catálogo de solo lectura, sin paginación.
   ramos: () => api.get<Ramo[]>('/ramos'),
 };

@@ -3,8 +3,13 @@ import { randomUUID } from 'node:crypto';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type APIRequestContext, type Locator, type Page } from '@playwright/test';
 
-import { esperarCarga, iniciarSesion } from './ayudas';
-import { cedulaValida } from './identificacion';
+import {
+  cabecerasDeSesion,
+  crearPolizaPropia,
+  esperarCarga,
+  hoyEnGuayaquil,
+  iniciarSesion,
+} from './ayudas';
 
 /**
  * HT-13 (Claroscuro): cada pantalla cumple WCAG 2 AA con axe, muestra el foco al tabular, no
@@ -27,6 +32,10 @@ interface Pantalla {
   rol: Rol | null;
   /** Elemento que indica que la pantalla terminó de cargar. */
   lista: (page: Page) => Locator;
+  /** Acciones tras cargar la ruta, p. ej. abrir un diálogo (Etapa B). */
+  preparar?: (page: Page) => Promise<void>;
+  /** Un diálogo modal tapa las barras a propósito: no se mide el foco bajo ellas. */
+  esDialogo?: boolean;
 }
 
 const titulo = (nombre: string | RegExp) => (page: Page) =>
@@ -72,7 +81,91 @@ const PANTALLAS: Pantalla[] = [
     rol: 'CLIENTE',
     lista: titulo('Cambiar contraseña'),
   },
+  {
+    nombre: 'inicio del administrador con el saldo de la operadora',
+    ruta: '/',
+    rol: 'ADMIN',
+    lista: (page) => page.getByRole('heading', { name: 'Salud del anclaje' }),
+  },
+  {
+    nombre: 'formulario de pago',
+    ruta: '/pagos',
+    rol: 'OPERADOR',
+    preparar: (page) => page.getByTestId('boton-nuevo-pago').click(),
+    lista: dialogo('Registrar pago'),
+    esDialogo: true,
+  },
+  {
+    nombre: 'validar pago',
+    ruta: rutaConPagoRegistrado,
+    rol: 'OPERADOR',
+    preparar: (page) =>
+      page
+        .getByTestId(/^boton-validar-/)
+        .first()
+        .click(),
+    lista: dialogo('Validar pago'),
+    esDialogo: true,
+  },
+  {
+    nombre: 'rechazar pago con un chip elegido',
+    ruta: rutaConPagoRegistrado,
+    rol: 'OPERADOR',
+    preparar: async (page) => {
+      await page
+        .getByTestId(/^boton-rechazar-/)
+        .first()
+        .click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Pago duplicado' }).click();
+    },
+    lista: dialogo('Rechazar pago'),
+    esDialogo: true,
+  },
+  {
+    nombre: 'plan de cuotas editando',
+    ruta: rutaConPolizaPropia,
+    rol: 'OPERADOR',
+    preparar: async (page) => {
+      await page.getByRole('button', { name: `Plan de cuotas de ${polizaDelPlan}` }).click();
+      const plan = page.getByRole('dialog');
+      await plan.getByRole('button', { name: 'Cambiar plan' }).click();
+      await plan.getByRole('button', { name: 'Proponer' }).click();
+    },
+    lista: (page) => page.getByRole('dialog').getByRole('status'),
+    esDialogo: true,
+  },
 ];
+
+function dialogo(nombre: string) {
+  return (page: Page) => page.getByRole('dialog', { name: nombre });
+}
+
+/** Garantiza un pago REGISTRADO (sobre una póliza propia, D22) para abrir validar o rechazar. */
+async function rutaConPagoRegistrado(request: APIRequestContext, ip: string): Promise<string> {
+  const headers = await cabecerasDeSesion(request, ip, CUENTAS.OPERADOR);
+  const { id: polizaId } = await crearPolizaPropia(request, headers);
+  const pago = await request.post('/api/v1/pagos', {
+    headers,
+    data: {
+      polizaId,
+      monto: '10.00',
+      fechaPago: hoyEnGuayaquil(),
+      metodo: 'DEBITO_BANCARIO',
+      referencia: `E2E-DISENO-${randomUUID()}`,
+    },
+  });
+  expect(pago.ok(), await pago.text()).toBeTruthy();
+  return '/pagos';
+}
+
+let polizaDelPlan = '';
+
+/** Póliza propia y reciente: aparece en la primera página de `PolizasPage`. */
+async function rutaConPolizaPropia(request: APIRequestContext, ip: string): Promise<string> {
+  const headers = await cabecerasDeSesion(request, ip, CUENTAS.OPERADOR);
+  polizaDelPlan = (await crearPolizaPropia(request, headers)).numero;
+  return '/polizas';
+}
 
 const ESCRITORIO = { width: 1280, height: 800 };
 const TELEFONO = { width: 360, height: 740 };
@@ -80,13 +173,7 @@ const PASOS_DE_TABULACION = 10;
 
 /** Un recibo existente (preferiblemente anclado) o uno propio emitido al validar un pago nuevo. */
 async function rutaDetalleRecibo(request: APIRequestContext, ip: string): Promise<string> {
-  const login = await request.post('/api/v1/auth/login', {
-    headers: { 'X-Forwarded-For': ip },
-    data: CUENTAS.OPERADOR,
-  });
-  expect(login.ok()).toBeTruthy();
-  const { accessToken } = (await login.json()) as { accessToken: string };
-  const headers = { Authorization: `Bearer ${accessToken}`, 'X-Forwarded-For': ip };
+  const headers = await cabecerasDeSesion(request, ip, CUENTAS.OPERADOR);
 
   for (const filtro of ['&estado=ANCLADO', '']) {
     const respuesta = await request.get(`/api/v1/recibos?page=1&pageSize=1${filtro}`, { headers });
@@ -95,13 +182,13 @@ async function rutaDetalleRecibo(request: APIRequestContext, ip: string): Promis
   }
 
   // Sin recibos, se emite uno sobre una póliza propia: los datos del seed no se alteran (D22).
-  const polizaId = await crearPolizaPropia(request, headers);
+  const { id: polizaId } = await crearPolizaPropia(request, headers);
   const pago = await request.post('/api/v1/pagos', {
     headers,
     data: {
       polizaId,
       monto: '10.00',
-      fechaPago: new Date().toISOString().slice(0, 10),
+      fechaPago: hoyEnGuayaquil(),
       metodo: 'TRANSFERENCIA',
       referencia: `E2E-DISENO-${randomUUID()}`,
     },
@@ -117,54 +204,19 @@ async function rutaDetalleRecibo(request: APIRequestContext, ip: string): Promis
   return `/recibos/${recibo.id}`;
 }
 
-async function crearPolizaPropia(
-  request: APIRequestContext,
-  headers: Record<string, string>,
-): Promise<string> {
-  const sufijo = Date.now();
-  const cliente = await request.post('/api/v1/clientes', {
-    headers,
-    data: {
-      tipoIdentificacion: 'CEDULA',
-      identificacion: cedulaValida(sufijo),
-      nombres: 'Diseño',
-      apellidos: `E2E ${sufijo}`,
-      email: `diseno.${sufijo}@example.com`,
-    },
-  });
-  expect(cliente.ok(), await cliente.text()).toBeTruthy();
-  const { id: clienteId } = (await cliente.json()) as { id: string };
-  const aseguradoras = (await (
-    await request.get('/api/v1/aseguradoras?page=1&pageSize=1', { headers })
-  ).json()) as { data: Array<{ id: string }> };
-  const ramos = (await (await request.get('/api/v1/ramos', { headers })).json()) as Array<{
-    id: string;
-  }>;
-  const hoy = new Date();
-  const dia = (fecha: Date) => fecha.toISOString().slice(0, 10);
-  const poliza = await request.post('/api/v1/polizas', {
-    headers,
-    data: {
-      numero: `POL-DISENO-${randomUUID().slice(0, 8)}`,
-      clienteId,
-      aseguradoraId: aseguradoras.data[0].id,
-      ramoId: ramos[0].id,
-      primaTotal: '100.00',
-      fechaInicio: dia(new Date(hoy.getTime() - 30 * 86_400_000)),
-      fechaFin: dia(new Date(hoy.getTime() + 335 * 86_400_000)),
-    },
-  });
-  expect(poliza.ok(), await poliza.text()).toBeTruthy();
-  return ((await poliza.json()) as { id: string }).id;
-}
-
 async function abrir(page: Page, ruta: string, pantalla: Pantalla): Promise<void> {
   await page.goto(ruta);
+  if (pantalla.preparar) {
+    await esperarCarga(page);
+    await pantalla.preparar(page);
+  }
   await expect(pantalla.lista(page)).toBeVisible();
   await esperarCarga(page);
 }
 
 async function sinViolacionesAxe(page: Page, contexto: string): Promise<void> {
+  // A mitad del fundido de entrada el texto aún es translúcido y axe mediría un contraste falso.
+  await enReposo(page);
   const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
   const resumen = violations.map((v) => ({
     regla: v.id,
@@ -338,7 +390,9 @@ PANTALLAS.forEach((pantalla, indice) => {
     await abrir(page, ruta, pantalla);
     await sinDesborde(page, `${pantalla.nombre} a 360 px`);
     await sinViolacionesAxe(page, `${pantalla.nombre} a 360 px`);
-    if (pantalla.rol) await focoNoTapadoPorBarras(page, `${pantalla.nombre} a 360 px`);
+    if (pantalla.rol && !pantalla.esDialogo) {
+      await focoNoTapadoPorBarras(page, `${pantalla.nombre} a 360 px`);
+    }
     if (pantalla.rol === 'CLIENTE') await objetivosDe44(page, `${pantalla.nombre} a 360 px`);
 
     expect(externas, `peticiones a otros orígenes en ${pantalla.nombre}`).toEqual([]);

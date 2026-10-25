@@ -15,6 +15,8 @@ vi.mock('../api', () => ({
     cambiarEstado: vi.fn(),
     aseguradoras: vi.fn(),
     ramos: vi.fn(),
+    cuotas: vi.fn(),
+    definirCuotas: vi.fn(),
   },
 }));
 
@@ -47,6 +49,7 @@ const POLIZA: Poliza = {
   clienteNombre: 'Ana Pérez',
   aseguradoraNombre: 'Aseguradora del Pacífico C.A.',
   tienePagosValidados: false,
+  enMora: false,
   createdAt: '2026-01-01T12:00:00.000Z',
   updatedAt: '2026-01-01T12:00:00.000Z',
 };
@@ -111,6 +114,7 @@ beforeEach(() => {
   aseguradoras.mockResolvedValue(paginada([ASEGURADORA]));
   ramos.mockResolvedValue([RAMO]);
   listarClientes.mockResolvedValue(paginada([CLIENTE]));
+  vi.mocked(polizasApi.cuotas).mockResolvedValue([]);
 });
 
 afterEach(cleanup);
@@ -242,6 +246,33 @@ describe('PolizasPage', () => {
       expect(ultima?.clienteId).toBeUndefined();
       expect(ultima?.estado).toBeUndefined();
     });
+  });
+
+  it('una póliza con cuotas vencidas muestra «En mora» junto a su estado (RN-16)', async () => {
+    listar.mockResolvedValue(paginada([{ ...POLIZA, enMora: true }]));
+    montar();
+
+    const fila = (await screen.findByText('POL-0001')).closest('tr') as HTMLElement;
+    expect(within(fila).getByText('Vigente')).toBeInTheDocument();
+    expect(within(fila).getByText('En mora')).toBeInTheDocument();
+  });
+
+  it('una póliza al día no muestra «En mora»', async () => {
+    montar();
+    await screen.findByText('POL-0001');
+    expect(screen.queryByText('En mora')).not.toBeInTheDocument();
+  });
+
+  it('el botón Cuotas abre el plan de la póliza, también si ya no está vigente', async () => {
+    listar.mockResolvedValue(paginada([{ ...POLIZA, estado: 'CANCELADA' }]));
+    montar();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Plan de cuotas de POL-0001' }));
+
+    expect(
+      await screen.findByRole('dialog', { name: /Plan de cuotas · POL-0001/ }),
+    ).toBeInTheDocument();
+    expect(polizasApi.cuotas).toHaveBeenCalledWith(POLIZA_ID);
   });
 
   it('una póliza cancelada no ofrece acciones de fila', async () => {

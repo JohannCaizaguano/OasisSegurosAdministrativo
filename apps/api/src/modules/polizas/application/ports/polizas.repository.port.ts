@@ -1,4 +1,6 @@
-import type { EstadoPoliza, OrdenPoliza } from '@oasis/shared';
+import type { Cuota, EstadoPoliza, OrdenPoliza } from '@oasis/shared';
+
+import type { CuotaDelPlan } from '../../domain/plan-cuotas';
 
 import type { Poliza } from '../../domain/poliza';
 
@@ -45,11 +47,17 @@ export interface PolizasRepositoryPort {
   crear(datos: DatosCrearPoliza): Promise<Poliza>;
   listar(filtros: FiltrosPolizas): Promise<PaginaPolizas>;
   buscarPorId(id: string): Promise<Poliza | null>;
-  actualizar(id: string, datos: DatosActualizarPoliza): Promise<Poliza>;
+  /** Con `cuotas`, reemplaza el plan en la misma transacción (D13). */
+  actualizar(id: string, datos: DatosActualizarPoliza, cuotas?: CuotaDelPlan[]): Promise<Poliza>;
   cambiarEstado(id: string, estado: EstadoPoliza): Promise<Poliza>;
   existeNumero(numero: string, exceptoId?: string): Promise<boolean>;
   buscarClienteParaPoliza(id: string): Promise<{ activo: boolean } | null>;
   existeAseguradora(id: string): Promise<boolean>;
   buscarRamoActivoPorId(id: string): Promise<RamoResumen | null>;
   listarRamosActivos(): Promise<RamoResumen[]>;
+  listarCuotas(polizaId: string): Promise<Cuota[]>;
+  /** D11: en una transacción, solo si sigue VIGENTE y sin pagos VALIDADOS. */
+  reemplazarCuotas(polizaId: string, cuotas: CuotaDelPlan[]): Promise<Cuota[]>;
+  /** D14: marca VENCIDA toda cuota PENDIENTE o PARCIAL con vencimiento anterior a `hoy`. */
+  marcarCuotasVencidas(hoy: string): Promise<number>;
 }

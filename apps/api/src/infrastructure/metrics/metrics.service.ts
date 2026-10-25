@@ -8,6 +8,7 @@ import { METRICS_APP } from './metrics.constants';
  * - http_request_duration_seconds / http_requests_total: latencia y RPS del API.
  * - recibos_anclados_total / recibos_pendientes_anclaje: salud del outbox.
  * - recibo_anclaje_latencia_segundos: tiempo entre creación del recibo y anclaje.
+ * - oasis_operadora_saldo_pol: saldo de la cuenta operadora (lo publica el worker).
  */
 @Injectable()
 export class MetricsService {
@@ -21,6 +22,7 @@ export class MetricsService {
   readonly recibosAnclajeErroresTotal: Counter<'motivo'>;
   readonly reciboAnclajeLatencia: Histogram<'red'>;
   readonly recibosPendientes: Gauge<'red'>;
+  readonly operadoraSaldoPol: Gauge;
 
   constructor(@Inject(METRICS_APP) app: string) {
     // La etiqueta `app` distingue API y worker en Prometheus.
@@ -72,6 +74,12 @@ export class MetricsService {
       name: 'recibos_pendientes_anclaje',
       help: 'Recibos en estado PENDIENTE_ANCLAJE o ENVIADO',
       labelNames: ['red'],
+      registers: [this.registry],
+    });
+
+    this.operadoraSaldoPol = new Gauge({
+      name: 'oasis_operadora_saldo_pol',
+      help: 'Saldo de la cuenta operadora en POL (HU-42)',
       registers: [this.registry],
     });
   }

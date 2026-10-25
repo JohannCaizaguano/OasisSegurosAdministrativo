@@ -1,3 +1,5 @@
+import { aCentavos } from '@oasis/shared';
+
 import {
   NoEncontradoError,
   ReglaNegocioError,
@@ -28,12 +30,36 @@ export async function exigirPolizaVigente(
   }
 }
 
+/**
+ * RN-02 (D7): se exige al registrar y otra vez al validar, contra el saldo de ese momento.
+ * ponytail: dos validaciones simultáneas sobre la misma póliza aún pueden pasar las dos; techo:
+ * S4; salida: HU-36 (S5) bloquea las cuotas con FOR UPDATE dentro de la transacción de validación.
+ */
+export async function exigirMontoDentroDelSaldo(
+  pagos: PagosRepositoryPort,
+  polizaId: string,
+  monto: string,
+): Promise<void> {
+  const saldo = await pagos.saldoPoliza(polizaId);
+  if (saldo === null) {
+    throw new NoEncontradoError('Póliza', polizaId);
+  }
+  if (aCentavos(monto) > aCentavos(saldo)) {
+    throw new ReglaNegocioError('El monto supera el saldo pendiente de la póliza (RN-02)', {
+      campo: 'monto',
+      motivo: 'MONTO_SUPERA_SALDO',
+      saldo,
+    });
+  }
+}
+
 export class CrearPagoUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
   /** D14 (RN-01): la póliza debe existir y estar VIGENTE antes de resolver el método. */
   async ejecutar(datos: ComandoCrearPago): Promise<Pago> {
     await exigirPolizaVigente(this.pagos, datos.polizaId);
+    await exigirMontoDentroDelSaldo(this.pagos, datos.polizaId, datos.monto);
 
     const metodo = await this.pagos.buscarMetodoPago(datos.metodo);
     if (!metodo) {

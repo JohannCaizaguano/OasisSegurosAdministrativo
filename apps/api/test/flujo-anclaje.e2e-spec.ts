@@ -2,11 +2,13 @@ import type { INestApplication, INestApplicationContext } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
+import { fechaEnGuayaquil } from '@oasis/shared';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
 import { WorkerModule } from '../src/worker.module';
+import { crearPolizaDePrueba } from './polizas-de-prueba';
 
 /**
  * E2E del flujo completo (login → validar → anclaje → verificación pública);
@@ -30,8 +32,8 @@ describe('Flujo de anclaje (e2e)', () => {
     worker = await NestFactory.createApplicationContext(WorkerModule, { logger: false });
 
     prisma = app.get(PrismaService);
-    const poliza = await prisma.poliza.findFirstOrThrow({ where: { estado: 'VIGENTE' } });
-    polizaId = poliza.id;
+    // Póliza propia (D22): con RN-02 la del seed agotaría su saldo entre corridas.
+    polizaId = await crearPolizaDePrueba(prisma);
 
     const login = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
@@ -52,7 +54,7 @@ describe('Flujo de anclaje (e2e)', () => {
       .send({
         polizaId,
         monto: '45.75',
-        fechaPago: new Date().toISOString().slice(0, 10),
+        fechaPago: fechaEnGuayaquil(new Date()),
         metodo: 'TRANSFERENCIA',
         referencia: `E2E-${Date.now()}`,
       })

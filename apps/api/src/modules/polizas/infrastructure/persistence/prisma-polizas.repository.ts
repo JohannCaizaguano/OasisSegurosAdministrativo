@@ -1,11 +1,12 @@
-import type { EstadoPoliza, OrdenPoliza } from '@oasis/shared';
+import type { Cuota, EstadoPoliza, OrdenPoliza } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-prisma';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Prisma } from '../../../../generated/prisma/client';
 import { ConflictoError } from '../../../../shared-kernel/domain-error';
-import { numeroDuplicado } from '../../domain/errores';
+import { numeroDuplicado, planConPagosValidados } from '../../domain/errores';
+import type { CuotaDelPlan } from '../../domain/plan-cuotas';
 import { Poliza } from '../../domain/poliza';
 import type {
   DatosActualizarPoliza,
@@ -29,18 +30,25 @@ interface FilaPoliza {
   estado: 'VIGENTE' | 'VENCIDA' | 'CANCELADA';
   createdAt: Date;
   updatedAt: Date;
-  _count: { pagos: number };
+  _count: { pagos: number; cuotas: number };
   cliente?: { nombres: string | null; apellidos: string | null; razonSocial: string | null };
   aseguradora?: { nombre: string };
 }
 
-/** D11: `tienePagosValidados` sale del `_count` filtrado por VALIDADO, sin N+1. */
+/** `tienePagosValidados` (D11) y `enMora` (D15) salen de `_count` filtrados, sin N+1. */
 const INCLUIR_POLIZA = {
   cliente: true,
   aseguradora: true,
   ramo: true,
-  _count: { select: { pagos: { where: { estado: 'VALIDADO' as const } } } },
+  _count: {
+    select: {
+      pagos: { where: { estado: 'VALIDADO' as const } },
+      cuotas: { where: { estado: 'VENCIDA' as const } },
+    },
+  },
 } as const;
+
+const aFecha = (fecha: string) => new Date(`${fecha}T00:00:00.000Z`);
 
 /** D15: `recientes` es el orden por defecto. */
 const ORDEN_POLIZAS: Record<OrdenPoliza, Prisma.PolizaOrderByWithRelationInput[]> = {
@@ -64,8 +72,16 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
           aseguradoraId: datos.aseguradoraId,
           ramoId: datos.ramoId,
           primaTotal: datos.primaTotal,
-          fechaInicio: new Date(`${datos.fechaInicio}T00:00:00.000Z`),
-          fechaFin: new Date(`${datos.fechaFin}T00:00:00.000Z`),
+          fechaInicio: aFecha(datos.fechaInicio),
+          fechaFin: aFecha(datos.fechaFin),
+          // D11: pago único por defecto, creado en la misma escritura que la póliza.
+          cuotas: {
+            create: {
+              numero: 1,
+              valor: datos.primaTotal,
+              fechaVencimiento: aFecha(datos.fechaInicio),
+            },
+          },
         },
         include: INCLUIR_POLIZA,
       });
@@ -109,22 +125,19 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
   }
 
   /** Escritura condicional: solo si sigue VIGENTE y, al cambiar la prima, sin pagos validados. */
-  async actualizar(id: string, datos: DatosActualizarPoliza): Promise<Poliza> {
+  async actualizar(
+    id: string,
+    datos: DatosActualizarPoliza,
+    cuotas?: CuotaDelPlan[],
+  ): Promise<Poliza> {
     try {
-      const { count } = await this.prisma.poliza.updateMany({
-        where: {
-          id,
-          estado: 'VIGENTE',
-          ...(datos.primaTotal !== undefined ? { pagos: { none: { estado: 'VALIDADO' } } } : {}),
-        },
-        data: {
-          ...datos,
-          ...(datos.fechaInicio
-            ? { fechaInicio: new Date(`${datos.fechaInicio}T00:00:00.000Z`) }
-            : {}),
-          ...(datos.fechaFin ? { fechaFin: new Date(`${datos.fechaFin}T00:00:00.000Z`) } : {}),
-        },
-      });
+      const count = cuotas
+        ? await this.prisma.$transaction(async (tx) => {
+            const escritas = await this.escribirPoliza(tx, id, datos);
+            if (escritas > 0) await this.escribirCuotas(tx, id, cuotas);
+            return escritas;
+          })
+        : await this.escribirPoliza(this.prisma, id, datos);
       return this.releerTrasEscribir(id, count);
     } catch (error: unknown) {
       if (datos.numero !== undefined && esConflictoUnico(error)) {
@@ -132,6 +145,83 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       }
       throw error;
     }
+  }
+
+  async listarCuotas(polizaId: string): Promise<Cuota[]> {
+    const filas = await this.prisma.cuota.findMany({
+      where: { polizaId },
+      orderBy: { numero: 'asc' },
+    });
+    return filas.map((fila) => ({
+      id: fila.id,
+      numero: fila.numero,
+      valor: fila.valor.toFixed(2),
+      valorPagado: fila.valorPagado.toFixed(2),
+      fechaVencimiento: fila.fechaVencimiento.toISOString().slice(0, 10),
+      estado: fila.estado,
+    }));
+  }
+
+  /**
+   * Único borrado del sistema (ADR-020): las cuotas sin aplicaciones no son evidencia.
+   * ponytail: techo, reemplazo completo del plan; salida, versionar planes si el negocio pide
+   * historial.
+   */
+  async reemplazarCuotas(polizaId: string, cuotas: CuotaDelPlan[]): Promise<Cuota[]> {
+    await this.prisma.$transaction(async (tx) => {
+      const editable = await tx.poliza.count({
+        where: { id: polizaId, estado: 'VIGENTE', pagos: { none: { estado: 'VALIDADO' } } },
+      });
+      if (editable === 0) {
+        throw planConPagosValidados();
+      }
+      await this.escribirCuotas(tx, polizaId, cuotas);
+    });
+    return this.listarCuotas(polizaId);
+  }
+
+  async marcarCuotasVencidas(hoy: string): Promise<number> {
+    const { count } = await this.prisma.cuota.updateMany({
+      where: { estado: { in: ['PENDIENTE', 'PARCIAL'] }, fechaVencimiento: { lt: aFecha(hoy) } },
+      data: { estado: 'VENCIDA' },
+    });
+    return count;
+  }
+
+  private async escribirPoliza(
+    cliente: Prisma.TransactionClient,
+    id: string,
+    datos: DatosActualizarPoliza,
+  ): Promise<number> {
+    const { count } = await cliente.poliza.updateMany({
+      where: {
+        id,
+        estado: 'VIGENTE',
+        ...(datos.primaTotal !== undefined ? { pagos: { none: { estado: 'VALIDADO' } } } : {}),
+      },
+      data: {
+        ...datos,
+        ...(datos.fechaInicio ? { fechaInicio: aFecha(datos.fechaInicio) } : {}),
+        ...(datos.fechaFin ? { fechaFin: aFecha(datos.fechaFin) } : {}),
+      },
+    });
+    return count;
+  }
+
+  private async escribirCuotas(
+    tx: Prisma.TransactionClient,
+    polizaId: string,
+    cuotas: CuotaDelPlan[],
+  ): Promise<void> {
+    await tx.cuota.deleteMany({ where: { polizaId } });
+    await tx.cuota.createMany({
+      data: cuotas.map((c) => ({
+        polizaId,
+        numero: c.numero,
+        valor: c.valor,
+        fechaVencimiento: aFecha(c.fechaVencimiento),
+      })),
+    });
   }
 
   async cambiarEstado(id: string, estado: EstadoPoliza): Promise<Poliza> {
@@ -200,6 +290,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       fechaFin: fila.fechaFin.toISOString().slice(0, 10),
       estado: fila.estado,
       tienePagosValidados: fila._count.pagos > 0,
+      enMora: fila._count.cuotas > 0,
       clienteNombre: fila.cliente ? this.nombreCliente(fila.cliente) : undefined,
       aseguradoraNombre: fila.aseguradora?.nombre,
       createdAt: fila.createdAt.toISOString(),

@@ -51,6 +51,7 @@ import { SelectorCliente } from '@/features/clientes/components/SelectorCliente'
 import { formatearFecha, formatearMoneda } from '@/lib/format';
 
 import { FormularioPoliza } from '../components/FormularioPoliza';
+import { PlanCuotasDialog } from '../components/PlanCuotasDialog';
 import { useCambiarEstadoPoliza, useCatalogoAseguradoras, usePolizas } from '../hooks';
 
 const TODAS = 'TODAS';
@@ -83,6 +84,7 @@ export function PolizasPage() {
   const [pagina, setPagina] = useState(1);
   const [formularioAbierto, setFormularioAbierto] = useState(false);
   const [enEdicion, setEnEdicion] = useState<Poliza | null>(null);
+  const [planDe, setPlanDe] = useState<Poliza | null>(null);
   const [confirmacion, setConfirmacion] = useState<{
     poliza: Poliza;
     estado: 'VENCIDA' | 'CANCELADA';
@@ -255,13 +257,26 @@ export function PolizasPage() {
                 <TableCell className="cifra text-right font-semibold whitespace-nowrap">
                   {formatearMoneda(poliza.primaTotal)}
                 </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatearFecha(poliza.fechaInicio)} – {formatearFecha(poliza.fechaFin)}
+                <TableCell>
+                  <span className="whitespace-nowrap">{formatearFecha(poliza.fechaInicio)} –</span>{' '}
+                  <span className="whitespace-nowrap">{formatearFecha(poliza.fechaFin)}</span>
                 </TableCell>
                 <TableCell>
-                  <EstadoInsignia dominio="poliza" estado={poliza.estado} />
+                  <div className="flex flex-wrap gap-1.5">
+                    <EstadoInsignia dominio="poliza" estado={poliza.estado} />
+                    {poliza.enMora && <EstadoInsignia dominio="poliza" estado="EN_MORA" />}
+                  </div>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right whitespace-nowrap">
+                  <Button
+                    variant="quiet"
+                    size="sm"
+                    aria-label={`Plan de cuotas de ${poliza.numero}`}
+                    data-testid={`boton-cuotas-${poliza.id}`}
+                    onClick={() => setPlanDe(poliza)}
+                  >
+                    Cuotas
+                  </Button>
                   {poliza.estado === 'VIGENTE' && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -348,6 +363,15 @@ export function PolizasPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {planDe && (
+        <PlanCuotasDialog
+          key={planDe.id}
+          poliza={planDe}
+          abierto
+          alCambiarAbierto={(abierto) => !abierto && setPlanDe(null)}
+        />
+      )}
 
       <AlertDialog
         open={confirmacion !== null}

@@ -1,17 +1,31 @@
 import { z } from 'zod';
 import { ESTADOS_PAGO, METODOS_PAGO } from '../constants/estados';
+import { fechaEnGuayaquil } from '../dominio/fechas';
 import { montoDecimalSchema, paginacionQuerySchema } from './common.schema';
 import { reciboResumenSchema } from './recibo.schema';
 
 export const metodoPagoSchema = z.enum(METODOS_PAGO);
 export const estadoPagoSchema = z.enum(ESTADOS_PAGO);
 
+/** D6: monto positivo, referencia obligatoria y fecha que no sea futura en Guayaquil. */
 export const crearPagoSchema = z.object({
-  polizaId: z.uuid(),
-  monto: montoDecimalSchema,
-  fechaPago: z.iso.date(),
+  polizaId: z.uuid('Seleccione una póliza'),
+  monto: montoDecimalSchema.refine(
+    (valor) => Number(valor) > 0,
+    'El monto debe ser mayor que cero',
+  ),
+  fechaPago: z.iso
+    .date()
+    .refine(
+      (fecha) => fecha <= fechaEnGuayaquil(new Date()),
+      'La fecha de pago no puede ser futura',
+    ),
   metodo: metodoPagoSchema,
-  referencia: z.string().max(100).optional(),
+  referencia: z
+    .string()
+    .trim()
+    .min(1, 'La referencia es obligatoria')
+    .max(100, 'La referencia no puede superar los 100 caracteres'),
 });
 export type CrearPagoInput = z.infer<typeof crearPagoSchema>;
 
@@ -36,6 +50,8 @@ export const pagoSchema = z.object({
   registradoPorId: z.uuid().nullish(),
   validadoPorId: z.uuid().nullish(),
   validadoEn: z.iso.datetime().nullish(),
+  rechazadoPorId: z.uuid().nullish(),
+  rechazadoEn: z.iso.datetime().nullish(),
   /** Nota de auditoría del operador. Interna: nunca se ancla. */
   nota: z.string().nullish(),
   /** Motivo obligatorio del rechazo (HU-19). */

@@ -61,6 +61,8 @@ mueve el código a la capa que corresponde.
 - `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara;
   descubre los controladores con `test/rutas-declaradas.ts` y las exenciones siguen listadas allí.
 - La bitácora es de solo inserción: no agregues métodos de edición ni de borrado a su puerto.
+- `PUT /polizas/:id/cuotas` se audita como `MODIFICAR` sobre `PlanCuotas` (con `entidadId` = la
+  póliza). `GET /operadora/saldo` es una lectura y no se audita.
 - El filtro de usuarios de la bitácora se alimenta de `GET /bitacora/usuarios` (ADMIN), que lista
   los usuarios con actividad (incluidas las cuentas CLIENTE); `GET /usuarios` queda solo para el
   personal (D6).
@@ -78,3 +80,5 @@ mueve el código a la capa que corresponde.
 - `GET/POST/PATCH /usuarios*` es solo ADMIN; desactivar, cambiar el rol y restablecer la contraseña
   cierran todas las sesiones con `cerrarTodas` (HU-04, D8). `aseguradoras` declara `@Roles` por
   handler: lectura para ADMIN y OPERADOR, escritura solo para ADMIN (D14).
+- `GET/PUT /polizas/:id/cuotas` es del personal (ADMIN y OPERADOR); `GET /operadora/saldo`, solo
+  del ADMIN (lo que es del administrador se oculta al operador, DESIGN.md).

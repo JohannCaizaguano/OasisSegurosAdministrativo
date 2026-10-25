@@ -22,3 +22,7 @@ Planes de los sprints de dos semanas, acordados el 23/10/2026 (HT-13, deuda de S
 | `sprint-s9-plan.md` | 28/12/2026 – 08/01/2027 | HT-10, HU-47, HT-11, HU-41, HU-46, HU-40, HU-44                             |
 
 Los registros nuevos se escriben por sprint de dos semanas (`sprint-s3.md`, `sprint-s4.md`, …), con la asignación de la tabla 6-1 de [PRODUCT_BACKLOG.md](../referencia/PRODUCT_BACKLOG.md).
+
+| Informe        | Plan                | Fechas             | Estado                                       |
+| -------------- | ------------------- | ------------------ | -------------------------------------------- |
+| `sprint-s4.md` | `sprint-s4-plan.md` | 19/10 – 30/10/2026 | Cerrado; HT-15.1 pendiente del autor en Amoy |

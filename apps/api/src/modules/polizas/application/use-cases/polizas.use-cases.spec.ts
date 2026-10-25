@@ -34,10 +34,22 @@ function crearPoliza(parcial: Partial<Parameters<typeof Poliza.reconstituir>[0]>
     fechaFin: '2026-12-31',
     estado: 'VIGENTE',
     tienePagosValidados: false,
+    enMora: false,
     createdAt: '2026-10-01T12:00:00.000Z',
     updatedAt: '2026-10-01T12:00:00.000Z',
     ...parcial,
   });
+}
+
+function cuota(numero: number, valor: string, fechaVencimiento: string) {
+  return {
+    id: `c${numero}`,
+    numero,
+    valor,
+    valorPagado: '0.00',
+    fechaVencimiento,
+    estado: 'PENDIENTE' as const,
+  };
 }
 
 function crearDobles(poliza: Poliza | null = crearPoliza()) {
@@ -56,6 +68,9 @@ function crearDobles(poliza: Poliza | null = crearPoliza()) {
     }),
     cambiarEstado: jest.fn().mockResolvedValue(poliza),
     listarRamosActivos: jest.fn().mockResolvedValue([]),
+    listarCuotas: jest.fn().mockResolvedValue([cuota(1, '1500.50', '2026-01-01')]),
+    reemplazarCuotas: jest.fn(),
+    marcarCuotasVencidas: jest.fn(),
   };
   return { polizas };
 }
@@ -264,5 +279,71 @@ describe('CambiarEstadoPolizaUseCase', () => {
     await caso.ejecutar(POLIZA_ID, 'CANCELADA');
 
     expect(deps.polizas.cambiarEstado).toHaveBeenCalledWith(POLIZA_ID, 'CANCELADA');
+  });
+});
+
+describe('ActualizarPolizaUseCase y el plan de cuotas (D13)', () => {
+  const TRES = [
+    cuota(1, '500.16', '2026-01-01'),
+    cuota(2, '500.16', '2026-02-01'),
+    cuota(3, '500.18', '2026-03-01'),
+  ];
+
+  it('con plan de una cuota, la cuota toma la prima nueva', async () => {
+    const deps = crearDobles();
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, { primaTotal: '1200.00' });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { primaTotal: '1200.00' }, [
+      { numero: 1, valor: '1200.00', fechaVencimiento: '2026-01-01' },
+    ]);
+  });
+
+  it('con plan de 3 cuotas recalcula los valores, conserva las fechas y sigue cuadrando', async () => {
+    const deps = crearDobles();
+    jest.mocked(deps.polizas.listarCuotas).mockResolvedValue(TRES);
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, { primaTotal: '1000.00' });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { primaTotal: '1000.00' }, [
+      { numero: 1, valor: '333.33', fechaVencimiento: '2026-01-01' },
+      { numero: 2, valor: '333.33', fechaVencimiento: '2026-02-01' },
+      { numero: 3, valor: '333.34', fechaVencimiento: '2026-03-01' },
+    ]);
+  });
+
+  it('con una cuota, el vencimiento sigue a la nueva fecha de inicio', async () => {
+    const deps = crearDobles();
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, {
+      fechaInicio: '2026-02-01',
+    });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { fechaInicio: '2026-02-01' }, [
+      { numero: 1, valor: '1500.50', fechaVencimiento: '2026-02-01' },
+    ]);
+  });
+
+  it('422 PLAN_FUERA_DE_VIGENCIA si la vigencia nueva deja cuotas fuera', async () => {
+    const deps = crearDobles();
+    jest.mocked(deps.polizas.listarCuotas).mockResolvedValue(TRES);
+
+    await expect(
+      new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, { fechaFin: '2026-02-15' }),
+    ).rejects.toMatchObject({ detalles: { motivo: 'PLAN_FUERA_DE_VIGENCIA' } });
+    expect(deps.polizas.actualizar).not.toHaveBeenCalled();
+  });
+
+  it('una póliza sin cuotas (datos previos a S4) se edita sin plan que ajustar', async () => {
+    const deps = crearDobles();
+    jest.mocked(deps.polizas.listarCuotas).mockResolvedValue([]);
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, { primaTotal: '1200.00' });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { primaTotal: '1200.00' });
+  });
+
+  it('sin cambios de prima ni de vigencia no toca las cuotas', async () => {
+    const deps = crearDobles();
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, { numero: 'POL-009' });
+
+    expect(deps.polizas.listarCuotas).not.toHaveBeenCalled();
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { numero: 'POL-009' });
   });
 });

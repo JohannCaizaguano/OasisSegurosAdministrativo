@@ -36,3 +36,12 @@ export function useMisPagos() {
     queryFn: () => dashboardApi.misPagos(),
   });
 }
+
+export function useSaldoOperadora() {
+  return useQuery({
+    queryKey: ['operadora', 'saldo'],
+    queryFn: () => dashboardApi.saldoOperadora(),
+    // El worker lo refresca cada 5 min; el panel mira cada minuto.
+    refetchInterval: 60_000,
+  });
+}
