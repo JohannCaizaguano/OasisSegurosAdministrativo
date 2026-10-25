@@ -109,6 +109,11 @@ convenciones que la skill ya define.
 - Orden: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
 - **Agentes** (`.opencode/agents/`): superpowers dirige la ejecución y cada tarea la hace el
   especialista de su área (sección "Agentes").
+- **Proceso proporcional al tamaño:** las tareas chicas del mismo tipo y área van en un solo
+  encargo, con una revisión de la rama al final en lugar de un revisor por tarea. Mientras se
+  itera se corren solo las pruebas afectadas; la suite completa y los e2e, una vez al cierre. Un
+  pedido que agranda mucho el trabajo se estima antes y el autor decide si entra ahora
+  (lección de la Etapa C del S4, `docs/sprints/sprint-s4.md` §13.6).
 
 ## Agentes
 

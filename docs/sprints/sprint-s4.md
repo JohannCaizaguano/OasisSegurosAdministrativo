@@ -398,3 +398,20 @@ tocadas.
 | `ReciboDetallePage` conserva «Polygon» en el bloque técnico                              | —              |
 | La mora no tiene e2e: solo la marca el worker (`VencimientoCuotasTask`); queda en Vitest | —              |
 | Chunk único, sin división del código por rutas                                           | —              |
+
+### 13.6 Lecciones del proceso
+
+La parte central (M1–M8) eran diffs de 10 a 80 líneas, pero la etapa tomó casi un día de trabajo
+de agentes. Las causas, de mayor a menor:
+
+- Los pedidos agregados durante la ejecución (PDF de 39 páginas sin fuente en el repo, prototipo
+  completo, medición y optimización del bundle) costaron más que M1–M8 juntas, sin una estimación
+  previa para el autor.
+- Unos 15 lanzamientos de agentes en secuencia, cada uno en frío y con la suite completa, para
+  tareas que cabían en uno o dos encargos.
+- El repositorio vive en `/mnt/d` (disco de Windows visto desde WSL): un archivo de Vitest tardó
+  30 s, la DoD local más de 10 min y Playwright 4,3 min.
+
+Desde el S5: tareas chicas agrupadas por área con una revisión final, pruebas enfocadas mientras se
+itera, estimación previa de los pedidos que agrandan el trabajo (`AGENTS.md`, «Proceso») y el
+repositorio en el disco de Linux de WSL (`CLAUDE.md`, «Trampas conocidas»).

@@ -246,3 +246,6 @@ leyendo varios archivos.
   UTC ya es «mañana» y D6 la rechaza. Las que validan pagos usan una póliza propia
   (`test/polizas-de-prueba.ts`, `crearPolizaPropia` en `e2e/ayudas.ts`) para que RN-02 no agote
   la del seed entre corridas.
+- En WSL, un repositorio bajo `/mnt/<disco>` (sistema de archivos de Windows) hace mucho más
+  lentos `pnpm install`, Vitest, Jest, builds y Playwright; conviene clonarlo en el disco de Linux
+  (`~/`). Docker Desktop y los puertos de `dev:infra` funcionan igual desde ahí.
