@@ -55,6 +55,8 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
           node-version-file: .nvmrc
+          # Sin `pnpm install` no hay store que guardar: el caché automático por `packageManager` falla.
+          package-manager-cache: false
       # Las excepciones viven en `auditConfig` de pnpm-workspace.yaml, con motivo y fecha.
       - name: pnpm audit (dependencias de producción)
         run: pnpm audit --prod --audit-level=high
