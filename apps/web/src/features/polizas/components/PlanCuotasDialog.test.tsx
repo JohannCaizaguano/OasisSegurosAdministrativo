@@ -32,6 +32,7 @@ const CUOTA_UNICA: Cuota = {
   valorPagado: '0.00',
   fechaVencimiento: '2026-01-31',
   estado: 'PENDIENTE',
+  aplicaciones: [],
 };
 
 function montar(poliza: Poliza = POLIZA) {

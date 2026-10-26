@@ -16,7 +16,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+import { useVistaPrevia } from '../hooks';
 import { ResumenPago } from './ResumenPago';
+import { AvisoVistaPrevia } from './VistaPreviaCuotas';
 
 interface Props {
   pago: Pago;
@@ -45,6 +47,8 @@ export function ValidarPagoDialog({
     resolver: zodResolver(validarPagoSchema) as Resolver<Formulario>,
     defaultValues: { confirmado: false, nota: '' },
   });
+  const vista = useVistaPrevia(pago.polizaId, pago.monto);
+  const superaSaldo = vista?.tipo === 'supera-saldo';
   const errorConfirmado = formState.errors.confirmado?.message;
   const errorNota = formState.errors.nota?.message;
   const idConfirmado = `${baseId}-confirmado`;
@@ -62,6 +66,7 @@ export function ValidarPagoDialog({
         </DialogHeader>
 
         <ResumenPago pago={pago} />
+        <AvisoVistaPrevia vista={vista} />
 
         <form
           noValidate
@@ -127,7 +132,7 @@ export function ValidarPagoDialog({
             <Button
               type="submit"
               variant="primary"
-              disabled={enCurso}
+              disabled={enCurso || superaSaldo}
               aria-busy={enCurso}
               data-testid="confirmar-validar"
             >

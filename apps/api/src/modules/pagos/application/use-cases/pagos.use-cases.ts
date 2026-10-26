@@ -5,6 +5,7 @@ import {
   ReglaNegocioError,
   ValidacionError,
 } from '../../../../shared-kernel/domain-error';
+import { montoSuperaSaldo } from '../../domain/errores';
 import type { Pago } from '../../domain/pago';
 import type {
   ComandoCrearPago,
@@ -31,9 +32,8 @@ export async function exigirPolizaVigente(
 }
 
 /**
- * RN-02 (D7): se exige al registrar y otra vez al validar, contra el saldo de ese momento.
- * ponytail: dos validaciones simultáneas sobre la misma póliza aún pueden pasar las dos; techo:
- * S4; salida: HU-36 (S5) bloquea las cuotas con FOR UPDATE dentro de la transacción de validación.
+ * RN-02 (D7): se exige al registrar y otra vez al validar, contra el saldo de ese momento. La
+ * comprobación definitiva la repite `validarYCrearRecibo` con las cuotas bloqueadas (D12).
  */
 export async function exigirMontoDentroDelSaldo(
   pagos: PagosRepositoryPort,
@@ -45,11 +45,7 @@ export async function exigirMontoDentroDelSaldo(
     throw new NoEncontradoError('Póliza', polizaId);
   }
   if (aCentavos(monto) > aCentavos(saldo)) {
-    throw new ReglaNegocioError('El monto supera el saldo pendiente de la póliza (RN-02)', {
-      campo: 'monto',
-      motivo: 'MONTO_SUPERA_SALDO',
-      saldo,
-    });
+    throw montoSuperaSaldo(saldo);
   }
 }
 
@@ -74,7 +70,7 @@ export class ListarPagosUseCase {
   constructor(private readonly pagos: PagosRepositoryPort) {}
 
   ejecutar(filtros: FiltrosPagos): Promise<PaginaPagos> {
-    return this.pagos.listar(filtros);
+    return this.pagos.listar({ ...filtros, porValidarPrimero: true });
   }
 }
 

@@ -1,4 +1,5 @@
 import type { Cuota, EstadoPoliza, OrdenPoliza } from '@oasis/shared';
+import { fechaEnGuayaquil } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-prisma';
@@ -6,11 +7,14 @@ import { PrismaService } from '../../../../infrastructure/prisma/prisma.service'
 import { Prisma } from '../../../../generated/prisma/client';
 import { ConflictoError } from '../../../../shared-kernel/domain-error';
 import { numeroDuplicado, planConPagosValidados } from '../../domain/errores';
+import { estadoDeCuota } from '../../domain/estado-cuota';
 import type { CuotaDelPlan } from '../../domain/plan-cuotas';
 import { Poliza } from '../../domain/poliza';
 import type {
+  CuotaEnCartera,
   DatosActualizarPoliza,
   DatosCrearPoliza,
+  FiltrosCartera,
   FiltrosPolizas,
   PaginaPolizas,
   PolizasRepositoryPort,
@@ -28,6 +32,8 @@ interface FilaPoliza {
   fechaInicio: Date;
   fechaFin: Date;
   estado: 'VIGENTE' | 'VENCIDA' | 'CANCELADA';
+  cobertura: string | null;
+  condiciones: string | null;
   createdAt: Date;
   updatedAt: Date;
   _count: { pagos: number; cuotas: number };
@@ -74,6 +80,8 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
           primaTotal: datos.primaTotal,
           fechaInicio: aFecha(datos.fechaInicio),
           fechaFin: aFecha(datos.fechaFin),
+          cobertura: datos.cobertura,
+          condiciones: datos.condiciones,
           // D11: pago único por defecto, creado en la misma escritura que la póliza.
           cuotas: {
             create: {
@@ -134,7 +142,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       const count = cuotas
         ? await this.prisma.$transaction(async (tx) => {
             const escritas = await this.escribirPoliza(tx, id, datos);
-            if (escritas > 0) await this.escribirCuotas(tx, id, cuotas);
+            if (escritas > 0) await this.ajustarCuotas(tx, id, cuotas);
             return escritas;
           })
         : await this.escribirPoliza(this.prisma, id, datos);
@@ -151,6 +159,12 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     const filas = await this.prisma.cuota.findMany({
       where: { polizaId },
       orderBy: { numero: 'asc' },
+      include: {
+        aplicaciones: {
+          select: { pagoId: true, monto: true, creadoEn: true },
+          orderBy: { creadoEn: 'asc' },
+        },
+      },
     });
     return filas.map((fila) => ({
       id: fila.id,
@@ -159,6 +173,11 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       valorPagado: fila.valorPagado.toFixed(2),
       fechaVencimiento: fila.fechaVencimiento.toISOString().slice(0, 10),
       estado: fila.estado,
+      aplicaciones: fila.aplicaciones.map((aplicacion) => ({
+        pagoId: aplicacion.pagoId,
+        monto: aplicacion.monto.toFixed(2),
+        fecha: aplicacion.creadoEn.toISOString(),
+      })),
     }));
   }
 
@@ -178,6 +197,65 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       await this.escribirCuotas(tx, polizaId, cuotas);
     });
     return this.listarCuotas(polizaId);
+  }
+
+  async listarCartera(
+    filtros: FiltrosCartera,
+  ): Promise<{ items: CuotaEnCartera[]; total: number }> {
+    const where = {
+      estado: { not: 'PAGADA' as const },
+      ...(filtros.vencimientoDesde || filtros.vencimientoHasta
+        ? {
+            fechaVencimiento: {
+              ...(filtros.vencimientoDesde ? { gte: aFecha(filtros.vencimientoDesde) } : {}),
+              ...(filtros.vencimientoHasta ? { lte: aFecha(filtros.vencimientoHasta) } : {}),
+            },
+          }
+        : {}),
+      ...(filtros.clienteId || filtros.aseguradoraId
+        ? { poliza: { clienteId: filtros.clienteId, aseguradoraId: filtros.aseguradoraId } }
+        : {}),
+    };
+    const [filas, total] = await this.prisma.$transaction([
+      this.prisma.cuota.findMany({
+        where,
+        include: {
+          poliza: {
+            select: {
+              id: true,
+              numero: true,
+              ramo: { select: { nombre: true, codigo: true } },
+              aseguradora: { select: { nombre: true } },
+              cliente: { select: { id: true, nombres: true, apellidos: true, razonSocial: true } },
+            },
+          },
+        },
+        orderBy: [{ fechaVencimiento: 'asc' }, { numero: 'asc' }, { id: 'asc' }],
+        skip: (filtros.pagina - 1) * filtros.porPagina,
+        take: filtros.porPagina,
+      }),
+      this.prisma.cuota.count({ where }),
+    ]);
+    return {
+      items: filas.map((fila) => ({
+        cuotaId: fila.id,
+        numero: fila.numero,
+        valor: fila.valor.toFixed(2),
+        valorPagado: fila.valorPagado.toFixed(2),
+        fechaVencimiento: fila.fechaVencimiento.toISOString().slice(0, 10),
+        // El `where` excluye PAGADA.
+        estado: fila.estado as CuotaEnCartera['estado'],
+        poliza: {
+          id: fila.poliza.id,
+          numero: fila.poliza.numero,
+          ramo: fila.poliza.ramo.nombre,
+          ramoCodigo: fila.poliza.ramo.codigo,
+          aseguradora: fila.poliza.aseguradora.nombre,
+        },
+        cliente: { id: fila.poliza.cliente.id, nombre: this.nombreCliente(fila.poliza.cliente) },
+      })),
+      total,
+    };
   }
 
   async marcarCuotasVencidas(hoy: string): Promise<number> {
@@ -222,6 +300,35 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
         fechaVencimiento: aFecha(c.fechaVencimiento),
       })),
     });
+  }
+
+  /**
+   * D13 al editar la póliza: el plan conserva su número de cuotas, así que se actualiza en sitio.
+   * Borrar y recrear rompería las aplicaciones de pagos (HU-36) y perdería `valorPagado`.
+   */
+  private async ajustarCuotas(
+    tx: Prisma.TransactionClient,
+    polizaId: string,
+    cuotas: CuotaDelPlan[],
+  ): Promise<void> {
+    const hoy = fechaEnGuayaquil(new Date());
+    const actuales = await tx.cuota.findMany({
+      where: { polizaId },
+      select: { numero: true, valorPagado: true },
+    });
+    const pagadoPorNumero = new Map(actuales.map((c) => [c.numero, c.valorPagado.toFixed(2)]));
+    for (const cuota of cuotas) {
+      const valorPagado = pagadoPorNumero.get(cuota.numero) ?? '0.00';
+      await tx.cuota.update({
+        where: { polizaId_numero: { polizaId, numero: cuota.numero } },
+        data: {
+          valor: cuota.valor,
+          fechaVencimiento: aFecha(cuota.fechaVencimiento),
+          // Una VENCIDA cuyo vencimiento pasa al futuro deja de estarlo (y sale de la mora).
+          estado: estadoDeCuota({ ...cuota, valorPagado }, hoy),
+        },
+      });
+    }
   }
 
   async cambiarEstado(id: string, estado: EstadoPoliza): Promise<Poliza> {
@@ -290,6 +397,8 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       fechaInicio: fila.fechaInicio.toISOString().slice(0, 10),
       fechaFin: fila.fechaFin.toISOString().slice(0, 10),
       estado: fila.estado,
+      cobertura: fila.cobertura,
+      condiciones: fila.condiciones,
       tienePagosValidados: fila._count.pagos > 0,
       enMora: fila._count.cuotas > 0,
       clienteNombre: fila.cliente ? this.nombreCliente(fila.cliente) : undefined,

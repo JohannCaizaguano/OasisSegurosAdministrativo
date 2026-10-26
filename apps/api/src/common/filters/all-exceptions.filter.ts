@@ -13,6 +13,7 @@ const MAPA_DOMINIO: Record<string, number> = {
   PROHIBIDO: HttpStatus.FORBIDDEN,
   REGLA_NEGOCIO: HttpStatus.UNPROCESSABLE_ENTITY,
   DEPENDENCIA_EXTERNA: HttpStatus.BAD_GATEWAY,
+  DEMASIADAS_CONSULTAS: HttpStatus.TOO_MANY_REQUESTS,
 };
 
 interface CuerpoError {

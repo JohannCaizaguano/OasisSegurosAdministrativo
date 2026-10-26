@@ -4,6 +4,29 @@ import { montoDecimalSchema, montoPositivoSchema, paginacionQuerySchema } from '
 
 export const estadoPolizaSchema = z.enum(ESTADOS_POLIZA);
 
+const MAX_TEXTO_POLIZA = 2000;
+
+const MENSAJE_COBERTURA = 'La cobertura no puede superar los 2 000 caracteres';
+const MENSAJE_CONDICIONES = 'Las condiciones no pueden superar los 2 000 caracteres';
+
+function textoRecortado(mensajeMaximo: string) {
+  return z.string().trim().max(MAX_TEXTO_POLIZA, mensajeMaximo);
+}
+
+/** D17 al crear: vacío tras recortar equivale a no enviarlo. */
+function textoAlCrear(mensajeMaximo: string) {
+  return textoRecortado(mensajeMaximo)
+    .transform((texto) => texto || undefined)
+    .optional();
+}
+
+/** D17 al editar: vacío tras recortar es `null`, que borra el texto guardado. */
+function textoAlEditar(mensajeMaximo: string) {
+  return textoRecortado(mensajeMaximo)
+    .transform((texto) => texto || null)
+    .nullable();
+}
+
 const camposPoliza = {
   numero: z.string().trim().min(1, 'El número es obligatorio').max(50),
   aseguradoraId: z.uuid('Seleccione una aseguradora'),
@@ -11,6 +34,8 @@ const camposPoliza = {
   primaTotal: montoPositivoSchema,
   fechaInicio: z.iso.date(),
   fechaFin: z.iso.date(),
+  cobertura: textoAlCrear(MENSAJE_COBERTURA),
+  condiciones: textoAlCrear(MENSAJE_CONDICIONES),
 };
 
 function validarFechas(
@@ -34,10 +59,14 @@ export type CrearPolizaInput = z.infer<typeof crearPolizaSchema>;
 
 /** D11: `strictObject` rechaza `clienteId` y `estado`; el cliente no cambia. */
 export const actualizarPolizaSchema = z
-  .strictObject(camposPoliza)
+  .strictObject({
+    ...camposPoliza,
+    cobertura: textoAlEditar(MENSAJE_COBERTURA),
+    condiciones: textoAlEditar(MENSAJE_CONDICIONES),
+  })
   .partial()
   .superRefine(validarFechas)
-  .refine((value) => Object.keys(value).length > 0, {
+  .refine((value) => Object.values(value).some((campo) => campo !== undefined), {
     message: 'Debe enviar al menos un campo',
   });
 export type ActualizarPolizaInput = z.infer<typeof actualizarPolizaSchema>;
@@ -58,6 +87,8 @@ export const polizaSchema = z.object({
   ramoCodigo: z.string(),
   // La respuesta refleja lo guardado; la prima positiva se exige en la entrada.
   primaTotal: montoDecimalSchema,
+  cobertura: z.string().nullable(),
+  condiciones: z.string().nullable(),
   estado: estadoPolizaSchema,
   clienteNombre: z.string().optional(),
   aseguradoraNombre: z.string().optional(),

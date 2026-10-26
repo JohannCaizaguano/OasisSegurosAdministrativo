@@ -1,4 +1,4 @@
-import type { EstadoPago, MetodoPago } from '@oasis/shared';
+import type { EstadoPago, EstadoRecibo, MetodoPago } from '@oasis/shared';
 
 import { Entity } from '../../../shared-kernel/entity';
 
@@ -24,6 +24,14 @@ export interface PropsPago {
   nota: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Recibo emitido al validar; ausente si la consulta no lo leyó. */
+  recibo?: ReciboDelPago | null;
+}
+
+export interface ReciboDelPago {
+  id: string;
+  codigo: string;
+  estado: EstadoRecibo;
 }
 
 export class Pago extends Entity<PropsPago> {
@@ -101,6 +109,10 @@ export class Pago extends Entity<PropsPago> {
 
   get updatedAt(): string {
     return this.props.updatedAt;
+  }
+
+  get recibo(): ReciboDelPago | null {
+    return this.props.recibo ?? null;
   }
 
   puedeValidarse(): boolean {

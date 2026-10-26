@@ -9,6 +9,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
+import { cedulaValida } from './identificaciones';
 import type { RutaDeclarada } from './rutas-declaradas';
 import { rutasDeclaradas } from './rutas-declaradas';
 
@@ -110,6 +111,26 @@ describe('Acceso por rol (e2e)', () => {
     expect(claves).not.toContain('PolizasController.eliminar');
   });
 
+  it('la matriz de S5 abre la verificación al CLIENTE y protege las rutas nuevas (D3, D7, D14, D16)', () => {
+    const rolesDe = (metodo: RequestMethod, ruta: string) =>
+      RUTAS.find((r) => r.metodo === metodo && r.ruta === ruta)
+        ?.roles.slice()
+        .sort();
+
+    expect(rolesDe(RequestMethod.GET, '/api/v1/recibos/:codigo/verificacion')).toEqual([
+      'ADMIN',
+      'CLIENTE',
+      'OPERADOR',
+    ]);
+    expect(rolesDe(RequestMethod.GET, '/api/v1/recibos/:id/imprimible')).toEqual([
+      'ADMIN',
+      'OPERADOR',
+    ]);
+    expect(rolesDe(RequestMethod.GET, '/api/v1/mis-recibos/:id/imprimible')).toEqual(['CLIENTE']);
+    expect(rolesDe(RequestMethod.GET, '/api/v1/pagos/:id')).toEqual(['ADMIN', 'OPERADOR']);
+    expect(rolesDe(RequestMethod.GET, '/api/v1/cuotas')).toEqual(['ADMIN', 'OPERADOR']);
+  });
+
   it('el CLIENTE solo obtiene sus pólizas y pagos', async () => {
     const sufijo = Date.now();
     const aseguradora = await prisma.aseguradora.findFirstOrThrow();
@@ -120,8 +141,8 @@ describe('Acceso por rol (e2e)', () => {
 
     const otroCliente = await prisma.cliente.create({
       data: {
-        tipoIdentificacion: 'PASAPORTE',
-        identificacion: `E2E-${sufijo}`,
+        tipoIdentificacion: 'CEDULA',
+        identificacion: cedulaValida(sufijo + 3030),
         nombres: 'Otro',
         apellidos: 'Cliente',
         email: `otro.${sufijo}@example.com`,
@@ -196,11 +217,12 @@ describe('Acceso por rol (e2e)', () => {
     expect(polizasDePagosSeed).not.toContain(poliza.id);
     expect(polizasDePagosOtro).toContain(poliza.id);
 
-    // La matriz ya cubre 403 en /recibos, /recibos/:id y /recibos/:codigo/verificacion.
-    await request(app.getHttpServer())
-      .get(`/api/v1/recibos/${ID_CUALQUIERA}/verificacion`)
+    // La matriz cubre el 403 en /recibos y /recibos/:id; la verificación admite al CLIENTE (D3).
+    const verificacion = await request(app.getHttpServer())
+      .get('/api/v1/recibos/RC-000000000000/verificacion')
       .set('X-Forwarded-For', ip())
       .set('Authorization', `Bearer ${tokenOtro}`)
-      .expect(403);
+      .expect(200);
+    expect(verificacion.body.estado).toBe('NO_ENCONTRADO');
   });
 });

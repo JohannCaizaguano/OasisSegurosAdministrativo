@@ -41,8 +41,6 @@ onlyBuiltDependencies:
 # Revisión: 08/11/2026.
 auditConfig:
   ignoreGhsas:
-    # zod 4.6.6 (corrección) se publicó el 11/10/2026: aún no cumple dos semanas.
-    - GHSA-mrhx-c7xc-m3w5
     # body-parser 2.4.0 y multer 2.5.0 se publicaron el 22/10/2026 (vía express de NestJS).
     - GHSA-27r3-jxmh-p828
     - GHSA-q7qp-rjg7-q26m

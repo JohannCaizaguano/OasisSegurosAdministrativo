@@ -140,6 +140,7 @@ describe('PrismaPolizasRepository', () => {
 
   it('reemplaza el plan dentro de una transacción que vuelve a exigir cero pagos validados', async () => {
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
       poliza: { count: jest.fn().mockResolvedValue(1) },
       cuota: { deleteMany: jest.fn(), createMany: jest.fn() },
     };
@@ -168,8 +169,218 @@ describe('PrismaPolizasRepository', () => {
     });
   });
 
+  it('cada cuota trae sus aplicaciones { pagoId, monto, fecha } en la misma consulta (D14)', async () => {
+    const prisma = {
+      cuota: {
+        findMany: jest.fn().mockResolvedValue([
+          {
+            id: 'c1',
+            numero: 1,
+            valor: new Prisma.Decimal('100'),
+            valorPagado: new Prisma.Decimal('40'),
+            fechaVencimiento: new Date('2026-11-01T00:00:00.000Z'),
+            estado: 'PARCIAL',
+            aplicaciones: [
+              {
+                pagoId: 'p1',
+                monto: new Prisma.Decimal('40'),
+                creadoEn: new Date('2026-10-02T15:00:00.000Z'),
+              },
+            ],
+          },
+        ]),
+      },
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    const cuotas = await repositorio.listarCuotas('1');
+
+    expect(cuotas[0]?.aplicaciones).toEqual([
+      { pagoId: 'p1', monto: '40.00', fecha: '2026-10-02T15:00:00.000Z' },
+    ]);
+    expect(cuotas[0]?.valorPagado).toBe('40.00');
+    expect(prisma.cuota.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('al ajustar el plan por la vigencia actualiza las cuotas en sitio y no borra las que tienen aplicaciones (HU-36)', async () => {
+    const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      poliza: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      cuota: {
+        findMany: jest
+          .fn()
+          .mockResolvedValue([{ numero: 1, valorPagado: new Prisma.Decimal('0') }]),
+        update: jest.fn(),
+        deleteMany: jest.fn(),
+        createMany: jest.fn(),
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
+      poliza: { findUniqueOrThrow: jest.fn().mockResolvedValue(FILA) },
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    await repositorio.actualizar('1', { fechaInicio: '2099-02-01' }, [
+      { numero: 1, valor: '1500.50', fechaVencimiento: '2099-02-01' },
+    ]);
+
+    expect(tx.cuota.deleteMany).not.toHaveBeenCalled();
+    expect(tx.cuota.update).toHaveBeenCalledWith({
+      where: { polizaId_numero: { polizaId: '1', numero: 1 } },
+      data: {
+        valor: '1500.50',
+        fechaVencimiento: new Date('2099-02-01T00:00:00.000Z'),
+        estado: 'PENDIENTE',
+      },
+    });
+  });
+
+  it('una cuota VENCIDA cuyo vencimiento se mueve al futuro deja de estarlo: PARCIAL si tiene abonos (revisión T20)', async () => {
+    const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      poliza: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      cuota: {
+        findMany: jest.fn().mockResolvedValue([
+          { numero: 1, valorPagado: new Prisma.Decimal('40') },
+          { numero: 2, valorPagado: new Prisma.Decimal('0') },
+        ]),
+        update: jest.fn(),
+      },
+    };
+    const prisma = {
+      $transaction: jest.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
+      poliza: { findUniqueOrThrow: jest.fn().mockResolvedValue(FILA) },
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    await repositorio.actualizar('1', { fechaInicio: '2000-01-01' }, [
+      { numero: 1, valor: '100.00', fechaVencimiento: '2099-01-01' },
+      { numero: 2, valor: '100.00', fechaVencimiento: '2000-01-01' },
+    ]);
+
+    const estados = tx.cuota.update.mock.calls.map(
+      ([argumento]) => (argumento as { data: { estado: string } }).data.estado,
+    );
+    expect(estados).toEqual(['PARCIAL', 'VENCIDA']);
+  });
+
+  it('cobertura y condiciones en null borran la columna y ausentes no la tocan (D17)', async () => {
+    const prisma = {
+      poliza: {
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        findUniqueOrThrow: jest.fn().mockResolvedValue(FILA),
+      },
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    await repositorio.actualizar('1', { cobertura: null, numero: 'POL-009' });
+
+    const { data } = prisma.poliza.updateMany.mock.calls[0][0] as { data: object };
+    expect(data).toEqual({ cobertura: null, numero: 'POL-009' });
+  });
+
+  it('expone cobertura y condiciones guardadas (HU-51)', async () => {
+    const prisma = {
+      poliza: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({ ...FILA, cobertura: 'Todo riesgo', condiciones: null }),
+      },
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    const poliza = await repositorio.buscarPorId('1');
+
+    expect(poliza?.cobertura).toBe('Todo riesgo');
+    expect(poliza?.condiciones).toBeNull();
+  });
+
+  it('cartera: excluye PAGADA, filtra por vencimiento, cliente y aseguradora, y ordena por vencimiento (D16)', async () => {
+    const prisma = {
+      cuota: {
+        findMany: jest.fn().mockReturnValue([
+          {
+            id: 'c1',
+            numero: 2,
+            valor: new Prisma.Decimal('100'),
+            valorPagado: new Prisma.Decimal('40.5'),
+            fechaVencimiento: new Date('2026-10-22T00:00:00.000Z'),
+            estado: 'PARCIAL',
+            poliza: {
+              id: 'p1',
+              numero: 'POL-1',
+              ramo: { nombre: 'Vehículos', codigo: 'VEHICULOS' },
+              aseguradora: { nombre: 'Aseguradora del Pacífico C.A.' },
+              cliente: {
+                id: 'cl1',
+                nombres: 'María',
+                apellidos: 'Cabrera',
+                razonSocial: null,
+              },
+            },
+          },
+        ]),
+        count: jest.fn().mockReturnValue(1),
+      },
+      $transaction: jest.fn((consultas: unknown[]) => Promise.all(consultas)),
+    };
+    const repositorio = new PrismaPolizasRepository(prisma as unknown as PrismaService);
+
+    const { items, total } = await repositorio.listarCartera({
+      vencimientoHasta: '2026-11-01',
+      clienteId: 'cl1',
+      aseguradoraId: 'as1',
+      pagina: 2,
+      porPagina: 10,
+    });
+
+    const where = {
+      estado: { not: 'PAGADA' },
+      fechaVencimiento: { lte: new Date('2026-11-01T00:00:00.000Z') },
+      poliza: { clienteId: 'cl1', aseguradoraId: 'as1' },
+    };
+    expect(prisma.cuota.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where,
+        orderBy: [{ fechaVencimiento: 'asc' }, { numero: 'asc' }, { id: 'asc' }],
+        skip: 10,
+        take: 10,
+      }),
+    );
+    expect(prisma.cuota.count).toHaveBeenCalledWith({ where });
+    expect(total).toBe(1);
+    expect(items).toEqual([
+      {
+        cuotaId: 'c1',
+        numero: 2,
+        valor: '100.00',
+        valorPagado: '40.50',
+        fechaVencimiento: '2026-10-22',
+        estado: 'PARCIAL',
+        poliza: {
+          id: 'p1',
+          numero: 'POL-1',
+          ramo: 'Vehículos',
+          ramoCodigo: 'VEHICULOS',
+          aseguradora: 'Aseguradora del Pacífico C.A.',
+        },
+        cliente: { id: 'cl1', nombre: 'María Cabrera' },
+      },
+    ]);
+  });
+
+  it.todo(
+    'reemplazar el plan bloquea las cuotas con FOR UPDATE antes de contar los pagos validados (Q16)',
+  );
+
+  it.todo(
+    'editar prima o vigencia bloquea las cuotas antes de la escritura condicional; si cambió, 409 POLIZA_MODIFICADA (Q16)',
+  );
+
   it('422 PLAN_CON_PAGOS_VALIDADOS si un pago se validó antes de reemplazar', async () => {
     const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
       poliza: { count: jest.fn().mockResolvedValue(0) },
       cuota: { deleteMany: jest.fn(), createMany: jest.fn() },
     };
@@ -198,5 +409,7 @@ const FILA = {
   estado: 'VIGENTE' as const,
   createdAt: new Date('2026-10-01T00:00:00.000Z'),
   updatedAt: new Date('2026-10-01T00:00:00.000Z'),
+  cobertura: null,
+  condiciones: null,
   _count: { pagos: 0, cuotas: 0 },
 };

@@ -83,4 +83,17 @@ describe('ListarBitacoraUseCase', () => {
     expect(espia.consultas[0].desde).toBeUndefined();
     expect(espia.consultas[0].hastaExclusivo).toBeUndefined();
   });
+
+  it('pasa entidad y entidadId al repositorio (D10)', async () => {
+    const espia = new BitacoraEspia();
+
+    await new ListarBitacoraUseCase(espia).ejecutar({
+      pagina: 1,
+      porPagina: 1,
+      entidad: 'Recibo',
+      entidadId: 'r1',
+    });
+
+    expect(espia.consultas[0]).toMatchObject({ entidad: 'Recibo', entidadId: 'r1' });
+  });
 });

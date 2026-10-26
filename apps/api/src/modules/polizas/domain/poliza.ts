@@ -16,6 +16,9 @@ export interface PropsPoliza {
   fechaInicio: string;
   fechaFin: string;
   estado: EstadoPoliza;
+  /** HU-51 (D17): textos libres; null si no se capturaron. */
+  cobertura: string | null;
+  condiciones: string | null;
   /** D11: si tiene pagos VALIDADOS, la prima no se puede editar. */
   tienePagosValidados: boolean;
   /** RN-16 (D15): tiene al menos una cuota VENCIDA. */
@@ -73,6 +76,14 @@ export class Poliza extends Entity<PropsPoliza> {
 
   get estado(): EstadoPoliza {
     return this.props.estado;
+  }
+
+  get cobertura(): string | null {
+    return this.props.cobertura;
+  }
+
+  get condiciones(): string | null {
+    return this.props.condiciones;
   }
 
   get tienePagosValidados(): boolean {

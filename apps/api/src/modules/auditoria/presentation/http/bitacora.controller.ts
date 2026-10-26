@@ -29,6 +29,8 @@ export class BitacoraController {
       porPagina: query.pageSize,
       usuarioId: query.usuarioId,
       accion: query.accion,
+      entidad: query.entidad,
+      entidadId: query.entidadId,
       desde: query.desde,
       hasta: query.hasta,
     });

@@ -9,6 +9,8 @@ export const listarBitacoraQuerySchema = paginacionQuerySchema
   .extend({
     usuarioId: idUuidSchema.optional(),
     accion: accionAuditoriaSchema.optional(),
+    entidad: z.string().trim().min(1).max(60).optional(),
+    entidadId: z.string().trim().min(1).max(64).optional(),
     desde: z.iso.date().optional(),
     hasta: z.iso.date().optional(),
   })

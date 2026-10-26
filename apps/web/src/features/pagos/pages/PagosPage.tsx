@@ -1,8 +1,8 @@
 import type { EstadoPago, Pago } from '@oasis/shared';
 import { ESTADOS_PAGO, ETIQUETAS_METODO_PAGO } from '@oasis/shared';
 import { Plus } from 'lucide-react';
-import { useId, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { AvisoError, AvisoVacio, EsqueletoTabla } from '@/components/DataState';
 import { EstadoInsignia } from '@/components/EstadoInsignia';
@@ -17,7 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Campo } from '@/components/Campo';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SelectorCliente } from '@/features/clientes/components/SelectorCliente';
 import {
   Select,
   SelectContent,
@@ -34,8 +37,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatearFecha, formatearMoneda } from '@/lib/format';
+import { useFiltrosEnUrl } from '@/lib/use-filtros-url';
 
+import { DetallePagoSheet } from '../components/DetallePagoSheet';
 import { FormularioPago } from '../components/FormularioPago';
+import { SelectorPoliza } from '../components/SelectorPoliza';
 import { RechazarPagoDialog } from '../components/RechazarPagoDialog';
 import { ValidarPagoDialog } from '../components/ValidarPagoDialog';
 import { usePagos, useRechazarPago, useValidarPago } from '../hooks';
@@ -49,13 +55,22 @@ const ESTADOS: Array<{ valor: EstadoPago | 'TODOS'; texto: string }> = [
   { valor: 'RECHAZADO', texto: 'Rechazados' },
 ];
 
+type ClaveFiltro = 'estado' | 'desde' | 'hasta' | 'polizaId' | 'clienteId';
+
+const ERROR_RANGO = 'La fecha «hasta» no puede ser anterior a «desde»';
+
 export function PagosPage() {
-  const idFiltro = useId();
-  const [parametros, setParametros] = useSearchParams();
-  const parametro = parametros.get('estado');
+  const filtros = useFiltrosEnUrl<ClaveFiltro>();
+  const parametro = filtros.leer('estado');
   const estado: EstadoPago | 'TODOS' = ESTADOS_PAGO.find((e) => e === parametro) ?? 'TODOS';
+  const desde = filtros.leer('desde');
+  const hasta = filtros.leer('hasta');
+  const rangoInvalido = !!desde && !!hasta && desde > hasta;
   const [pagina, setPagina] = useState(1);
+  // Los combobox son no controlados: se remontan para vaciarlos al limpiar los filtros.
+  const [generacion, setGeneracion] = useState(0);
   const [pendiente, setPendiente] = useState<{ pago: Pago; accion: AccionPago } | null>(null);
+  const [detalleDe, setDetalleDe] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
 
   const validar = useValidarPago();
@@ -65,15 +80,29 @@ export function PagosPage() {
     page: pagina,
     pageSize: 20,
     estado: estado === 'TODOS' ? undefined : estado,
+    desde,
+    hasta: rangoInvalido ? undefined : hasta,
+    polizaId: filtros.leer('polizaId'),
+    clienteId: filtros.leer('clienteId'),
   });
 
   const enCurso = validar.isPending || rechazar.isPending;
   const registrados = consulta.data?.data.filter((p) => p.estado === 'REGISTRADO').length ?? 0;
   const meta = consulta.data?.meta;
 
-  function cambiarEstado(valor: EstadoPago | 'TODOS') {
-    setParametros(valor === 'TODOS' ? {} : { estado: valor }, { replace: true });
+  function filtrar(cambios: Partial<Record<ClaveFiltro, string | undefined>>) {
+    filtros.cambiar(cambios);
     setPagina(1);
+  }
+
+  function cambiarEstado(valor: EstadoPago | 'TODOS') {
+    filtrar({ estado: valor === 'TODOS' ? undefined : valor });
+  }
+
+  function limpiarFiltros() {
+    filtros.limpiar();
+    setPagina(1);
+    setGeneracion((valor) => valor + 1);
   }
 
   function cerrarDialogo() {
@@ -94,14 +123,14 @@ export function PagosPage() {
         </Button>
       </Encabezado>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="grid w-full gap-1.5 sm:w-56">
-          <Label htmlFor={idFiltro}>Filtrar por estado</Label>
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="grid w-full gap-2 sm:w-52">
+          <Label htmlFor="filtro-estado-pagos">Filtrar por estado</Label>
           <Select
             value={estado}
             onValueChange={(valor) => cambiarEstado(valor as EstadoPago | 'TODOS')}
           >
-            <SelectTrigger id={idFiltro} data-testid="filtro-estado-pagos">
+            <SelectTrigger id="filtro-estado-pagos" data-testid="filtro-estado-pagos">
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
@@ -113,6 +142,61 @@ export function PagosPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="w-full sm:w-44">
+          <Campo id="filtro-desde-pagos" label="Desde">
+            {(atributos) => (
+              <Input
+                {...atributos}
+                type="date"
+                value={desde ?? ''}
+                onChange={(evento) => filtrar({ desde: evento.target.value })}
+              />
+            )}
+          </Campo>
+        </div>
+        <div className="w-full sm:w-44">
+          <Campo
+            id="filtro-hasta-pagos"
+            label="Hasta"
+            error={rangoInvalido ? ERROR_RANGO : undefined}
+          >
+            {(atributos) => (
+              <Input
+                {...atributos}
+                type="date"
+                value={hasta ?? ''}
+                min={desde}
+                onChange={(evento) => filtrar({ hasta: evento.target.value })}
+              />
+            )}
+          </Campo>
+        </div>
+        <div className="grid w-full gap-2 sm:w-60">
+          <Label htmlFor="filtro-poliza-pagos">Póliza</Label>
+          <SelectorPoliza
+            key={`poliza-${generacion}`}
+            id="filtro-poliza-pagos"
+            onChange={(id) => filtrar({ polizaId: id })}
+          />
+        </div>
+        <div className="grid w-full gap-2 sm:w-64">
+          <Label htmlFor="filtro-cliente-pagos">Cliente</Label>
+          <SelectorCliente
+            key={`cliente-${generacion}`}
+            id="filtro-cliente-pagos"
+            onChange={(id) => filtrar({ clienteId: id })}
+          />
+        </div>
+        {filtros.hayFiltros ? (
+          <Button
+            type="button"
+            variant="quiet"
+            className="self-end sm:mt-[30px] sm:self-start"
+            onClick={limpiarFiltros}
+          >
+            Limpiar filtros
+          </Button>
+        ) : null}
       </div>
 
       <LeyendaEstados dominio="pago" />
@@ -127,20 +211,15 @@ export function PagosPage() {
           ) : consulta.isError ? (
             <AvisoError error={consulta.error} alReintentar={() => void consulta.refetch()} />
           ) : consulta.data?.data.length === 0 ? (
-            estado === 'TODOS' ? (
+            !filtros.hayFiltros ? (
               <AvisoVacio descripcion="Use «Registrar pago» para registrar el primero.">
                 Sin pagos registrados
               </AvisoVacio>
             ) : (
               <AvisoVacio
-                descripcion="Pruebe con «Todos los estados»."
+                descripcion="Pruebe con otros filtros o quítelos."
                 accion={
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => cambiarEstado('TODOS')}
-                  >
+                  <Button type="button" variant="secondary" size="sm" onClick={limpiarFiltros}>
                     Quitar filtro
                   </Button>
                 }
@@ -184,34 +263,45 @@ export function PagosPage() {
                       <EstadoInsignia dominio="pago" estado={pago.estado} />
                     </TableCell>
                     <TableCell className="text-right">
-                      {pago.estado === 'REGISTRADO' ? (
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="quiet"
-                            data-testid={`boton-validar-${pago.id}`}
-                            disabled={enCurso}
-                            onClick={() => setPendiente({ pago, accion: 'validar' })}
-                          >
-                            Validar
-                          </Button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="danger-outline"
-                            data-testid={`boton-rechazar-${pago.id}`}
-                            disabled={enCurso}
-                            onClick={() => setPendiente({ pago, accion: 'rechazar' })}
-                          >
-                            Rechazar
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-caption whitespace-nowrap text-muted-foreground">
-                          {formatearFecha(pago.validadoEn ?? pago.rechazadoEn)}
-                        </span>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="quiet"
+                          aria-label={`Ver detalle del pago ${pago.referencia ?? formatearFecha(pago.fechaPago)}`}
+                          onClick={() => setDetalleDe(pago.id)}
+                        >
+                          Detalle
+                        </Button>
+                        {pago.estado === 'REGISTRADO' ? (
+                          <>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="quiet"
+                              data-testid={`boton-validar-${pago.id}`}
+                              disabled={enCurso}
+                              onClick={() => setPendiente({ pago, accion: 'validar' })}
+                            >
+                              Validar
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="danger-outline"
+                              data-testid={`boton-rechazar-${pago.id}`}
+                              disabled={enCurso}
+                              onClick={() => setPendiente({ pago, accion: 'rechazar' })}
+                            >
+                              Rechazar
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-caption whitespace-nowrap text-muted-foreground">
+                            {formatearFecha(pago.validadoEn ?? pago.rechazadoEn)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -282,6 +372,8 @@ export function PagosPage() {
           {registrando && <FormularioPago alGuardar={() => setRegistrando(false)} />}
         </DialogContent>
       </Dialog>
+
+      <DetallePagoSheet pagoId={detalleDe} alCerrar={() => setDetalleDe(null)} />
 
       {pendiente?.accion === 'validar' && (
         <ValidarPagoDialog

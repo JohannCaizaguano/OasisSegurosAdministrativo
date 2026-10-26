@@ -12,6 +12,8 @@ export interface FiltrosPagos {
   desde?: string;
   hasta?: string;
   q?: string;
+  /** D15, solo para el personal: REGISTRADO primero. Sin ella, lo más reciente primero. */
+  porValidarPrimero?: boolean;
   pagina: number;
   porPagina: number;
 }
@@ -55,11 +57,21 @@ export interface ResultadoValidacion {
   recibo: Recibo;
 }
 
+/** D14: el pago con lo que aplicó a cada cuota. */
+export interface DetallePago {
+  pago: Pago;
+  aplicaciones: { cuotaNumero: number; monto: string }[];
+}
+
 export interface PagosRepositoryPort {
   crear(datos: DatosCrearPago): Promise<Pago>;
   listar(filtros: FiltrosPagos): Promise<PaginaPagos>;
   buscarPorId(id: string): Promise<Pago | null>;
-  /** En UNA transacción: pago = VALIDADO y creación del Recibo PENDIENTE_ANCLAJE. */
+  buscarDetalle(id: string): Promise<DetallePago | null>;
+  /**
+   * En UNA transacción: bloquea las cuotas de la póliza, exige RN-02 con ellas, aplica el pago
+   * (HU-36), marca el pago VALIDADO y crea el Recibo PENDIENTE_ANCLAJE.
+   */
   validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion>;
   rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago>;
   /** Resuelve un método de pago activo por su código (catálogo `MetodoPago`). */

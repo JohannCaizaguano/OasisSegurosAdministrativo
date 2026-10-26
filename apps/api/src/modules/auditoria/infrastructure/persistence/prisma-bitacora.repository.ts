@@ -30,6 +30,8 @@ export class PrismaBitacoraRepository implements BitacoraRepositoryPort {
     const where = {
       usuarioId: filtros.usuarioId,
       accion: filtros.accion,
+      entidad: filtros.entidad,
+      entidadId: filtros.entidadId,
       creadoEn:
         filtros.desde || filtros.hastaExclusivo
           ? { gte: filtros.desde, lt: filtros.hastaExclusivo }

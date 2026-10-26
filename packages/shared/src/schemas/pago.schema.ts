@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { ESTADOS_PAGO, METODOS_PAGO } from '../constants/estados';
 import { fechaEnGuayaquil } from '../dominio/fechas';
-import { montoDecimalSchema, paginacionQuerySchema } from './common.schema';
-import { reciboResumenSchema } from './recibo.schema';
+import { montoDecimalSchema, paginacionQuerySchema, validarRangoFechas } from './common.schema';
+import { estadoReciboSchema, reciboResumenSchema } from './recibo.schema';
 
 export const metodoPagoSchema = z.enum(METODOS_PAGO);
 export const estadoPagoSchema = z.enum(ESTADOS_PAGO);
@@ -29,13 +29,16 @@ export const crearPagoSchema = z.object({
 });
 export type CrearPagoInput = z.infer<typeof crearPagoSchema>;
 
-export const listarPagosQuerySchema = paginacionQuerySchema.extend({
-  estado: estadoPagoSchema.optional(),
-  polizaId: z.uuid().optional(),
-  desde: z.iso.date().optional(),
-  hasta: z.iso.date().optional(),
-  q: z.string().trim().min(1).max(120).optional(),
-});
+export const listarPagosQuerySchema = paginacionQuerySchema
+  .extend({
+    estado: estadoPagoSchema.optional(),
+    polizaId: z.uuid().optional(),
+    clienteId: z.uuid().optional(),
+    desde: z.iso.date().optional(),
+    hasta: z.iso.date().optional(),
+    q: z.string().trim().min(1).max(120).optional(),
+  })
+  .superRefine(validarRangoFechas);
 export type ListarPagosQuery = z.infer<typeof listarPagosQuerySchema>;
 
 export const pagoSchema = z.object({
@@ -60,6 +63,21 @@ export const pagoSchema = z.object({
   updatedAt: z.iso.datetime(),
 });
 export type Pago = z.infer<typeof pagoSchema>;
+
+/** Fila de `/mis-pagos` (D7): el recibo solo existe si el pago fue validado. */
+export const pagoClienteSchema = pagoSchema.extend({
+  recibo: z.object({ id: z.uuid(), codigo: z.string() }).nullable(),
+});
+export type PagoCliente = z.infer<typeof pagoClienteSchema>;
+
+/** `GET /pagos/:id` (D14): a qué cuotas se aplicó el pago y su recibo, si fue validado. */
+export const pagoDetalleSchema = pagoSchema.extend({
+  aplicaciones: z.array(
+    z.object({ cuotaNumero: z.number().int().positive(), monto: montoDecimalSchema }),
+  ),
+  recibo: z.object({ id: z.uuid(), codigo: z.string(), estado: estadoReciboSchema }).nullable(),
+});
+export type PagoDetalle = z.infer<typeof pagoDetalleSchema>;
 
 export const validarPagoResponseSchema = z.object({
   pago: pagoSchema,

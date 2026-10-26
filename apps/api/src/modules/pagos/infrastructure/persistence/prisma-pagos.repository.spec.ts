@@ -106,17 +106,49 @@ describe('PrismaPagosRepository', () => {
     await expect(repositorio.saldoPoliza('b')).resolves.toBeNull();
   });
 
-  it('lista primero lo más reciente: fecha de pago y, a igual fecha, el último registrado', async () => {
+  it('lista primero los pagos por validar: estado (orden del enum), fecha de pago y registro (D15)', async () => {
     const prisma = {
       pago: { findMany: jest.fn().mockReturnValue([]), count: jest.fn().mockReturnValue(0) },
       $transaction: jest.fn((consultas: unknown[]) => Promise.all(consultas)),
     };
     const repositorio = new PrismaPagosRepository(prisma as unknown as PrismaService);
 
-    await repositorio.listar({ pagina: 1, porPagina: 20 });
+    await repositorio.listar({ pagina: 2, porPagina: 20, porValidarPrimero: true });
+
+    expect(prisma.pago.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: [{ estado: 'asc' }, { fechaPago: 'desc' }, { createdAt: 'desc' }],
+        skip: 20,
+        take: 20,
+      }),
+    );
+  });
+
+  it('sin la marca del personal ordena por fecha de pago y registro, lo más reciente primero', async () => {
+    const prisma = {
+      pago: { findMany: jest.fn().mockReturnValue([]), count: jest.fn().mockReturnValue(0) },
+      $transaction: jest.fn((consultas: unknown[]) => Promise.all(consultas)),
+    };
+    const repositorio = new PrismaPagosRepository(prisma as unknown as PrismaService);
+
+    await repositorio.listar({ pagina: 1, porPagina: 20, clienteId: 'c1' });
 
     expect(prisma.pago.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ orderBy: [{ fechaPago: 'desc' }, { createdAt: 'desc' }] }),
     );
+  });
+
+  it('filtra por cliente a través de la póliza y cuenta con el mismo filtro (HU-20)', async () => {
+    const prisma = {
+      pago: { findMany: jest.fn().mockReturnValue([]), count: jest.fn().mockReturnValue(0) },
+      $transaction: jest.fn((consultas: unknown[]) => Promise.all(consultas)),
+    };
+    const repositorio = new PrismaPagosRepository(prisma as unknown as PrismaService);
+
+    await repositorio.listar({ pagina: 1, porPagina: 20, clienteId: 'c1', estado: 'VALIDADO' });
+
+    const where = { estado: 'VALIDADO', polizaId: undefined, poliza: { clienteId: 'c1' } };
+    expect(prisma.pago.findMany).toHaveBeenCalledWith(expect.objectContaining({ where }));
+    expect(prisma.pago.count).toHaveBeenCalledWith({ where });
   });
 });

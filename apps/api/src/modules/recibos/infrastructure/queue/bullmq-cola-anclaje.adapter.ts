@@ -22,7 +22,7 @@ export class BullMqColaAnclajeAdapter implements ColaAnclajePort {
   }
 
   async encolarAnulacion(reciboId: string): Promise<void> {
-    await this.cola.add(JOB_ANULAR_RECIBO, { reciboId }, { jobId: `anular:${reciboId}` });
+    await this.cola.add(JOB_ANULAR_RECIBO, { reciboId }, { jobId: `anular-${reciboId}` });
   }
 
   /**

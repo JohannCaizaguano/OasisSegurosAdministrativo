@@ -10,6 +10,9 @@ import { ViemRegistroRecibosAdapter } from './infrastructure/blockchain/viem-reg
 import { PrismaRecibosRepository } from './infrastructure/persistence/prisma-recibos.repository';
 import { BullMqColaAnclajeAdapter } from './infrastructure/queue/bullmq-cola-anclaje.adapter';
 import { RecibosController } from './presentation/http/recibos.controller';
+import { VerificacionController } from './presentation/http/verificacion.controller';
+import { MisRecibosController } from './presentation/http/mis-recibos.controller';
+import { ObtenerReciboImprimibleUseCase } from './application/use-cases/obtener-recibo-imprimible.use-case';
 import { COLA_ANCLAJE } from './application/ports/cola-anclaje.port';
 import { CONFIG_CADENA } from './application/ports/configuracion-cadena.port';
 import { CRIPTO } from './application/ports/cripto.port';
@@ -45,6 +48,12 @@ const casosDeUso: Provider[] = [
     provide: ObtenerReciboUseCase,
     inject: [RECIBOS_REPOSITORY],
     useFactory: (repo: PrismaRecibosRepository) => new ObtenerReciboUseCase(repo),
+  },
+  {
+    provide: ObtenerReciboImprimibleUseCase,
+    inject: [RECIBOS_REPOSITORY, CONFIG_CADENA],
+    useFactory: (repo: PrismaRecibosRepository, cadena: ConfiguracionCadenaAdapter) =>
+      new ObtenerReciboImprimibleUseCase(repo, cadena),
   },
   {
     provide: VerificarReciboUseCase,
@@ -110,7 +119,12 @@ const casosDeUso: Provider[] = [
 
 @Module({
   imports: [BullModule.registerQueue({ name: COLA_ANCLAJE_RECIBOS })],
-  controllers: [RecibosController, OperadoraController],
+  controllers: [
+    RecibosController,
+    VerificacionController,
+    MisRecibosController,
+    OperadoraController,
+  ],
   providers: [
     { provide: CRIPTO, useClass: NodeCriptoAdapter },
     { provide: HASHER_RECIBOS, useClass: ViemHasherRecibosAdapter },

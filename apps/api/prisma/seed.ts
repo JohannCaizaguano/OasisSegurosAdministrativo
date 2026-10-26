@@ -45,12 +45,14 @@ function claveDeSeed(variable: keyof typeof CLAVES_POR_DEFECTO): string {
   return valor ?? porDefecto;
 }
 
+// D18: los mismos códigos que siembra la migración `cobertura_ramos_s5`.
 const RAMOS = [
   { codigo: 'VIDA', nombre: 'Vida' },
-  { codigo: 'SALUD', nombre: 'Salud' },
+  { codigo: 'ASISTENCIA_MEDICA', nombre: 'Asistencia médica' },
   { codigo: 'VEHICULOS', nombre: 'Vehículos' },
-  { codigo: 'INCENDIO', nombre: 'Incendio' },
-  { codigo: 'FIANZAS', nombre: 'Fianzas' },
+  { codigo: 'EQUIPOS_ELECTRONICOS', nombre: 'Equipos electrónicos' },
+  { codigo: 'AEREO_DRONES', nombre: 'Aéreo (drones)' },
+  { codigo: 'EQUIPOS_MAQUINARIA', nombre: 'Equipos y maquinaria' },
 ] as const;
 
 const METODOS_PAGO = [

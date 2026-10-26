@@ -295,6 +295,35 @@
   }
 }
 
+/* Recibo imprimible (HU-25, D8): A4 vertical, sin navegación ni botones y con los tonos de estado. */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  [data-no-imprimir],
+  [data-barra] {
+    display: none !important;
+  }
+
+  body {
+    background: var(--card);
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .recibo-imprimible {
+    max-width: none;
+    padding: 0;
+    box-shadow: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
 /* Movimiento reducido (DESIGN.md): fuera desplazamientos y escalados; se conservan opacidad y color. */
 @media (prefers-reduced-motion: reduce) {
   *,

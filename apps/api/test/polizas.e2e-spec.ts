@@ -1,5 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
+import { fechaEnGuayaquil } from '@oasis/shared';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 
@@ -191,14 +192,15 @@ describe('Pólizas (e2e)', () => {
     });
   });
 
-  it('lista los ramos activos del seed y el CLIENTE no accede (D10)', async () => {
+  it('lista los ramos de Oasis activos y el CLIENTE no accede (D10, HU-51.4, D18)', async () => {
     const respuesta = await conSesion('get', '/api/v1/ramos').expect(200);
     const ramos = respuesta.body as Array<{ id: string; codigo: string; nombre: string }>;
 
     expect(ramos.map((ramo) => ramo.codigo).sort()).toEqual([
-      'FIANZAS',
-      'INCENDIO',
-      'SALUD',
+      'AEREO_DRONES',
+      'ASISTENCIA_MEDICA',
+      'EQUIPOS_ELECTRONICOS',
+      'EQUIPOS_MAQUINARIA',
       'VEHICULOS',
       'VIDA',
     ]);
@@ -345,5 +347,94 @@ describe('Pólizas (e2e)', () => {
       pageSize: 2,
     }).expect(200);
     expect(pagina2.body.data).toHaveLength(1);
+  });
+
+  it('un ramo retirado (SALUD) ya no admite pólizas nuevas → 422 RAMO_INVALIDO (HU-51.4, D18)', async () => {
+    const clienteId = await clienteNuevo();
+    const salud = await prisma.ramo.findUniqueOrThrow({ where: { codigo: 'SALUD' } });
+    expect(salud.activo).toBe(false);
+
+    const respuesta = await crearPoliza(clienteId, { ramoId: salud.id }).expect(422);
+
+    expect(respuesta.body.details).toEqual({ campo: 'ramoId', motivo: 'RAMO_INVALIDO' });
+  });
+
+  it('registra cobertura y condiciones y las devuelve en el detalle y el listado (HU-51.1–51.3)', async () => {
+    const clienteId = await clienteNuevo();
+    const cobertura = 'Daños propios\nResponsabilidad civil hasta $50 000';
+    const condiciones = 'Deducible del 10 %';
+
+    const creada = await crearPoliza(clienteId, {
+      cobertura: `  ${cobertura}  `,
+      condiciones,
+    }).expect(201);
+    const id = creada.body.id as string;
+
+    expect(creada.body).toMatchObject({ cobertura, condiciones });
+    const detalle = await conSesion('get', `/api/v1/polizas/${id}`).expect(200);
+    expect(detalle.body).toMatchObject({ cobertura, condiciones });
+    const listado = await listarPolizas({ clienteId }).expect(200);
+    expect(listado.body.data[0]).toMatchObject({ id, cobertura, condiciones });
+
+    const sinTextos = await crearPoliza(clienteId, { cobertura: '   ' }).expect(201);
+    expect(sinTextos.body).toMatchObject({ cobertura: null, condiciones: null });
+  });
+
+  it('cobertura de 2 001 caracteres → 400; de 2 000 → 201 (HU-51.1)', async () => {
+    const clienteId = await clienteNuevo();
+
+    const larga = await crearPoliza(clienteId, { cobertura: 'a'.repeat(2001) }).expect(400);
+    expect(JSON.stringify(larga.body.details)).toContain('cobertura');
+    await crearPoliza(clienteId, { condiciones: 'b'.repeat(2001) }).expect(400);
+    await crearPoliza(clienteId, { cobertura: 'a'.repeat(2000) }).expect(201);
+  });
+
+  it('al editar: cambia la cobertura, null la borra y un campo ausente no se toca (HU-51.2)', async () => {
+    const clienteId = await clienteNuevo();
+    const creada = await crearPoliza(clienteId, {
+      cobertura: 'Cobertura inicial',
+      condiciones: 'Condiciones iniciales',
+    }).expect(201);
+    const id = creada.body.id as string;
+
+    const cambiada = await editarPoliza(id, { cobertura: 'Cobertura ampliada' }).expect(200);
+    expect(cambiada.body).toMatchObject({
+      cobertura: 'Cobertura ampliada',
+      condiciones: 'Condiciones iniciales',
+    });
+
+    const borrada = await editarPoliza(id, { cobertura: null }).expect(200);
+    expect(borrada.body).toMatchObject({ cobertura: null, condiciones: 'Condiciones iniciales' });
+
+    const vaciada = await editarPoliza(id, { condiciones: '  ' }).expect(200);
+    expect(vaciada.body).toMatchObject({ cobertura: null, condiciones: null });
+
+    await editarPoliza(id, { condiciones: 'c'.repeat(2001) }).expect(400);
+  });
+
+  it('edita la cobertura aunque la póliza tenga pagos validados, sin tocar el plan (HU-51.2)', async () => {
+    const polizaId = await crearPolizaDePrueba(prisma, { prima: '300.00' });
+    const pago = await conSesion('post', '/api/v1/pagos')
+      .send({
+        polizaId,
+        monto: '10.00',
+        fechaPago: fechaEnGuayaquil(new Date()),
+        metodo: 'TRANSFERENCIA',
+        referencia: `E2E-COB-${sufijo}`,
+      })
+      .expect(201);
+    await conSesion('patch', `/api/v1/pagos/${pago.body.id as string}/validar`)
+      .send({ confirmado: true })
+      .expect(200);
+    const antes = await prisma.cuota.findMany({ where: { polizaId }, orderBy: { numero: 'asc' } });
+
+    const editada = await editarPoliza(polizaId, { cobertura: 'Nueva cobertura' }).expect(200);
+
+    expect(editada.body.cobertura).toBe('Nueva cobertura');
+    const despues = await prisma.cuota.findMany({
+      where: { polizaId },
+      orderBy: { numero: 'asc' },
+    });
+    expect(despues).toEqual(antes);
   });
 });

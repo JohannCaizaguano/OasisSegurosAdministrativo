@@ -1,5 +1,6 @@
 import type { Aseguradora, Cliente, Poliza, Ramo, RespuestaPaginada } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -44,6 +45,8 @@ const POLIZA: Poliza = {
   ramo: 'Vehículos',
   ramoCodigo: 'VEHICULOS',
   primaTotal: '1500.50',
+  cobertura: null,
+  condiciones: null,
   fechaInicio: '2026-01-01',
   fechaFin: '2026-12-31',
   estado: 'VIGENTE',
@@ -89,7 +92,9 @@ function montar() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <PolizasPage />
+      <MemoryRouter>
+        <PolizasPage />
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }
@@ -121,6 +126,16 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('PolizasPage', () => {
+  it('el número de la póliza enlaza a su detalle (HU-51)', async () => {
+    listar.mockResolvedValue(paginada([POLIZA]));
+    montar();
+
+    expect(await screen.findByRole('link', { name: 'POL-0001' })).toHaveAttribute(
+      'href',
+      `/polizas/${POLIZA_ID}`,
+    );
+  });
+
   it('muestra el listado paginado', async () => {
     listar.mockResolvedValue(paginada([POLIZA], { total: 45, totalPages: 3 }));
     montar();

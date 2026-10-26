@@ -52,7 +52,11 @@ export function AppLayout() {
     return (
       <div className="min-h-dvh pb-[calc(4rem+env(safe-area-inset-bottom))] riel:pb-0">
         <SaltarAlContenido />
-        <header data-superficie="noche" className="bg-sidebar text-sidebar-foreground">
+        <header
+          data-superficie="noche"
+          data-no-imprimir
+          className="bg-sidebar text-sidebar-foreground"
+        >
           <div className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 riel:px-[30px]">
             <img src={isologo} alt="Oasis Seguros" width={44} height={44} className="size-11" />
             <MenuUsuario />

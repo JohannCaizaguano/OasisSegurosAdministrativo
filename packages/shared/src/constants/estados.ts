@@ -7,6 +7,10 @@ export type EstadoPoliza = (typeof ESTADOS_POLIZA)[number];
 export const ESTADOS_CUOTA = ['PENDIENTE', 'PARCIAL', 'PAGADA', 'VENCIDA'] as const;
 export type EstadoCuota = (typeof ESTADOS_CUOTA)[number];
 
+/** HU-38 (D16): TODAS reúne POR_VENCER y VENCIDAS; las cuotas PAGADAS nunca están en cartera. */
+export const VISTAS_CARTERA = ['POR_VENCER', 'VENCIDAS', 'TODAS'] as const;
+export type VistaCartera = (typeof VISTAS_CARTERA)[number];
+
 export const FILTROS_ESTADO_CLIENTE = ['ACTIVOS', 'INACTIVOS', 'TODOS'] as const;
 export type FiltroEstadoCliente = (typeof FILTROS_ESTADO_CLIENTE)[number];
 
@@ -51,11 +55,12 @@ export const ESTADOS_RECIBO_FINALES: readonly EstadoRecibo[] = ['ANCLADO', 'FALL
 
 export const MONEDA = 'USD' as const;
 
+/** HU-28 (D2): resultados de verificar un recibo, 1:1 con el criterio de aceptación. */
 export const ESTADOS_VERIFICACION = [
-  'VALIDO',
+  'AUTENTICO',
+  'NO_COINCIDE',
+  'EN_PROCESO',
   'ANULADO',
-  'NO_ANCLADO',
   'NO_ENCONTRADO',
-  'HASH_INCONSISTENTE',
 ] as const;
 export type EstadoVerificacion = (typeof ESTADOS_VERIFICACION)[number];

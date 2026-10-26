@@ -1,4 +1,4 @@
-import type { Pago, Poliza } from '@oasis/shared';
+import type { Cuota, Pago, Poliza } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,10 +10,23 @@ import { pagosApi } from '../api';
 import { FormularioPago } from './FormularioPago';
 
 vi.mock('../api', () => ({ pagosApi: { crear: vi.fn() } }));
-vi.mock('@/features/polizas/api', () => ({ polizasApi: { listar: vi.fn() } }));
+vi.mock('@/features/polizas/api', () => ({ polizasApi: { listar: vi.fn(), cuotas: vi.fn() } }));
 
 const crear = vi.mocked(pagosApi.crear);
 const listarPolizas = vi.mocked(polizasApi.listar);
+const cuotas = vi.mocked(polizasApi.cuotas);
+
+function cuota(numero: number, valor = '120.00'): Cuota {
+  return {
+    id: `c${numero}`,
+    numero,
+    valor,
+    valorPagado: '0.00',
+    fechaVencimiento: `2099-0${numero}-01`,
+    estado: 'PENDIENTE',
+    aplicaciones: [],
+  };
+}
 
 const POLIZA_ID = '55555555-5555-4555-8555-555555555555';
 const POLIZA = {
@@ -54,6 +67,7 @@ function llenar(campos: { monto?: string; referencia?: string }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  cuotas.mockResolvedValue([cuota(1, '9000.00')]);
   listarPolizas.mockResolvedValue({
     data: [POLIZA],
     meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
@@ -62,7 +76,58 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
+describe('FormularioPago — vista previa de las cuotas (D24)', () => {
+  it('bajo el monto dice en condicional qué cuotas cubriría', async () => {
+    cuotas.mockResolvedValue([cuota(1), cuota(2)]);
+    montar();
+    await elegirPoliza();
+    llenar({ monto: '160.00' });
+
+    const frase = await screen.findByText(
+      'Este pago cubriría: la cuota 1 quedaría Pagada y la cuota 2 recibiría $40,00 (Pago parcial).',
+    );
+    // Cambia con cada tecla del monto: sin región viva para no repetir el anuncio.
+    expect(frase).not.toHaveAttribute('role');
+    expect(frase).not.toHaveAttribute('aria-live');
+    expect(cuotas).toHaveBeenCalledWith(POLIZA_ID);
+  });
+
+  it('un monto mayor que lo pendiente muestra el aviso de saldo sin llamar al API', async () => {
+    cuotas.mockResolvedValue([cuota(1), cuota(2)]);
+    montar();
+    await elegirPoliza();
+    llenar({ monto: '300.00', referencia: 'DB-0010' });
+
+    expect(await screen.findByText('Supera el saldo pendiente ($240,00).')).toHaveAttribute(
+      'role',
+      'alert',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar pago' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Monto')).toHaveAttribute('aria-invalid', 'true'),
+    );
+    expect(crear).not.toHaveBeenCalled();
+  });
+});
+
 describe('FormularioPago (HU-16)', () => {
+  it('no ofrece pólizas que no estén vigentes (RN-01)', async () => {
+    listarPolizas.mockImplementation(async (filtros = {}) => ({
+      data:
+        filtros.estado === 'VIGENTE'
+          ? [POLIZA]
+          : [POLIZA, { ...POLIZA, id: 'p-cancelada', numero: 'POL-0099', estado: 'CANCELADA' }],
+      meta: { page: 1, pageSize: 20, total: 1, totalPages: 1 },
+    }));
+    montar();
+    const combobox = screen.getByRole('combobox', { name: 'Póliza' });
+    fireEvent.focus(combobox);
+    fireEvent.change(combobox, { target: { value: 'POL' } });
+
+    expect(await screen.findByRole('option', { name: /POL-2026-0001/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /POL-0099/ })).not.toBeInTheDocument();
+  });
+
   it('busca solo pólizas vigentes y ofrece Débito bancario como método por defecto', async () => {
     montar();
     await elegirPoliza();

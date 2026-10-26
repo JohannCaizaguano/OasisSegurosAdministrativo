@@ -100,7 +100,7 @@ describe('Flujo de anclaje (e2e)', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(verificacion.body.estado).toBe('VALIDO');
+    expect(verificacion.body.estado).toBe('AUTENTICO');
     expect(verificacion.body.hashOnchain).toBe(detalle.hashRecibo);
     expect(verificacion.body.txHash).toBe(detalle.txHash);
     expect(verificacion.body.explorerUrl).toContain(detalle.txHash as string);

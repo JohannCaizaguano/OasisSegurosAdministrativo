@@ -26,7 +26,9 @@ ADR-015). En la cadena no se expone ningún dato personal.
 - **Medición**: `/metrics` (prom-client) solo en la red interna, con un stack opcional de
   Prometheus, Grafana, cAdvisor y node-exporter.
 - **Documentación**: `docs/referencia` (fuente de verdad), `docs/arquitectura` (C4 y
-  secuencia en Mermaid), `docs/adr`, `docs/sprints` y `docs/despliegue.md`.
+  secuencia en Mermaid), `docs/adr`, `docs/sprints`, `docs/despliegue.md` y
+  [`docs/proteccion-datos`](docs/proteccion-datos/) (LOPDP: incidentes, tratamiento, encargados y
+  política, HT-16).
 
 ## Estructura
 
@@ -36,7 +38,7 @@ apps/web              SPA (Vite, React 19, shadcn/ui)
 packages/shared       Esquemas Zod, constantes, tipos y ABI (generado)
 packages/contracts    RegistroRecibos.sol + Hardhat 3 + Ignition + tests
 infra/                monitoring/, k6/ y scripts/ (bootstrap, backup, restore, deploy)
-docs/                 referencia/, arquitectura/, adr/, sprints/, despliegue.md
+docs/                 referencia/, arquitectura/, adr/, sprints/, proteccion-datos/, despliegue.md
 compose.dev|prod|monitoring.yaml
 ```
 

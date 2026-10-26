@@ -1,5 +1,5 @@
 import type { VerificacionRecibo } from '@oasis/shared';
-import { ExternalLink, Search, ShieldX } from 'lucide-react';
+import { ChevronDown, ExternalLink, Search, ShieldX } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -10,19 +10,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ApiError } from '@/lib/api-client';
+import { useAuthStore } from '@/lib/auth-store';
 import { formatearFecha } from '@/lib/format';
 
 import { useVerificacion } from '../hooks';
 
 const TITULOS: Record<VerificacionRecibo['estado'], string> = {
-  VALIDO: 'Recibo auténtico',
+  AUTENTICO: 'Recibo auténtico',
+  NO_COINCIDE: 'El recibo no coincide',
+  EN_PROCESO: 'Recibo en proceso',
   ANULADO: 'Recibo anulado',
-  NO_ANCLADO: 'Recibo en proceso',
   NO_ENCONTRADO: 'Recibo no encontrado',
-  HASH_INCONSISTENTE: 'El recibo no coincide',
 };
 
-function Dato({
+function DatoTecnico({
   termino,
   children,
   testId,
@@ -41,7 +43,38 @@ function Dato({
   );
 }
 
-function Resultado({ verificacion }: { verificacion: VerificacionRecibo }) {
+/** D5: hashes, contrato y bloque solo para el personal, plegados por defecto. */
+function DetallesTecnicos({ verificacion }: { verificacion: VerificacionRecibo }) {
+  return (
+    <details className="group rounded-md bg-secondary px-4">
+      <summary className="flex min-h-control cursor-pointer items-center gap-2 font-semibold text-link">
+        <ChevronDown
+          className="size-4 transition-transform group-open:rotate-180"
+          aria-hidden="true"
+        />
+        Detalles técnicos
+      </summary>
+      <dl className="grid gap-3.5 pb-4">
+        <DatoTecnico termino="hashRecibo (recalculado)" testId="hash-verificado">
+          {verificacion.hashRecibo}
+        </DatoTecnico>
+        <DatoTecnico termino="hash en el contrato">{verificacion.hashOnchain ?? '—'}</DatoTecnico>
+        <DatoTecnico termino="Transacción">{verificacion.txHash ?? '—'}</DatoTecnico>
+        <DatoTecnico termino="Bloque">{verificacion.blockNumber ?? '—'}</DatoTecnico>
+        <DatoTecnico termino="Contrato">{verificacion.contractAddress ?? '—'}</DatoTecnico>
+        <DatoTecnico termino="Red (chainId)">{String(verificacion.chainId)}</DatoTecnico>
+      </dl>
+    </details>
+  );
+}
+
+function Resultado({
+  verificacion,
+  esPersonal,
+}: {
+  verificacion: VerificacionRecibo;
+  esPersonal: boolean;
+}) {
   const { tono, icono: Icono, descripcion } = presentacionDe('verificacion', verificacion.estado);
 
   return (
@@ -66,46 +99,50 @@ function Resultado({ verificacion }: { verificacion: VerificacionRecibo }) {
           </div>
         </div>
 
-        <dl className="grid gap-3.5">
+        <dl className="grid gap-x-6 gap-y-3.5 sm:grid-cols-2">
           <div>
             <dt className="text-caption text-muted-foreground">Código</dt>
             <dd className="cifra font-semibold">{verificacion.codigo}</dd>
           </div>
-          <Dato termino="hashRecibo (recalculado)" testId="hash-verificado">
-            {verificacion.hashRecibo}
-          </Dato>
-          <Dato termino="hash en cadena">{verificacion.hashOnchain ?? '—'}</Dato>
           <div>
-            <dt className="text-caption text-muted-foreground">Anclado</dt>
-            <dd className="font-semibold">{formatearFecha(verificacion.ancladoEn)}</dd>
+            <dt className="text-caption text-muted-foreground">Registrado</dt>
+            <dd className="cifra font-semibold">{formatearFecha(verificacion.ancladoEn)}</dd>
           </div>
-          <Dato termino="Transacción">{verificacion.txHash ?? '—'}</Dato>
         </dl>
 
-        {verificacion.explorerUrl && (
+        {verificacion.explorerUrl ? (
           <a
             className="inline-flex min-h-control items-center gap-1.5 self-start font-semibold text-link underline underline-offset-3"
             href={verificacion.explorerUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
           >
-            Ver en el explorador
+            {esPersonal ? 'Ver en el explorador' : 'Ver el registro público'}
             <ExternalLink className="size-4" aria-hidden="true" />
             <span className="sr-only">(se abre en una pestaña nueva)</span>
           </a>
-        )}
+        ) : null}
+
+        {esPersonal ? <DetallesTecnicos verificacion={verificacion} /> : null}
+
         <p className="text-caption text-muted-foreground">
-          Verificado el {formatearFecha(verificacion.verificadoEn)} · Red {verificacion.chainId}
-          {verificacion.contractAddress ? (
-            <>
-              {' · Contrato '}
-              <span className="font-mono break-all">{verificacion.contractAddress}</span>
-            </>
-          ) : null}
+          Verificado el <span className="cifra">{formatearFecha(verificacion.verificadoEn)}</span>
         </p>
       </CardContent>
     </Card>
   );
+}
+
+/** El 429 del límite por usuario (D4) trae los segundos de espera en `details`. */
+function mensajeDeError(error: unknown): string {
+  if (error instanceof ApiError && error.statusCode === 429) {
+    const detalles = error.details as { reintentarEnSegundos?: unknown } | undefined;
+    const segundos = detalles?.reintentarEnSegundos;
+    return typeof segundos === 'number'
+      ? `Demasiadas consultas; intente de nuevo en ${segundos} segundos.`
+      : 'Demasiadas consultas; intente de nuevo en un minuto.';
+  }
+  return 'No fue posible verificar el recibo. Revise el código e intente nuevamente.';
 }
 
 export function VerificacionPage() {
@@ -115,6 +152,7 @@ export function VerificacionPage() {
   const [codigoPrevio, setCodigoPrevio] = useState(codigo);
 
   const consulta = useVerificacion(codigo);
+  const esPersonal = useAuthStore((estado) => estado.usuario?.rol !== 'CLIENTE');
 
   // El input sigue a la ruta (React reutiliza la instancia); ajuste durante el
   // render, no en un efecto.
@@ -173,11 +211,11 @@ export function VerificacionPage() {
           className="flex animate-aviso items-start gap-2.5 rounded-md bg-estado-error-fondo px-4 py-3 font-medium text-estado-error"
         >
           <ShieldX className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
-          No fue posible verificar el recibo. Revise el código e intente nuevamente.
+          {mensajeDeError(consulta.error)}
         </p>
       )}
 
-      {consulta.data && <Resultado verificacion={consulta.data} />}
+      {consulta.data && <Resultado verificacion={consulta.data} esPersonal={esPersonal} />}
     </div>
   );
 }

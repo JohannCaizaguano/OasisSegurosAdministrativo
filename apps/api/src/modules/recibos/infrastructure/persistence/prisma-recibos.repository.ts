@@ -1,8 +1,10 @@
+import type { MetodoPago } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import type { Recibo } from '../../domain/recibo';
 import type {
+  DatosReciboImprimible,
   FiltrosRecibos,
   PaginaRecibos,
   RecibosRepositoryPort,
@@ -10,6 +12,41 @@ import type {
 import { mapearRecibo } from './recibo.mapper';
 
 const INCLUDE = { pago: { include: { poliza: true } } } as const;
+
+const SELECT_IMPRIMIBLE = {
+  codigo: true,
+  estado: true,
+  creadoEn: true,
+  ancladoEn: true,
+  txHash: true,
+  pago: {
+    select: {
+      monto: true,
+      fechaPago: true,
+      referencia: true,
+      metodoPago: { select: { codigo: true } },
+      poliza: {
+        select: {
+          numero: true,
+          clienteId: true,
+          ramo: { select: { nombre: true } },
+          aseguradora: { select: { nombre: true } },
+          cliente: {
+            select: { identificacion: true, nombres: true, apellidos: true, razonSocial: true },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+function nombreCliente(cliente: {
+  nombres: string | null;
+  apellidos: string | null;
+  razonSocial: string | null;
+}): string {
+  return cliente.razonSocial ?? [cliente.nombres, cliente.apellidos].filter(Boolean).join(' ');
+}
 
 @Injectable()
 export class PrismaRecibosRepository implements RecibosRepositoryPort {
@@ -40,6 +77,36 @@ export class PrismaRecibosRepository implements RecibosRepositoryPort {
     ]);
 
     return { items: filas.map((fila) => mapearRecibo(fila)), total };
+  }
+
+  async buscarImprimible(id: string): Promise<DatosReciboImprimible | null> {
+    const fila = await this.prisma.recibo.findUnique({ where: { id }, select: SELECT_IMPRIMIBLE });
+    if (!fila) return null;
+    const { pago } = fila;
+    return {
+      codigo: fila.codigo,
+      estado: fila.estado,
+      creadoEn: fila.creadoEn.toISOString(),
+      ancladoEn: fila.ancladoEn?.toISOString() ?? null,
+      txHash: fila.txHash,
+      pago: {
+        monto: pago.monto.toFixed(2),
+        fechaPago: pago.fechaPago.toISOString().slice(0, 10),
+        // El catálogo solo contiene códigos de `METODOS_PAGO`.
+        metodo: pago.metodoPago.codigo as MetodoPago,
+        referencia: pago.referencia,
+      },
+      poliza: {
+        numero: pago.poliza.numero,
+        ramo: pago.poliza.ramo.nombre,
+        aseguradora: pago.poliza.aseguradora.nombre,
+        clienteId: pago.poliza.clienteId,
+      },
+      cliente: {
+        nombre: nombreCliente(pago.poliza.cliente),
+        identificacion: pago.poliza.cliente.identificacion,
+      },
+    };
   }
 
   async guardar(recibo: Recibo): Promise<Recibo> {

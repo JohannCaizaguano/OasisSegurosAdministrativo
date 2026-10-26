@@ -17,6 +17,8 @@ function poliza(parcial: Partial<PropsPoliza> = {}): Poliza {
     fechaInicio: '2026-01-31',
     fechaFin: '2026-12-31',
     estado: 'VIGENTE',
+    cobertura: null,
+    condiciones: null,
     tienePagosValidados: false,
     enMora: false,
     createdAt: '2026-10-01T12:00:00.000Z',

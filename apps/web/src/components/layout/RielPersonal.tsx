@@ -1,6 +1,7 @@
 import type { Rol } from '@oasis/shared';
 import {
   Building2,
+  CalendarClock,
   FileText,
   LayoutDashboard,
   Receipt,
@@ -14,6 +15,7 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 
 import isologo from '@/assets/isologo-oasis.png';
+import { usePagosPorValidar } from '@/features/pagos/hooks';
 
 import { MenuUsuario } from './MenuUsuario';
 
@@ -29,6 +31,7 @@ interface Enlace {
 const ENLACES: Enlace[] = [
   { a: '/', texto: 'Inicio', icono: LayoutDashboard, roles: ['ADMIN', 'OPERADOR'] },
   { a: '/pagos', texto: 'Pagos', icono: FileText, roles: ['ADMIN', 'OPERADOR'] },
+  { a: '/cartera', texto: 'Cartera', icono: CalendarClock, roles: ['ADMIN', 'OPERADOR'] },
   {
     a: '/recibos',
     texto: 'Recibos',
@@ -64,6 +67,7 @@ function estaActivo({ a, excluye }: Enlace, ruta: string): boolean {
 export function RielPersonal({ rol }: { rol: Rol }) {
   const { pathname } = useLocation();
   const enlaces = ENLACES.filter((enlace) => enlace.roles.includes(rol));
+  const porValidar = usePagosPorValidar(rol !== 'CLIENTE').data?.meta.total ?? 0;
 
   return (
     <nav
@@ -83,12 +87,15 @@ export function RielPersonal({ rol }: { rol: Rol }) {
         {enlaces.map((enlace) => {
           const { a, texto, icono: Icono } = enlace;
           const activo = estaActivo(enlace, pathname);
+          // D26 c: la cifra de pagos por validar abre la lista ya filtrada.
+          const pendientes = a === '/pagos' ? porValidar : 0;
           return (
             <li key={a} className="shrink-0">
               <Link
-                to={a}
+                to={pendientes > 0 ? '/pagos?estado=REGISTRADO' : a}
                 aria-current={activo ? 'page' : undefined}
-                className="flex min-h-[52px] min-w-[72px] flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-mini leading-tight text-sidebar-foreground hover:bg-sidebar-accent aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-bold aria-[current=page]:text-sidebar-primary riel:min-h-14"
+                aria-label={pendientes > 0 ? `${texto}, ${pendientes} por validar` : undefined}
+                className="relative flex min-h-[52px] min-w-[72px] flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-mini leading-tight text-sidebar-foreground hover:bg-sidebar-accent aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-bold aria-[current=page]:text-sidebar-primary riel:min-h-14"
               >
                 <Icono
                   aria-hidden="true"
@@ -97,6 +104,15 @@ export function RielPersonal({ rol }: { rol: Rol }) {
                   }
                 />
                 {texto}
+                {pendientes > 0 ? (
+                  <span
+                    aria-hidden="true"
+                    data-testid="pildora-por-validar"
+                    className="cifra absolute top-1 right-2 grid h-5 min-w-5 place-items-center rounded-full bg-sidebar-primary px-1.5 text-mini leading-none font-bold text-sidebar-primary-foreground"
+                  >
+                    {pendientes > 99 ? '99+' : pendientes}
+                  </span>
+                ) : null}
               </Link>
             </li>
           );

@@ -5,6 +5,7 @@ import { expect, test, type APIRequestContext, type Locator, type Page } from '@
 
 import {
   cabecerasDeSesion,
+  ENLACE_PAGOS,
   crearPolizaPropia,
   esperarCarga,
   hoyEnGuayaquil,
@@ -141,7 +142,95 @@ const PANTALLAS: Pantalla[] = [
     lista: (page) => page.getByRole('dialog').getByRole('status'),
     esDialogo: true,
   },
+  { nombre: 'cartera', ruta: '/cartera', rol: 'OPERADOR', lista: titulo('Cartera') },
+  {
+    nombre: 'detalle de póliza',
+    ruta: rutaDetallePoliza,
+    rol: 'OPERADOR',
+    lista: titulo(/^Póliza /),
+  },
+  {
+    nombre: 'detalle del pago',
+    ruta: rutaConPagoRegistrado,
+    rol: 'OPERADOR',
+    preparar: (page) =>
+      page
+        .getByRole('button', { name: /^Ver detalle del pago/ })
+        .first()
+        .click(),
+    lista: dialogo('Detalle del pago'),
+    esDialogo: true,
+  },
+  {
+    nombre: 'recibo imprimible (personal)',
+    ruta: async (request, ip) => `/recibos/${(await emitirReciboPropio(request, ip)).id}/imprimir`,
+    rol: 'OPERADOR',
+    lista: titulo('Recibo de pago'),
+  },
+  {
+    nombre: 'recibo imprimible (cliente)',
+    ruta: async (request, ip) =>
+      `/portal/recibos/${(await emitirReciboPropio(request, ip, true)).id}`,
+    rol: 'CLIENTE',
+    lista: titulo('Recibo de pago'),
+  },
+  {
+    nombre: 'verificación del cliente',
+    ruta: async (request, ip) =>
+      `/recibos/verificar/${(await emitirReciboPropio(request, ip, true)).codigo}`,
+    rol: 'CLIENTE',
+    lista: (page) => page.getByTestId('resultado-verificacion'),
+  },
 ];
+
+/** Póliza propia con cobertura y condiciones para el detalle (HU-51). */
+async function rutaDetallePoliza(request: APIRequestContext, ip: string): Promise<string> {
+  const headers = await cabecerasDeSesion(request, ip, CUENTAS.OPERADOR);
+  const { id } = await crearPolizaPropia(request, headers, {
+    cobertura: 'Daños materiales\nResponsabilidad civil',
+    condiciones: 'Deducible del 10 %',
+  });
+  return `/polizas/${id}`;
+}
+
+/**
+ * Recibo nuevo sobre una póliza propia (D22). Con `delClienteDelSeed`, la póliza es de
+ * `cliente@oasis.com`, para que el CLIENTE pueda abrirlo (RN-07).
+ */
+async function emitirReciboPropio(
+  request: APIRequestContext,
+  ip: string,
+  delClienteDelSeed = false,
+): Promise<{ id: string; codigo: string }> {
+  const headers = await cabecerasDeSesion(request, ip, CUENTAS.OPERADOR);
+  let clienteId: string | undefined;
+  if (delClienteDelSeed) {
+    const delCliente = await cabecerasDeSesion(request, ip, CUENTAS.CLIENTE);
+    const polizas = await request.get('/api/v1/mis-polizas?page=1&pageSize=1', {
+      headers: delCliente,
+    });
+    clienteId = ((await polizas.json()) as { data: Array<{ clienteId: string }> }).data[0]
+      .clienteId;
+  }
+  const { id: polizaId } = await crearPolizaPropia(request, headers, { clienteId });
+  const pago = await request.post('/api/v1/pagos', {
+    headers,
+    data: {
+      polizaId,
+      monto: '10.00',
+      fechaPago: hoyEnGuayaquil(),
+      metodo: 'TRANSFERENCIA',
+      referencia: `E2E-DISENO-${randomUUID()}`,
+    },
+  });
+  expect(pago.ok(), await pago.text()).toBeTruthy();
+  const validado = await request.patch(
+    `/api/v1/pagos/${((await pago.json()) as { id: string }).id}/validar`,
+    { headers, data: { confirmado: true } },
+  );
+  expect(validado.ok(), await validado.text()).toBeTruthy();
+  return ((await validado.json()) as { recibo: { id: string; codigo: string } }).recibo;
+}
 
 function dialogo(nombre: string) {
   return (page: Page) => page.getByRole('dialog', { name: nombre });
@@ -430,7 +519,7 @@ test('el riel se recorre con el teclado: Tab hasta un ítem y Enter navega (HT-1
   await page.evaluate(() => {
     (document.activeElement as HTMLElement | null)?.blur();
   });
-  const pagos = riel.getByRole('link', { name: 'Pagos', exact: true });
+  const pagos = riel.getByRole('link', { name: ENLACE_PAGOS });
   let alcanzado = false;
   for (let paso = 0; paso < 20 && !alcanzado; paso++) {
     await page.keyboard.press('Tab');
@@ -439,7 +528,8 @@ test('el riel se recorre con el teclado: Tab hasta un ítem y Enter navega (HT-1
   expect(alcanzado, 'el ítem «Pagos» del riel debe alcanzarse con Tab').toBe(true);
   await page.keyboard.press('Enter');
 
-  await expect(page).toHaveURL(/\/pagos$/);
+  // D26 c: con pagos por validar, el enlace abre el listado ya filtrado.
+  await expect(page).toHaveURL(/\/pagos(\?estado=REGISTRADO)?$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos' })).toBeVisible();
   await expect(pagos).toHaveAttribute('aria-current', 'page');
   await expect(riel.getByRole('link', { name: 'Inicio' })).not.toHaveAttribute('aria-current');

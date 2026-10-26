@@ -1,15 +1,15 @@
-import type { ReciboDetalle, ReciboResumen, VerificacionRecibo } from '@oasis/shared';
-import { codigoReciboSchema, idUuidParamSchema, listarRecibosQuerySchema } from '@oasis/shared';
+import type { ReciboDetalle, ReciboImprimible, ReciboResumen } from '@oasis/shared';
+import { idUuidParamSchema, listarRecibosQuerySchema } from '@oasis/shared';
 import { Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles } from '../../../../common/auth/decorators';
-import { ZodParam, ZodParamCampo, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
+import { ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
 import { AnularReciboUseCase } from '../../application/use-cases/anular-recibo.use-case';
+import { ObtenerReciboImprimibleUseCase } from '../../application/use-cases/obtener-recibo-imprimible.use-case';
 import { ObtenerReciboUseCase } from '../../application/use-cases/obtener-recibo.use-case';
 import { ReintentarReciboUseCase } from '../../application/use-cases/reintentar-recibo.use-case';
-import { VerificarReciboUseCase } from '../../application/use-cases/verificar-recibo.use-case';
 import {
   CONFIG_CADENA,
   type ConfiguracionCadenaPort,
@@ -24,9 +24,9 @@ import type { Recibo } from '../../domain/recibo';
 export class RecibosController {
   constructor(
     private readonly obtenerRecibo: ObtenerReciboUseCase,
+    private readonly obtenerImprimible: ObtenerReciboImprimibleUseCase,
     private readonly anularRecibo: AnularReciboUseCase,
     private readonly reintentarRecibo: ReintentarReciboUseCase,
-    private readonly verificarRecibo: VerificarReciboUseCase,
     @Inject(RECIBOS_REPOSITORY) private readonly recibos: RecibosRepositoryPort,
     @Inject(CONFIG_CADENA) private readonly cadena: ConfiguracionCadenaPort,
   ) {}
@@ -63,12 +63,10 @@ export class RecibosController {
     return this.aDetalle(await this.obtenerRecibo.ejecutar(params.id));
   }
 
-  @Get(':codigo/verificacion')
-  @ApiOperation({ summary: 'Verifica un recibo contra el contrato (exige sesión, ADR-015)' })
-  async verificar(
-    @ZodParamCampo('codigo', codigoReciboSchema) codigo: string,
-  ): Promise<VerificacionRecibo> {
-    return this.verificarRecibo.ejecutar(codigo);
+  @Get(':id/imprimible')
+  @ApiOperation({ summary: 'Recibo imprimible, sin datos internos (HU-25)' })
+  imprimible(@ZodParam(idUuidParamSchema) params: { id: string }): Promise<ReciboImprimible> {
+    return this.obtenerImprimible.ejecutar(params.id);
   }
 
   @Post(':id/reintentar')
@@ -108,7 +106,6 @@ export class RecibosController {
       ...this.aResumen(recibo),
       pagoId: recibo.pagoId,
       numeroPoliza: recibo.numeroPoliza ?? '',
-      payloadCanonico: recibo.payloadCanonico,
       blockNumber: recibo.blockNumber,
       gasUsed: recibo.gasUsed,
       effectiveGasPrice: recibo.effectiveGasPrice,

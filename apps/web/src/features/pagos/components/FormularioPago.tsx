@@ -6,7 +6,7 @@ import {
   METODOS_PAGO,
 } from '@oasis/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useController, useForm } from 'react-hook-form';
+import { useController, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Campo } from '@/components/Campo';
@@ -23,8 +23,9 @@ import {
 import { ApiError } from '@/lib/api-client';
 import { formatearMoneda } from '@/lib/format';
 
-import { useCrearPago } from '../hooks';
+import { useCrearPago, useVistaPrevia } from '../hooks';
 import { SelectorPoliza } from './SelectorPoliza';
+import { AvisoVistaPrevia } from './VistaPreviaCuotas';
 
 const CAMPOS: ReadonlyArray<keyof CrearPagoInput> = [
   'polizaId',
@@ -63,6 +64,13 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
   const errores = formulario.formState.errors;
   const { field: campoPoliza } = useController({ control: formulario.control, name: 'polizaId' });
   const { field: campoMetodo } = useController({ control: formulario.control, name: 'metodo' });
+  const monto = useWatch({ control: formulario.control, name: 'monto' });
+  const vista = useVistaPrevia(campoPoliza.value, monto);
+  // RN-02 antes de enviar (D24): el API lo vuelve a exigir al registrar y al validar.
+  const errorSaldo =
+    vista?.tipo === 'supera-saldo'
+      ? `Supera el saldo pendiente (${formatearMoneda(vista.pendiente)}).`
+      : undefined;
 
   function manejarError(error: unknown) {
     if (error instanceof ApiError) {
@@ -80,9 +88,13 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
     <form
       noValidate
       className="grid gap-4"
-      onSubmit={formulario.handleSubmit((datos) =>
-        crear.mutate(datos, { onSuccess: alGuardar, onError: manejarError }),
-      )}
+      onSubmit={formulario.handleSubmit((datos) => {
+        if (errorSaldo) {
+          formulario.setFocus('monto');
+          return;
+        }
+        crear.mutate(datos, { onSuccess: alGuardar, onError: manejarError });
+      })}
     >
       <Campo
         id="pago-poliza"
@@ -100,7 +112,7 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
           id="pago-monto"
           ayuda="En dólares, con punto decimal. No puede superar el saldo pendiente de la póliza."
           label="Monto"
-          error={errores.monto?.message}
+          error={errores.monto?.message ?? errorSaldo}
         >
           {(atributos) => (
             <Input
@@ -127,6 +139,8 @@ export function FormularioPago({ alGuardar }: { alGuardar: () => void }) {
           )}
         </Campo>
       </div>
+
+      {vista?.tipo === 'aplicacion' ? <AvisoVistaPrevia vista={vista} condicional /> : null}
 
       <Campo id="pago-metodo" label="Método" error={errores.metodo?.message}>
         {(atributos) => (
