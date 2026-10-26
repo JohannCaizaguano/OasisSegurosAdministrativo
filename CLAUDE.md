@@ -236,7 +236,7 @@ leyendo varios archivos.
 ## Trampas conocidas
 
 - No subir a NestJS 12 (solo ESM; el API es CommonJS) ni a TypeScript 7 (sin soporte en
-  `typescript-eslint` ni `ts-jest`). Detalle en `docs/sprints/sprint-01.md` §7.
+  `typescript-eslint` ni `ts-jest`). Detalle en `docs/sprints/sprint-s1.md` §7.
 - pnpm 12: los binarios de un paquete se ejecutan con `pnpm --filter <pkg> exec <bin>`.
 - Prettier respeta `.gitignore` y `.prettierignore`: cualquier archivo no ignorado, aunque no esté
   versionado, entra en `pnpm format:check`.

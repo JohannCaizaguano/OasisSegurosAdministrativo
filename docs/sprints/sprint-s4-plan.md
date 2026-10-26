@@ -902,7 +902,7 @@ Pruebas manuales (resultado en el informe):
 
 ### T32. Informe y commit 2 (sesión principal)
 
-Crea `docs/sprints/sprint-s4.md` con la estructura de `sprint-05.md`:
+Crea `docs/sprints/sprint-s4.md` con la estructura de `sprint-s3.md`:
 
 1. Encabezado (historias, épicas, rama, fechas, los dos commits y estado).
 2. Objetivo.

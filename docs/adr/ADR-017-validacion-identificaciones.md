@@ -2,7 +2,7 @@
 
 - **Estado**: aceptado
 - **Fecha**: 2026-10
-- **Sprint**: 4
+- **Sprint**: S2
 
 ## Contexto
 

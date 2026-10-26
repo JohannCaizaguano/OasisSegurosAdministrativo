@@ -1,30 +1,134 @@
-# Sprint 2 — Plan de implementación
+# Sprint S1 — Plan de implementación
 
-- **Historias:** HT-02 Contrato inteligente RegistroRecibos (18 h) y HU-45 Bitácora de auditoría
-  (6 h): 24 de 25 horas de capacidad.
-- **Rama:** `feat/sprint-02-contrato-bitacora`.
+- **Historias:** HT-01 Configuración del monorepo e integración continua (10 h), HT-03 Base del
+  backend con arquitectura hexagonal (12 h), HT-02 Contrato inteligente RegistroRecibos (18 h) y
+  HU-45 Bitácora de auditoría (6 h).
+- **Horas:** 46 de 50 h de capacidad (tabla 6-1 del backlog).
+- **Épicas:** EP-07 (HT-01, HT-03), EP-05 (HT-02) y EP-09 (HU-45).
+- **Fechas:** 07/09/2026 – 18/09/2026 (tabla 6-1 del backlog).
+- **Dos etapas secuenciales:**
+  - **Etapa A — Monorepo, integración continua y backend base (HT-01, HT-03):** la base sobre la
+    que se construye todo lo demás; termina con el **commit 1**.
+  - **Etapa B — Contrato en Amoy y bitácora de auditoría (HT-02, HU-45):** parte de la Etapa A
+    integrada; termina con el **commit 2**.
+- **Ramas:** una por etapa, cada una con su commit y su PR: `feat/sprint-01-base-monorepo-backend`
+  (Etapa A) y `feat/sprint-02-contrato-bitacora` (Etapa B).
 - **Ejecuta:** agente local (OpenCode) sobre esta copia del repositorio.
-- **Decisiones acordadas con el desarrollador:** 01/10/2026 (sección 2).
+- **Decisiones:** las de la Etapa A quedan en los ADR de la sección A2; las de la Etapa B se
+  acordaron con el desarrollador el 01/10/2026 (sección B2).
 
-Este documento es el Sprint Backlog del Sprint 2. Las reglas generales están en `AGENTS.md` y la
-fuente de verdad en `docs/referencia/`, que no se edita. Si algo de este plan contradice
-`docs/referencia/`, gana la referencia: detente y repórtalo.
+Este documento es el Sprint Backlog de S1. Las reglas generales están en `AGENTS.md` y la fuente de
+verdad en `docs/referencia/`, que no se edita. Si algo de este plan contradice `docs/referencia/`,
+gana la referencia: detente y repórtalo. El informe del sprint es `docs/sprints/sprint-s1.md`.
 
-## 0. Reglas de ejecución
+---
 
-1. Ejecuta las fases en orden: 0 → 1 → (2 en paralelo con 3) → 4 → 5.
+# ETAPA A — Monorepo, integración continua y backend base (HT-01, HT-03)
+
+## A0. Reglas de ejecución
+
+1. Primero HT-01 (el monorepo y la CI) y después HT-03, que se construye sobre él.
+2. Antes de dar por terminada la etapa, ejecuta la verificación de la sección A4 y guarda la salida
+   para el informe.
+3. **Un solo commit** al cierre de la etapa. **No hagas push ni abras el PR**: los hace el usuario.
+4. No adelantes trabajo de otras historias: los módulos de negocio quedan como carpeta vacía y el
+   modelo de datos se crea completo, pero su código llega en su sprint (ADR-010).
+5. Comentarios solo para el porqué no obvio y en español (ver `AGENTS.md`).
+
+## A1. Alcance
+
+### HT-01 — criterios de aceptación
+
+1. El workspace contiene `apps/api`, `apps/web`, `packages/contracts` y `packages/shared`.
+2. ESLint, Prettier, husky, lint-staged y commitlint funcionan en cada commit.
+3. El workflow `ci.yml` instala dependencias, ejecuta lint y construye en cada push y pull request.
+4. El README describe cómo levantar el entorno local.
+
+### HT-03 — criterios de aceptación (RNF-17)
+
+1. Las variables de entorno se validan con Zod y el API no arranca si falta alguna.
+2. Prisma 7 funciona con el adaptador `pg`, la migración inicial y el seed.
+3. `GET /health` informa el estado de PostgreSQL y Redis.
+4. Los logs son JSON e incluyen un `requestId` por solicitud.
+5. Un filtro global devuelve los errores en formato uniforme.
+6. dependency-cruiser falla si el dominio importa infraestructura.
+
+### Fuera de alcance (no implementar)
+
+- Contrato en Amoy y bitácora de auditoría (Etapa B).
+- Imágenes de producción, `compose.prod.yaml` y Caddy (HT-05, S7); el nodo Hardhat en
+  `compose.dev.yaml` llega con HT-02 (ADR-011).
+- Módulos `notificaciones/` y `reportes/`, que quedan como carpeta con `.gitkeep` (S6 y S8).
+
+## A2. Decisiones tomadas (no reabrir)
+
+| #   | Decisión                                                                                                                              | Registro |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| D1  | Monolito modular desplegado con Docker Compose en un VPS.                                                                             | ADR-001  |
+| D2  | Arquitectura hexagonal por módulo, verificada con dependency-cruiser en la CI (`pnpm deps:check` y su prueba negativa).               | ADR-002  |
+| D3  | La migración inicial crea el modelo de datos completo de la arquitectura (§9.0); cada historia trae su código, no sus tablas.         | ADR-010  |
+| D4  | `compose.dev.yaml` solo levanta PostgreSQL 17 y Redis 7; la contenerización completa es de HT-05.                                     | ADR-011  |
+| D5  | `/health` con Terminus, dentro del prefijo `/api/v1`, con tiempo límite por indicador.                                                | ADR-012  |
+| D6  | NestJS 11, TypeScript 6 y Prisma 7 estable: NestJS 12 es solo ESM, TypeScript 7 no tiene soporte en `typescript-eslint` ni `ts-jest`. | Informe  |
+| D7  | Los ADR previos se renumeran con los IDs de la tabla 11-1 de la arquitectura (`docs/adr/README.md`).                                  | Informe  |
+
+## A3. Entregables
+
+- Workspace pnpm con los cuatro paquetes y calidad automatizada (ESLint, Prettier, husky,
+  lint-staged y commitlint).
+- `.github/workflows/ci.yml` con lint, formato, tipos, regla hexagonal, build, contratos, API con
+  PostgreSQL y Redis, SPA e imágenes.
+- Configuración validada con Zod, Prisma 7 con `@prisma/adapter-pg`, migración inicial y seed
+  idempotente con catálogos.
+- `GET /health`, logs JSON con `requestId` (nestjs-pino) y filtro global de errores.
+- Regla hexagonal verificada y plantilla de módulos (`apps/api/src/modules/README.md`).
+- README, `AGENTS.md` y los ADR de la sección A2.
+
+## A4. Verificación y cierre
+
+```bash
+pnpm install --frozen-lockfile
+pnpm -r build && pnpm -r lint && pnpm format:check && pnpm -r typecheck
+pnpm deps:check && pnpm deps:check:negativo
+pnpm test
+docker compose -f compose.dev.yaml up -d postgres redis
+pnpm --filter @oasis/api exec prisma migrate deploy
+pnpm --filter @oasis/api seed                     # dos veces: idempotente
+curl http://localhost:3000/api/v1/health          # 200 con ambos servicios
+pnpm test:e2e
+```
+
+Escribe la Etapa A del informe `docs/sprints/sprint-s1.md` (encabezado, objetivo, entregables,
+criterios con evidencia, Definición de Terminado, versiones exactas, decisiones y discrepancias,
+impedimentos, deuda y cómo verificar) y haz el commit 1.
+
+## A5. Estimación
+
+| Historia  |  Horas |
+| --------- | -----: |
+| HT-01     |     10 |
+| HT-03     |     12 |
+| **Total** | **22** |
+
+---
+
+# ETAPA B — Contrato en Amoy y bitácora de auditoría (HT-02, HU-45)
+
+## B0. Reglas de ejecución
+
+1. Ejecuta las fases en orden: B0 → B1 → (B2 en paralelo con B3) → B4 → B5.
 2. Los pasos marcados con 👤 los ejecuta el usuario, porque descifran el keystore de Hardhat con una
    contraseña interactiva. **Nunca** pidas, leas, imprimas ni guardes claves privadas, la API key de
    Etherscan ni la URL del RPC: solo recibes datos públicos (direcciones, hashes de transacción,
    bloques).
 3. TDD en el código nuevo de HU-45: primero la prueba en rojo y luego el código.
 4. Antes de dar por terminada una fase, ejecuta su verificación y guarda la salida para el informe.
-5. **Un solo commit** al final (sección 10). **No hagas push ni abras el PR**: los hace el usuario.
+5. **Un solo commit** al final (sección B10). **No hagas push ni abras el PR**: los hace el usuario.
 6. No adelantes trabajo de otros sprints; lo que quede fuera de alcance se anota como deuda en el
-   informe (sección 9.2).
+   informe (sección B9.2).
 7. Comentarios solo para el porqué no obvio y en español; nada de narrar cambios (ver `AGENTS.md`).
 
-## 1. Alcance
+## B1. Alcance
 
 ### HT-02 — criterios de aceptación
 
@@ -50,12 +154,12 @@ Requisitos: RF-50 y RNF-27 (conservación de al menos 1 año, sin modificación 
 
 ### Fuera de alcance (no implementar)
 
-- Motivo obligatorio de la anulación y su hash en la cadena (HU-27, S11). El contrato no cambia.
-- Importación de clientes y pólizas (HU-34, S13): solo se declara la acción `IMPORTAR`.
-- Gestión de usuarios (HU-04, S4), ADR-007 (S7) y RPC de respaldo del worker.
-- Copiar `OPERATOR_PRIVATE_KEY` a `.env.worker` del VPS (HT-06, S13).
+- Motivo obligatorio de la anulación y su hash en la cadena (HU-27, S6). El contrato no cambia.
+- Importación de clientes y pólizas (HU-34, S6): solo se declara la acción `IMPORTAR`.
+- Gestión de usuarios (HU-04, S2), ADR-007 (S4) y RPC de respaldo del worker.
+- Copiar `OPERATOR_PRIVATE_KEY` a `.env.worker` del VPS (HT-06, S7).
 
-## 2. Decisiones tomadas (no reabrir)
+## B2. Decisiones tomadas (no reabrir)
 
 | #   | Decisión                                                                                                                                                                                                                                                                             | Motivo                                                                                                                     |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
@@ -64,10 +168,10 @@ Requisitos: RF-50 y RNF-27 (conservación de al menos 1 año, sin modificación 
 | D3  | Slither analiza `RegistroRecibos.sol` directamente, no el proyecto Hardhat, con `fail_on: medium`.                                                                                                                                                                                   | Los tests Foundry rompen `crytic-compile`; `medium` es más estricto que RNF-14.                                            |
 | D4  | Amoy: el agente prepara configuración, scripts y guion; el usuario ejecuta los comandos que usan el keystore y entrega las salidas públicas.                                                                                                                                         | Secretos y contraseña interactiva.                                                                                         |
 | D5  | Se crea ya la cuenta operadora (`REGISTRADOR_ROLE`), que firma el hash de prueba desde una red nueva `amoyOperador`.                                                                                                                                                                 | Separación de roles (ADR-006); la cuenta se usa también en S7 y S13.                                                       |
-| D6  | El despliegue en Amoy es **definitivo**: S7, S8 y S13 usarán esa dirección.                                                                                                                                                                                                          | Contrato inmutable sin cambios pendientes.                                                                                 |
+| D6  | El despliegue en Amoy es **definitivo**: S4, S5 y S7 usarán esa dirección.                                                                                                                                                                                                           | Contrato inmutable sin cambios pendientes.                                                                                 |
 | D7  | Se versiona `packages/contracts/ignition/deployments/chain-80002/`; `chain-31337` sigue ignorado.                                                                                                                                                                                    | Evidencia del despliegue y `ignition verify` reproducible.                                                                 |
 | D8  | RPC de Amoy: el despliegue usa la URL propia del usuario (`AMOY_RPC_URL` del keystore). La documentación cita `https://polygon-amoy-bor-rpc.publicnode.com` como alternativa pública; `rpc-amoy.polygon.technology` ya no resuelve en DNS (verificado el 01/10/2026) y se reemplaza. | El RPC documentado dejó de funcionar.                                                                                      |
-| D9  | Se instrumentan **todas** las mutaciones HTTP existentes con un catálogo de 9 acciones; `IMPORTAR` queda declarada para S13.                                                                                                                                                         | Es la única forma de demostrar el criterio 1 en este sprint.                                                               |
+| D9  | Se instrumentan **todas** las mutaciones HTTP existentes con un catálogo de 9 acciones; `IMPORTAR` queda declarada para S6.                                                                                                                                                          | Es la única forma de demostrar el criterio 1 en este sprint.                                                               |
 | D10 | Captura declarativa: decorador `@Auditar(accion, entidad)` más un interceptor global que inserta tras la respuesta exitosa. No es atómica con la operación (riesgo documentado en ADR-013).                                                                                          | Diff mínimo; no toca los casos de uso.                                                                                     |
 | D11 | Del inicio de sesión solo se registran los exitosos.                                                                                                                                                                                                                                 | `usuarioId` es obligatorio; los intentos fallidos ya quedan en el log y los limita el throttler.                           |
 | D12 | Inmutabilidad en dos capas: el puerto no ofrece editar ni borrar, y un trigger de PostgreSQL rechaza UPDATE, DELETE y TRUNCATE.                                                                                                                                                      | Evidencia verificable de RN-17.                                                                                            |
@@ -76,7 +180,7 @@ Requisitos: RF-50 y RNF-27 (conservación de al menos 1 año, sin modificación 
 | D15 | Se agregan `.claude/` y `docs/*.docx` a `.gitignore`, y se versiona `CLAUDE.md`.                                                                                                                                                                                                     | `.claude/` rompe `pnpm format:check`; el contenido de los `.docx` ya está en `docs/referencia/`.                           |
 | D16 | Un solo commit; el usuario hace push y abre el PR.                                                                                                                                                                                                                                   | `AGENTS.md` y preferencia del usuario.                                                                                     |
 
-## 3. Estado de partida (verificado el 01/10/2026)
+## B3. Estado de partida (verificado el 01/10/2026)
 
 - `RegistroRecibos.sol` coincide con la tabla 9-1. Tiene 26 pruebas (16 en Solidity y 10 en TS),
   100 % de líneas cubiertas, `registrar` ≈ 78 423 de gas y el ABI se exporta con control de deriva
@@ -95,7 +199,7 @@ Requisitos: RF-50 y RNF-27 (conservación de al menos 1 año, sin modificación 
   `apps/api/src/modules/auditoria/` está vacío (`.gitkeep`) y `trust proxy = 1` ya está activo.
 - `pnpm format:check` falla en local por los archivos de `.claude/`.
 
-## 4. Fase 0 — Preparación (0,5 h)
+## B4. Fase B0 — Preparación (0,5 h)
 
 ```bash
 git switch main && git pull --ff-only
@@ -131,7 +235,7 @@ línea base debe quedar en verde:
 pnpm -r lint && pnpm format:check && pnpm -r typecheck && pnpm deps:check && pnpm test
 ```
 
-## 5. Fase 1 — HT-02: código (9 h)
+## B5. Fase B1 — HT-02: código (9 h)
 
 ### T1. Pruebas de roles del contrato (2 h)
 
@@ -369,12 +473,12 @@ estaba registrado".
      4. `hardhat ignition verify chain-80002`;
      5. `hardhat run scripts/grant-registrador.ts --network amoy`;
      6. `hardhat run scripts/registrar-prueba.ts --network amoyOperador`.
-   - Reemplaza la tabla de la sección 4 por estas filas, que se completan en la Fase 4: dirección
+   - Reemplaza la tabla de la sección 4 por estas filas, que se completan en la Fase B4: dirección
      del contrato; transacción y bloque del despliegue; gas del despliegue; cuenta admin
      (`DEFAULT_ADMIN_ROLE`); cuenta operadora (`REGISTRADOR_ROLE`); transacción de `grantRole`;
      hash de prueba (id, transacción, bloque y gas); código verificado
      (`https://amoy.polygonscan.com/address/<dirección>#code`).
-   - Aclara que `CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S13).
+   - Aclara que `CONTRACT_ADDRESS` de Amoy y `OPERATOR_PRIVATE_KEY` pasan al VPS en HT-06 (S7).
 
 ### T6. ADR-008 (1 h)
 
@@ -385,13 +489,13 @@ Crea `docs/adr/ADR-008-contrato-inmutable.md` con este contenido:
 
 - **Estado**: aceptado
 - **Fecha**: 2026-10
-- **Sprint**: 2
+- **Sprint**: S1
 
 ## Contexto
 
 `RegistroRecibos` es la evidencia pública de los recibos (ADR-003, ADR-004): su valor depende de
 que nadie, ni siquiera el bróker, pueda cambiar sus reglas después de anclar. HT-02 lo despliega en
-Amoy en el Sprint 2, y los sprints siguientes (S7, S8 y S13) usan esa dirección.
+Amoy en el Sprint 1, y los sprints siguientes (S4, S5 y S7) usan esa dirección.
 
 ## Decisión
 
@@ -422,7 +526,7 @@ Amoy en el Sprint 2, y los sprints siguientes (S7, S8 y S13) usan esa dirección
 En `docs/adr/README.md`, cambia la fila de ADR-008 para que apunte a
 `ADR-008-contrato-inmutable.md` (la fila de ADR-013 se agrega en T15).
 
-### Verificación de la Fase 1
+### Verificación de la Fase B1
 
 ```bash
 pnpm --filter @oasis/contracts lint
@@ -433,7 +537,7 @@ pnpm --filter @oasis/contracts export-abi
 git diff --exit-code packages/shared/src/abi              # sin cambios: el contrato no cambió
 ```
 
-## 6. Fase 2 — 👤 Punto de control en Amoy (en paralelo con la Fase 3)
+## B6. Fase B2 — 👤 Punto de control en Amoy (en paralelo con la Fase B3)
 
 El keystore ya tiene las cuatro claves: `AMOY_RPC_URL` (URL propia del usuario),
 `DEPLOYER_PRIVATE_KEY`, `ETHERSCAN_API_KEY` y `OPERATOR_PRIVATE_KEY` (verificado el 01/10/2026).
@@ -441,8 +545,8 @@ Antes de enviar el mensaje, confírmalo con
 `pnpm --filter @oasis/contracts exec hardhat keystore list`, que muestra solo los nombres y no pide
 contraseña.
 
-Cuando la Fase 1 esté en verde, envía al usuario el mensaje siguiente **tal cual** y continúa con la
-Fase 3 mientras responde. No ejecutes estos comandos tú: piden la contraseña del keystore.
+Cuando la Fase B1 esté en verde, envía al usuario el mensaje siguiente **tal cual** y continúa con la
+Fase B3 mientras responde. No ejecutes estos comandos tú: piden la contraseña del keystore.
 
 > **Despliegue en Amoy (HT-02).** Ejecuta en tu terminal, desde la raíz del repositorio, y pégame
 > solo las salidas públicas: direcciones, hashes, bloques y enlaces. Nada secreto.
@@ -463,9 +567,9 @@ Fase 3 mientras responde. No ejecutes estos comandos tú: piden la contraseña d
 >   Pégame la salida completa.
 
 Si un paso falla, pide la salida del error y corrige solo los scripts o la configuración de la
-Fase 1, nunca el contrato (D2).
+Fase B1, nunca el contrato (D2).
 
-## 7. Fase 3 — HU-45: bitácora de auditoría (6 h)
+## B7. Fase B3 — HU-45: bitácora de auditoría (6 h)
 
 Estructura nueva del módulo (`apps/api/src/modules/auditoria/`; borra su `.gitkeep`):
 
@@ -1109,7 +1213,7 @@ Nueva carpeta `apps/web/src/features/auditoria/`:
 
 - **Estado**: aceptado
 - **Fecha**: 2026-10
-- **Sprint**: 2
+- **Sprint**: S1
 
 ## Contexto
 
@@ -1154,11 +1258,11 @@ módulos.
 - Negativas: el registro no es atómico con la operación. Si la inserción falla después del commit,
   la acción queda solo en el log de pino con su `requestId`. Los intentos fallidos de inicio de
   sesión quedan en el log, no en la bitácora. La conservación de un año se cumple porque nada se
-  borra; los respaldos llegan con HT-06 (S13).
+  borra; los respaldos llegan con HT-06 (S7).
 ```
 
 - En `docs/adr/README.md`, agrega la fila
-  `| ADR-013 | Bitácora de auditoría declarativa y de solo inserción | S2 | ADR-013-bitacora-auditoria.md |`.
+  `| ADR-013 | Bitácora de auditoría declarativa y de solo inserción | S1 | ADR-013-bitacora-auditoria.md |`.
 - En `apps/api/src/modules/README.md`, agrega la sección "Auditoría (HU-45)":
   - Todo endpoint que crea, modifica, elimina, valida, rechaza, anula, reintenta, importa o inicia
     sesión declara `@Auditar(accion, entidad)` (`src/common/auditoria/auditar.decorator.ts`), con
@@ -1176,7 +1280,7 @@ módulos.
   - En la tabla de pruebas, actualiza los conteos reales (contratos: 30 = 18 Solidity + 12 viem;
     API y SPA según la salida real) y agrega una fila de Slither con el comando de T3.
 
-## 8. Fase 4 — Evidencia de Amoy (1,5 h; tras las respuestas de la Fase 2)
+## B8. Fase B4 — Evidencia de Amoy (1,5 h; tras las respuestas de la Fase B2)
 
 1. `git status` debe mostrar `packages/contracts/ignition/deployments/chain-80002/`
    (`deployed_addresses.json`, `journal.jsonl`, `build-info/` y `artifacts/`). Se versiona entero.
@@ -1200,9 +1304,9 @@ módulos.
    Incluye el gas real de `registrar` en Amoy como evidencia de RNF-07 (≤ 100 000).
 5. **No** escribas la dirección de Amoy en `apps/api/.env`: el desarrollo local sigue en 31337.
 
-## 9. Fase 5 — Cierre (2 h)
+## B9. Fase B5 — Cierre (2 h)
 
-### 9.1 Definición de Terminado
+### B9.1 Definición de Terminado
 
 Con la infraestructura de desarrollo arriba (`pnpm dev:infra`, o el nodo Hardhat nativo con
 `pnpm --filter @oasis/contracts exec hardhat node --hostname 127.0.0.1`), ejecuta todo y guarda las
@@ -1231,24 +1335,24 @@ Prueba manual de la página: inicia sesión como ADMIN y abre `/bitacora`. Revis
 paginación, el ancho de 360 px y la navegación con teclado. Inicia sesión como OPERADOR y comprueba
 que el menú no muestra "Bitácora" y que `/bitacora` redirige al inicio.
 
-### 9.2 Informe del sprint
+### B9.2 Informe del sprint
 
-Crea `docs/sprints/sprint-02.md` con la misma estructura que `sprint-01.md`:
+Escribe la Etapa B del informe `docs/sprints/sprint-s1.md`, con la misma estructura que la Etapa A:
 
 1. Encabezado: historias, épicas (EP-05 y EP-09), rama, fechas reales y estado.
 2. Objetivo.
 3. Entregables (tabla con su ubicación).
-4. Criterios de HT-02 con su evidencia (sección 11 de este plan).
+4. Criterios de HT-02 con su evidencia (sección B11 de este plan).
 5. Criterios de HU-45 con su evidencia. Aclara que `IMPORTAR` queda declarada y que la prueba de
-   cobertura obligará a instrumentar la importación en S13.
-6. Definición de Terminado (tabla de estado, como en S1).
+   cobertura obligará a instrumentar la importación en S6.
+6. Definición de Terminado (tabla de estado, como en la Etapa A).
 7. **Despliegue en Amoy:** tabla con dirección, transacciones, bloques, gas real, costo en POL,
    cuentas y enlaces.
 8. Versiones exactas: Hardhat 3.18.0, hardhat-ignition 3.1.8, hardhat-verify 3.1.1, OpenZeppelin
-   5.6.1, solc 0.8.28 y Slither 0.11.6, además de las del S1 que no cambiaron.
+   5.6.1, solc 0.8.28 y Slither 0.11.6, además de las de la Etapa A que no cambiaron.
 9. Decisiones y discrepancias:
    - ADR-008 y ADR-013.
-   - La matriz 8-1 del ERS v1.2 asigna otros sprints (por ejemplo, HT-02 en S1 y HT-03 en S0);
+   - La matriz 8-1 del ERS v1.2 asigna otros sprints (por ejemplo, HT-03 en S0);
      manda el backlog.
    - `rpc-amoy.polygon.technology` ya no resuelve.
    - En Slither 0.11.6 la clave válida es `fail_on`, no `fail_medium`.
@@ -1256,16 +1360,16 @@ Crea `docs/sprints/sprint-02.md` con la misma estructura que `sprint-01.md`:
 10. Impedimentos y observaciones: el faucet de Alchemy exige saldo en mainnet; QuickNode y
     ETHGlobal no lo exigen.
 11. Deuda y fuera de alcance:
-    - instrumentar la importación (S13);
-    - registrar el motivo de la anulación (S11);
+    - instrumentar la importación (S6);
+    - registrar el motivo de la anulación (S6);
     - verificar con la dirección guardada en cada recibo si algún día hay un segundo contrato
       (ADR-008);
-    - presupuesto de POL para las pruebas de carga de S16, porque cada recibo anclado cuesta
+    - presupuesto de POL para las pruebas de carga de S9, porque cada recibo anclado cuesta
       ≈ 0,003 POL;
-    - ADR-007 (S7).
-12. Cómo verificar: los comandos de 9.1.
+    - ADR-007 (S4).
+12. Cómo verificar: los comandos de B9.1.
 
-## 10. Commit y entrega
+## B10. Commit y entrega
 
 Revisa con `git status` que no entren `.env`, `.claude/`, `*.docx`, `ignition/deployments/chain-31337`
 ni artefactos. Haz un solo commit:
@@ -1273,13 +1377,13 @@ ni artefactos. Haz un solo commit:
 ```bash
 git add -A
 git commit -F - <<'EOF'
-feat(repo): completar el sprint 2 con el contrato en Amoy y la bitácora de auditoría
+feat(repo): completar la etapa B del sprint S1 con el contrato en Amoy y la bitácora de auditoría
 
 - HT-02: pruebas de roles con errores exactos, reporte corregido, Slither en verde sobre el
   contrato, red amoyOperador, script registrar-prueba y despliegue verificado en Amoy.
 - HU-45: módulo auditoria con @Auditar e interceptor global, bitácora de solo inserción con
   trigger, GET /api/v1/bitacora y página Bitácora para ADMIN.
-- Docs: ADR-008, ADR-013, despliegue en Amoy, plan e informe del sprint 2.
+- Docs: ADR-008, ADR-013, despliegue en Amoy, plan e informe de la etapa B del S1.
 
 Refs: HT-02, HU-45
 EOF
@@ -1287,7 +1391,7 @@ EOF
 
 No hagas push. Termina con un mensaje al usuario que incluya:
 
-- el resumen de la verificación de 9.1;
+- el resumen de la verificación de B9.1;
 - la dirección del contrato y los enlaces de PolygonScan;
 - el título del PR (el encabezado del commit);
 - este cuerpo de PR, listo para pegar:
@@ -1295,8 +1399,8 @@ No hagas push. Termina con un mensaje al usuario que incluya:
 ```markdown
 ## Resumen
 
-Sprint 2: contrato RegistroRecibos desplegado y verificado en Amoy (HT-02) y bitácora de
-auditoría (HU-45). Informe: `docs/sprints/sprint-02.md`.
+S1, Etapa B: contrato RegistroRecibos desplegado y verificado en Amoy (HT-02) y bitácora de
+auditoría (HU-45). Informe: `docs/sprints/sprint-s1.md`.
 
 ## Criterios de aceptación
 
@@ -1314,7 +1418,7 @@ auditoría (HU-45). Informe: `docs/sprints/sprint-02.md`.
 - Aceptación del Product Owner en la revisión del sprint.
 ```
 
-## 11. Trazabilidad criterio → evidencia
+## B11. Trazabilidad criterio → evidencia
 
 | Criterio                                           | Evidencia                                                                                                         |
 | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -1329,15 +1433,15 @@ auditoría (HU-45). Informe: `docs/sprints/sprint-02.md`.
 | HU-45.3 sin modificar ni eliminar (RN-17)          | migración `bitacora_solo_insercion`, puerto sin edición y e2e caso 7                                              |
 | HU-45.4 consulta del ADMIN con filtros             | `GET /api/v1/bitacora`, e2e casos 4 a 6, página `/bitacora` y su prueba de Vitest                                 |
 
-## 12. Estimación
+## B12. Estimación
 
 | Fase | Tareas                                                                              | Historia |  Horas |
 | ---- | ----------------------------------------------------------------------------------- | -------- | -----: |
-| 0    | Preparación y limpieza (T0)                                                         | HT-02    |    0,5 |
-| 1    | Pruebas, reporte, Slither, red operadora, script, documentación y ADR-008 (T1 a T6) | HT-02    |      9 |
-| 2    | Punto de control en Amoy (usuario)                                                  | HT-02    |      2 |
-| 3    | Bitácora (T7 a T15)                                                                 | HU-45    |      6 |
-| 4    | Evidencia de Amoy                                                                   | HT-02    |    1,5 |
-| 5    | Definición de Terminado, informe y commit                                           | HT-02    |      2 |
+| B0   | Preparación y limpieza (T0)                                                         | HT-02    |    0,5 |
+| B1   | Pruebas, reporte, Slither, red operadora, script, documentación y ADR-008 (T1 a T6) | HT-02    |      9 |
+| B2   | Punto de control en Amoy (usuario)                                                  | HT-02    |      2 |
+| B3   | Bitácora (T7 a T15)                                                                 | HU-45    |      6 |
+| B4   | Evidencia de Amoy                                                                   | HT-02    |    1,5 |
+| B5   | Definición de Terminado, informe y commit                                           | HT-02    |      2 |
 | —    | Holgura                                                                             | HT-02    |      3 |
 |      | **Total**                                                                           |          | **24** |

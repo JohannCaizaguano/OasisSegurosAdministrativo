@@ -1,39 +1,49 @@
-# Sprint 5 — Plan de implementación
+# Sprint S3 — Plan de implementación
 
 - **Historias:** HU-08 Editar y desactivar cliente (4 h), HU-09 Buscar clientes (5 h), HU-12
-  Registrar póliza (8 h), HU-13 Editar póliza y su estado (4 h) y HU-14 Listar pólizas (3 h): 24 de
-  25 horas de capacidad.
-- **Épicas:** EP-02 (HU-08 y HU-09) y EP-03 (HU-12, HU-13 y HU-14).
-- **Fechas:** 05/10/2026 – 09/10/2026 (tabla 6-1 del backlog).
-- **Rama:** `feat/sprint-05-clientes-polizas`.
-- **Ejecuta:** OpenCode con agentes coordinados (`.opencode/agents/`, sección 0.1) sobre esta
+  Registrar póliza (8 h), HU-13 Editar póliza y su estado (4 h), HU-14 Listar pólizas (3 h) y HT-13
+  Implementación del sistema de diseño de la interfaz (25 h).
+- **Horas:** 49 de 50 h de capacidad (tabla 6-1 del backlog).
+- **Épicas:** EP-02 (HU-08 y HU-09), EP-03 (HU-12, HU-13 y HU-14) y EP-07 (HT-13).
+- **Fechas:** 05/10/2026 – 16/10/2026 (tabla 6-1 del backlog).
+- **Dos etapas secuenciales:**
+  - **Etapa A — Gestión de clientes y registro de pólizas (HU-08, HU-09, HU-12, HU-13, HU-14):**
+    termina con el **commit 1**.
+  - **Etapa B — Sistema de diseño (HT-13):** la segunda semana del sprint, reservada para
+    implementar la propuesta de diseño que apruebe Oasis Seguros (sección 6 del backlog).
+- **Rama de la Etapa A:** `feat/sprint-05-clientes-polizas`.
+- **Ejecuta:** OpenCode con agentes coordinados (`.opencode/agents/`, sección A0.1) sobre esta
   copia del repositorio.
-- **Decisiones acordadas con el desarrollador:** 07/10/2026, en una sesión de grilling (sección 2).
+- **Decisiones acordadas con el desarrollador:** 07/10/2026, en una sesión de grilling (sección A2).
 
-Este documento es el Sprint Backlog del Sprint 5. Las reglas generales están en `AGENTS.md`, el mapa
-técnico en `CLAUDE.md` y las reglas de los módulos del API en `apps/api/src/modules/README.md`.
-OpenCode solo carga `AGENTS.md`: cada agente lee los otros dos antes de empezar. La fuente de verdad
-está en `docs/referencia/`, que no se edita. Si algo de este plan contradice `docs/referencia/`,
-gana la referencia: detente y repórtalo.
+Este documento es el Sprint Backlog de S3. Las reglas generales están en `AGENTS.md`, el mapa técnico
+en `CLAUDE.md` y las reglas de los módulos del API en `apps/api/src/modules/README.md`. OpenCode
+solo carga `AGENTS.md`: cada agente lee los otros dos antes de empezar. La fuente de verdad está en
+`docs/referencia/`, que no se edita. Si algo de este plan contradice `docs/referencia/`, gana la
+referencia: detente y repórtalo. El informe del sprint es `docs/sprints/sprint-s3.md`.
 
 **Cómo leer las tareas.** Cada tarea indica su **agente** y trae un miniprompt: qué hacer, archivos,
 comportamiento, casos borde, pruebas primero y verificación. Cuando ayuda, suma un bloque
 **Ejemplo (orientativo)**, que muestra la forma o la parte delicada. No se copia tal cual: adáptalo
 al código real.
 
-## 0. Reglas de ejecución
+---
 
-1. El orquestador ejecuta las fases en orden: 0 → 1 → 2 (paralela) → 3 → 4 → 5. Ningún subagente
+# ETAPA A — Gestión de clientes y registro de pólizas (HU-08, HU-09, HU-12, HU-13, HU-14)
+
+## A0. Reglas de ejecución
+
+1. El orquestador ejecuta las fases en orden: A0 → A1 → A2 (paralela) → A3 → A4 → A5. Ningún subagente
    arranca una fase por su cuenta.
 2. TDD en toda lógica nueva: primero la prueba en rojo y luego el código (`test-driven-development`).
    Antes de cerrar una fase, el orquestador usa `verification-before-completion` y guarda la salida
    en el ledger.
-3. Al empezar su tarea, cada agente invoca las skills de su fila (sección 0.2) en el orden de
+3. Al empezar su tarea, cada agente invoca las skills de su fila (sección A0.2) en el orden de
    `AGENTS.md`: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
 4. Tras cambiar `packages/shared/src`, ejecuta `pnpm --filter @oasis/shared build` y borra
    `apps/web/node_modules/.vite` (Vite no invalida el prebundle de un paquete del workspace).
 5. Nunca edites `docs/referencia/`.
-6. **Un solo commit** al final (sección 13), hecho por el orquestador y sin líneas de atribución
+6. **Un solo commit** al final (sección A13), hecho por el orquestador y sin líneas de atribución
    (`Co-Authored-By`, "Generated with…"). Antes, comprueba que `git config user.name` sea
    `JohannCaizaguano`. **No hagas push ni abras el PR**: los hace el usuario.
 7. No adelantes trabajo de otros sprints; lo que quede fuera de alcance va como deuda al informe.
@@ -43,7 +53,7 @@ al código real.
    (`pnpm --filter …`); nadie ejecuta `pnpm -r build` ni `pnpm install` hasta que el orquestador
    cierre la fase.
 
-### 0.1 Agentes y coordinación
+### A0.1 Agentes y coordinación
 
 Los agentes están en `.opencode/agents/`. Heredan el modelo con el que se lanza OpenCode y sus
 permisos de edición limitan cada uno a su carpeta (D3).
@@ -58,17 +68,17 @@ permisos de edición limitan cada uno a su carpeta (D3).
 | `revisor`         | subagente | nada (solo su nota del ledger)                                      | 4     | T13      |
 
 ```text
-Fase 0  orquestador ── T0 rama, línea base y ledger
-Fase 1  contrato-shared ── T1 → T2 → T3            (secuencial: es el contrato de todos)
-Fase 2  ┌ backend-api ── T4 → T5 → T6 → T7         (paralela: dos llamadas `task` en el
+Fase A0  orquestador ── T0 rama, línea base y ledger
+Fase A1  contrato-shared ── T1 → T2 → T3            (secuencial: es el contrato de todos)
+Fase A2  ┌ backend-api ── T4 → T5 → T6 → T7         (paralela: dos llamadas `task` en el
         └ frontend-spa ── T8 → T9 → T10             mismo mensaje)
-Fase 3  verificador ── T11 → T12
-Fase 4  revisor ── T13 → especialistas corrigen → revisor confirma (máx. 1 ronda)
-Fase 5  orquestador ── T14 docs, DoD, informe y commit
+Fase A3  verificador ── T11 → T12
+Fase A4  revisor ── T13 → especialistas corrigen → revisor confirma (máx. 1 ronda)
+Fase A5  orquestador ── T14 docs, DoD, informe y commit
 ```
 
 **Traspasos.** Cada subagente termina escribiendo su nota en
-`.superpowers/sdd/sprint-05-plan/<agente>.md`, con:
+`.superpowers/sdd/sprint-s3-plan/<agente>.md`, con:
 
 - qué hizo y la salida resumida de sus comandos;
 - sus desvíos del plan, con su motivo;
@@ -81,23 +91,23 @@ resumen de las notas que le afectan: el subagente no ve la conversación del orq
 y se lo devuelve al orquestador, que relanza al dueño de esa carpeta. Si el `verificador` encuentra
 un bug de producto, deja la prueba en rojo como evidencia.
 
-**Frenos.** Si una decisión de la sección 2 deja de ser viable, el orquestador se detiene e invoca
+**Frenos.** Si una decisión de la sección A2 deja de ser viable, el orquestador se detiene e invoca
 `grilling` para planteársela al usuario con su recomendación. Las decisiones no se reabren por
 iniciativa de un agente.
 
-### 0.2 Skills por fase
+### A0.2 Skills por fase
 
 | Momento                               | Agente            | Skills                                                                                                                                                                     |
 | ------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Todo el sprint                        | `orquestador`     | `executing-plans`, `ponytail`, `verification-before-completion`; `grilling` solo como freno                                                                                |
 | Toda lógica nueva                     | todos             | `test-driven-development`                                                                                                                                                  |
 | Un fallo o una prueba roja inesperada | todos             | `systematic-debugging`                                                                                                                                                     |
-| Fase 1 (T1 a T3)                      | `contrato-shared` | `zod`, `typescript-advanced-types`, `vitest`                                                                                                                               |
-| Fase 2, API (T4 a T7)                 | `backend-api`     | `nestjs-best-practices`, `nodejs-best-practices`, `nodejs-backend-patterns`, `prisma-client-api`                                                                           |
-| Fase 2, SPA (T8 a T10)                | `frontend-spa`    | `react-best-practices`, `composition-patterns`, `react-hook-form`, `zod`, `shadcn`, `tailwind-v4-shadcn`, `tailwind-css-patterns`, `impeccable`, `accessibility`, `vitest` |
-| Fase 3, API (T11)                     | `verificador`     | `nestjs-best-practices`, `prisma-client-api`                                                                                                                               |
-| Fase 3, SPA (T12)                     | `verificador`     | `playwright-best-practices`                                                                                                                                                |
-| Fase 4 (T13)                          | `revisor`         | `ponytail-review`, `accessibility`, `impeccable` (`audit`)                                                                                                                 |
+| Fase A1 (T1 a T3)                     | `contrato-shared` | `zod`, `typescript-advanced-types`, `vitest`                                                                                                                               |
+| Fase A2, API (T4 a T7)                | `backend-api`     | `nestjs-best-practices`, `nodejs-best-practices`, `nodejs-backend-patterns`, `prisma-client-api`                                                                           |
+| Fase A2, SPA (T8 a T10)               | `frontend-spa`    | `react-best-practices`, `composition-patterns`, `react-hook-form`, `zod`, `shadcn`, `tailwind-v4-shadcn`, `tailwind-css-patterns`, `impeccable`, `accessibility`, `vitest` |
+| Fase A3, API (T11)                    | `verificador`     | `nestjs-best-practices`, `prisma-client-api`                                                                                                                               |
+| Fase A3, SPA (T12)                    | `verificador`     | `playwright-best-practices`                                                                                                                                                |
+| Fase A4 (T13)                         | `revisor`         | `ponytail-review`, `accessibility`, `impeccable` (`audit`)                                                                                                                 |
 | Si Vite sirve un prebundle viejo      | `frontend-spa`    | `vite`                                                                                                                                                                     |
 
 No aplican:
@@ -119,11 +129,11 @@ No aplican:
 **Superpowers en este sprint:**
 
 - Sin worktrees: todos los agentes trabajan sobre la rama de T0.
-- El ledger vive en `.superpowers/sdd/sprint-05-plan/`, que está en `.gitignore`.
+- El ledger vive en `.superpowers/sdd/sprint-s3-plan/`, que está en `.gitignore`.
 - Sin commits por tarea.
 - Si `finishing-a-development-branch` ofrece opciones, elige "conservar la rama tal cual".
 
-## 1. Alcance
+## A1. Alcance
 
 ### HU-08 — Editar y desactivar cliente (RF-09)
 
@@ -159,43 +169,43 @@ No aplican:
 
 ### Fuera de alcance (no implementar)
 
-- Cuentas de CLIENTE: desactivar un cliente no toca su `Usuario` ni sus sesiones (HU-05, S10).
-- Ficha del cliente con pólizas y pagos (HU-10, S10).
+- Cuentas de CLIENTE: desactivar un cliente no toca su `Usuario` ni sus sesiones (HU-05, S6).
+- Ficha del cliente con pólizas y pagos (HU-10, S6).
 - Plan de cuotas, registro, validación y rechazo de pagos desde la SPA (HU-35, HU-16, HU-18 y
-  HU-19, S6). Del módulo de pagos solo se toca RN-01 en `CrearPagoUseCase` (D14).
-- Saldo pendiente (HU-15, S10).
-- Administrar catálogos (HU-46, S15): `GET /ramos` es de solo lectura.
-- Importación desde archivo (HU-34, S13).
+  HU-19, S4). Del módulo de pagos solo se toca RN-01 en `CrearPagoUseCase` (D14).
+- Saldo pendiente (HU-15, S6).
+- Administrar catálogos (HU-46, S9): `GET /ramos` es de solo lectura.
+- Importación desde archivo (HU-34, S6).
 - Búsqueda insensible a tildes (`unaccent`): deuda (D8).
-- Firefox y WebKit en Playwright (HT-09, S15).
+- Firefox y WebKit en Playwright (HT-09, S8).
 
-## 2. Decisiones tomadas (no reabrir)
+## A2. Decisiones tomadas (no reabrir)
 
-| #   | Decisión                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Motivo                                                                                                          |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| D1  | Plan con el formato de S4, ejecutado por OpenCode con agentes coordinados; un solo commit del orquestador, sin atribuciones; push y PR los hace el usuario. Las horas se reportan como las fija el backlog (sin orden de recorte).                                                                                                                                                                                                                                                                       | `AGENTS.md` y preferencia del desarrollador.                                                                    |
-| D2  | Alcance: HU-08, HU-09, HU-12, HU-13 y HU-14, más RN-01 en `CrearPagoUseCase` (criterio de HU-13) y el retiro de `DELETE /polizas/:id`.                                                                                                                                                                                                                                                                                                                                                                   | Regla de alcance.                                                                                               |
-| D3  | Agentes versionados en `.opencode/agents/`, heredan el modelo: `orquestador` (primario) y los subagentes `contrato-shared`, `backend-api`, `frontend-spa`, `verificador` y `revisor` (solo lectura). Cada uno edita solo su carpeta (tabla 0.1).                                                                                                                                                                                                                                                         | Las carpetas disjuntas son lo que permite la fase paralela sin worktrees.                                       |
-| D4  | Coordinación: el contrato primero (Fase 1), luego API y SPA en paralelo, después e2e y revisión. Traspasos por notas en `.superpowers/sdd/sprint-05-plan/`. El revisor hace una ronda y como máximo una de confirmación; lo que quede pendiente va como deuda.                                                                                                                                                                                                                                           | La SPA programa contra el contrato, no contra el API en curso.                                                  |
-| D5  | Editar cliente (`PATCH /clientes/:id`): nombres, apellidos, razón social, correo y teléfono siempre, también si el cliente está inactivo. `tipoIdentificacion` e `identificacion` solo si el cliente **no tiene ninguna póliza**, en cualquier estado. Si las tiene y el valor cambia → `ReglaNegocioError` (422) con `details: { campo, motivo: 'IDENTIFICACION_CON_POLIZAS' }`. Reenviar el mismo valor no es un cambio.                                                                               | La identificación es la del recibo; cambiarla rompe la trazabilidad.                                            |
-| D6  | `POST /clientes/:id/desactivar` y `/reactivar` (`@HttpCode(200)`, ADMIN y OPERADOR), auditados como `DESACTIVAR` y `REACTIVAR` sobre `Cliente`. Idempotentes: desactivar a uno inactivo devuelve el cliente igual. Responden el cliente. No se toca su `Usuario` ni sus sesiones.                                                                                                                                                                                                                        | Mismo patrón que usuarios (S4); RN-09. La cuenta de cliente es de HU-05.                                        |
-| D7  | La respuesta de cliente suma `activo: boolean` y `tienePolizas: boolean`, calculado con `_count` en la misma consulta (sin N+1). La SPA deshabilita tipo e identificación cuando `tienePolizas` es verdadero.                                                                                                                                                                                                                                                                                            | La SPA debe explicar el bloqueo antes del envío.                                                                |
-| D8  | `GET /clientes`: `estado=ACTIVOS\|INACTIVOS\|TODOS` (por defecto `ACTIVOS`) y `pageSize` por defecto 20. `q` se divide por espacios: **cada** palabra debe coincidir (`contains`, sin distinguir mayúsculas) con identificación, nombres, apellidos, razón social o correo. La insensibilidad a tildes queda como deuda con un comentario `ponytail:` (techo: ILIKE; salida: extensión `unaccent`).                                                                                                      | "juan pérez" debe encontrar a Juan Pérez aunque nombre y apellido estén en columnas distintas.                  |
-| D9  | Crear póliza: `crearPolizaSchema` sin `estado` (siempre VIGENTE) y con `ramoId: uuid` en lugar de `ramo: string`. `fechaFin` **estrictamente** posterior a `fechaInicio`. `primaTotal` > 0 con hasta 2 decimales (`montoPositivoSchema`). Errores (`details: { campo, motivo }`): cliente inexistente → 404; cliente inactivo → 422 `CLIENTE_INACTIVO`; aseguradora inexistente → 404; ramo inexistente o inactivo → 422 `RAMO_INVALIDO`; número repetido → 409 `NUMERO_DUPLICADO`, también por `P2002`. | Criterios literales de HU-12 y HU-08.4; la SPA no es la única defensa.                                          |
-| D10 | `GET /ramos` de solo lectura (ADMIN y OPERADOR): ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. Vive en el módulo `polizas` (`RamosController`). Administrarlos es HU-46.                                                                                                                                                                                                                                                                                                  | El formulario necesita un `Select` estable; texto libre resuelto por nombre es frágil.                          |
-| D11 | Editar póliza (`PATCH /polizas/:id`): solo si está VIGENTE (si no → 422 `POLIZA_NO_VIGENTE`). Campos: `numero`, `aseguradoraId`, `ramoId`, `primaTotal`, `fechaInicio` y `fechaFin`; **sin** `clienteId` ni `estado` (el esquema los rechaza). La prima no cambia si hay pagos VALIDADOS → 422 `PRIMA_CON_PAGOS_VALIDADOS`. Si llega una sola fecha, se compara con la guardada. La respuesta suma `tienePagosValidados: boolean` (con `_count` filtrado).                                               | Mover una póliza con pagos o recibos a otro cliente rompe la trazabilidad.                                      |
-| D12 | Estado: `POST /polizas/:id/estado` con `{ estado: 'VENCIDA' \| 'CANCELADA' }`, `@HttpCode(200)`, auditado como **`CAMBIAR_ESTADO`** (acción nueva). El detalle de la bitácora guarda `estado` nuevo. Solo VIGENTE → VENCIDA o CANCELADA; los dos son **terminales** (desde otro estado → 422 `POLIZA_NO_VIGENTE`). La SPA pide confirmación con `AlertDialog`. Una renovación es una póliza nueva con otro número.                                                                                       | Una cancelación debe poder encontrarse en la bitácora (HU-45); cuotas y saldo (S6–S10) heredan estados simples. |
-| D13 | Se retira `DELETE /polizas/:id` con su caso de uso, el método del repositorio y su entrada en `auditoria-cobertura.spec.ts`.                                                                                                                                                                                                                                                                                                                                                                             | RN-09; como clientes y aseguradoras en S4. CANCELADA cubre el error de registro.                                |
-| D14 | RN-01 en `CrearPagoUseCase`: la póliza inexistente → 404; no VIGENTE → 422 `POLIZA_NO_VIGENTE`. Nuevo método `estadoPoliza(polizaId)` en `PagosRepositoryPort`. No se toca nada más de pagos.                                                                                                                                                                                                                                                                                                            | Criterio de HU-13 con evidencia en este sprint; el registro de pagos completo es HU-16 (S6).                    |
-| D15 | `GET /polizas`: filtros `clienteId`, `aseguradoraId`, `estado` y `q` (número), paginado (por defecto 20), y `orden=recientes\|fechaFinAsc\|fechaFinDesc` (por defecto `recientes`). La SPA alterna el orden con el encabezado "Vigencia" (`aria-sort`).                                                                                                                                                                                                                                                  | HU-14.                                                                                                          |
-| D16 | Selector de cliente: `SelectorCliente`, un combobox ARIA 1.2 hecho con `Input` y una lista (`role="listbox"`), con búsqueda en el servidor (`GET /clientes?q=&estado=ACTIVOS`, debounce de 300 ms y 20 resultados), sin dependencias nuevas. Se usa en el formulario de póliza (solo activos) y como filtro del listado de pólizas.                                                                                                                                                                      | HU-08.4; un `Select` con los primeros 100 deja de servir con más clientes.                                      |
-| D17 | ADR-018 "Ciclo de vida de la póliza": estados terminales, renovación como póliza nueva, sin borrado, bloqueos de edición (VIGENTE, prima con pagos validados, cliente fijo) y RN-01. El informe pide al autor agregarlo a la tabla 11-1.                                                                                                                                                                                                                                                                 | Fija reglas que S6–S8 heredan.                                                                                  |
-| D18 | Pruebas: TDD de los esquemas y de los casos de uso nuevos; e2e `clientes` ampliado, `polizas` nuevo, `pagos-rn01` (o caso en `flujo-anclaje`), `bitacora` y matriz de `acceso-por-rol` actualizados; Vitest de `ClientesPage`, `FormularioCliente`, `SelectorCliente`, `PolizasPage` y `FormularioPoliza`; Playwright `clientes-polizas.spec.ts` y 360 px de las páginas tocadas, solo Chromium.                                                                                                         | Evidencia por criterio para el informe.                                                                         |
-| D19 | Las e2e que cambian el estado de una póliza **crean su propia póliza**; nunca alteran la del seed, que `flujo-anclaje` e `idempotencia-anclaje` buscan con `findFirst({ estado: 'VIGENTE' })`.                                                                                                                                                                                                                                                                                                           | Evita romper el flujo de anclaje entre corridas.                                                                |
+| #   | Decisión                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Motivo                                                                                                         |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| D1  | Plan con el formato de S2, ejecutado por OpenCode con agentes coordinados; un solo commit del orquestador, sin atribuciones; push y PR los hace el usuario. Las horas se reportan como las fija el backlog (sin orden de recorte).                                                                                                                                                                                                                                                                       | `AGENTS.md` y preferencia del desarrollador.                                                                   |
+| D2  | Alcance: HU-08, HU-09, HU-12, HU-13 y HU-14, más RN-01 en `CrearPagoUseCase` (criterio de HU-13) y el retiro de `DELETE /polizas/:id`.                                                                                                                                                                                                                                                                                                                                                                   | Regla de alcance.                                                                                              |
+| D3  | Agentes versionados en `.opencode/agents/`, heredan el modelo: `orquestador` (primario) y los subagentes `contrato-shared`, `backend-api`, `frontend-spa`, `verificador` y `revisor` (solo lectura). Cada uno edita solo su carpeta (tabla 0.1).                                                                                                                                                                                                                                                         | Las carpetas disjuntas son lo que permite la fase paralela sin worktrees.                                      |
+| D4  | Coordinación: el contrato primero (Fase A1), luego API y SPA en paralelo, después e2e y revisión. Traspasos por notas en `.superpowers/sdd/sprint-s3-plan/`. El revisor hace una ronda y como máximo una de confirmación; lo que quede pendiente va como deuda.                                                                                                                                                                                                                                          | La SPA programa contra el contrato, no contra el API en curso.                                                 |
+| D5  | Editar cliente (`PATCH /clientes/:id`): nombres, apellidos, razón social, correo y teléfono siempre, también si el cliente está inactivo. `tipoIdentificacion` e `identificacion` solo si el cliente **no tiene ninguna póliza**, en cualquier estado. Si las tiene y el valor cambia → `ReglaNegocioError` (422) con `details: { campo, motivo: 'IDENTIFICACION_CON_POLIZAS' }`. Reenviar el mismo valor no es un cambio.                                                                               | La identificación es la del recibo; cambiarla rompe la trazabilidad.                                           |
+| D6  | `POST /clientes/:id/desactivar` y `/reactivar` (`@HttpCode(200)`, ADMIN y OPERADOR), auditados como `DESACTIVAR` y `REACTIVAR` sobre `Cliente`. Idempotentes: desactivar a uno inactivo devuelve el cliente igual. Responden el cliente. No se toca su `Usuario` ni sus sesiones.                                                                                                                                                                                                                        | Mismo patrón que usuarios (S2); RN-09. La cuenta de cliente es de HU-05.                                       |
+| D7  | La respuesta de cliente suma `activo: boolean` y `tienePolizas: boolean`, calculado con `_count` en la misma consulta (sin N+1). La SPA deshabilita tipo e identificación cuando `tienePolizas` es verdadero.                                                                                                                                                                                                                                                                                            | La SPA debe explicar el bloqueo antes del envío.                                                               |
+| D8  | `GET /clientes`: `estado=ACTIVOS\|INACTIVOS\|TODOS` (por defecto `ACTIVOS`) y `pageSize` por defecto 20. `q` se divide por espacios: **cada** palabra debe coincidir (`contains`, sin distinguir mayúsculas) con identificación, nombres, apellidos, razón social o correo. La insensibilidad a tildes queda como deuda con un comentario `ponytail:` (techo: ILIKE; salida: extensión `unaccent`).                                                                                                      | "juan pérez" debe encontrar a Juan Pérez aunque nombre y apellido estén en columnas distintas.                 |
+| D9  | Crear póliza: `crearPolizaSchema` sin `estado` (siempre VIGENTE) y con `ramoId: uuid` en lugar de `ramo: string`. `fechaFin` **estrictamente** posterior a `fechaInicio`. `primaTotal` > 0 con hasta 2 decimales (`montoPositivoSchema`). Errores (`details: { campo, motivo }`): cliente inexistente → 404; cliente inactivo → 422 `CLIENTE_INACTIVO`; aseguradora inexistente → 404; ramo inexistente o inactivo → 422 `RAMO_INVALIDO`; número repetido → 409 `NUMERO_DUPLICADO`, también por `P2002`. | Criterios literales de HU-12 y HU-08.4; la SPA no es la única defensa.                                         |
+| D10 | `GET /ramos` de solo lectura (ADMIN y OPERADOR): ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. Vive en el módulo `polizas` (`RamosController`). Administrarlos es HU-46.                                                                                                                                                                                                                                                                                                  | El formulario necesita un `Select` estable; texto libre resuelto por nombre es frágil.                         |
+| D11 | Editar póliza (`PATCH /polizas/:id`): solo si está VIGENTE (si no → 422 `POLIZA_NO_VIGENTE`). Campos: `numero`, `aseguradoraId`, `ramoId`, `primaTotal`, `fechaInicio` y `fechaFin`; **sin** `clienteId` ni `estado` (el esquema los rechaza). La prima no cambia si hay pagos VALIDADOS → 422 `PRIMA_CON_PAGOS_VALIDADOS`. Si llega una sola fecha, se compara con la guardada. La respuesta suma `tienePagosValidados: boolean` (con `_count` filtrado).                                               | Mover una póliza con pagos o recibos a otro cliente rompe la trazabilidad.                                     |
+| D12 | Estado: `POST /polizas/:id/estado` con `{ estado: 'VENCIDA' \| 'CANCELADA' }`, `@HttpCode(200)`, auditado como **`CAMBIAR_ESTADO`** (acción nueva). El detalle de la bitácora guarda `estado` nuevo. Solo VIGENTE → VENCIDA o CANCELADA; los dos son **terminales** (desde otro estado → 422 `POLIZA_NO_VIGENTE`). La SPA pide confirmación con `AlertDialog`. Una renovación es una póliza nueva con otro número.                                                                                       | Una cancelación debe poder encontrarse en la bitácora (HU-45); cuotas y saldo (S4–S6) heredan estados simples. |
+| D13 | Se retira `DELETE /polizas/:id` con su caso de uso, el método del repositorio y su entrada en `auditoria-cobertura.spec.ts`.                                                                                                                                                                                                                                                                                                                                                                             | RN-09; como clientes y aseguradoras en S2. CANCELADA cubre el error de registro.                               |
+| D14 | RN-01 en `CrearPagoUseCase`: la póliza inexistente → 404; no VIGENTE → 422 `POLIZA_NO_VIGENTE`. Nuevo método `estadoPoliza(polizaId)` en `PagosRepositoryPort`. No se toca nada más de pagos.                                                                                                                                                                                                                                                                                                            | Criterio de HU-13 con evidencia en este sprint; el registro de pagos completo es HU-16 (S4).                   |
+| D15 | `GET /polizas`: filtros `clienteId`, `aseguradoraId`, `estado` y `q` (número), paginado (por defecto 20), y `orden=recientes\|fechaFinAsc\|fechaFinDesc` (por defecto `recientes`). La SPA alterna el orden con el encabezado "Vigencia" (`aria-sort`).                                                                                                                                                                                                                                                  | HU-14.                                                                                                         |
+| D16 | Selector de cliente: `SelectorCliente`, un combobox ARIA 1.2 hecho con `Input` y una lista (`role="listbox"`), con búsqueda en el servidor (`GET /clientes?q=&estado=ACTIVOS`, debounce de 300 ms y 20 resultados), sin dependencias nuevas. Se usa en el formulario de póliza (solo activos) y como filtro del listado de pólizas.                                                                                                                                                                      | HU-08.4; un `Select` con los primeros 100 deja de servir con más clientes.                                     |
+| D17 | ADR-018 "Ciclo de vida de la póliza": estados terminales, renovación como póliza nueva, sin borrado, bloqueos de edición (VIGENTE, prima con pagos validados, cliente fijo) y RN-01. El informe pide al autor agregarlo a la tabla 11-1.                                                                                                                                                                                                                                                                 | Fija reglas que S4 y S5 heredan.                                                                               |
+| D18 | Pruebas: TDD de los esquemas y de los casos de uso nuevos; e2e `clientes` ampliado, `polizas` nuevo, `pagos-rn01` (o caso en `flujo-anclaje`), `bitacora` y matriz de `acceso-por-rol` actualizados; Vitest de `ClientesPage`, `FormularioCliente`, `SelectorCliente`, `PolizasPage` y `FormularioPoliza`; Playwright `clientes-polizas.spec.ts` y 360 px de las páginas tocadas, solo Chromium.                                                                                                         | Evidencia por criterio para el informe.                                                                        |
+| D19 | Las e2e que cambian el estado de una póliza **crean su propia póliza**; nunca alteran la del seed, que `flujo-anclaje` e `idempotencia-anclaje` buscan con `findFirst({ estado: 'VIGENTE' })`.                                                                                                                                                                                                                                                                                                           | Evita romper el flujo de anclaje entre corridas.                                                               |
 
-## 3. Estado de partida (verificado el 07/10/2026)
+## A3. Estado de partida (verificado el 07/10/2026)
 
-- **Clientes:** CRUD sin `DELETE` desde S4. `Cliente.activo` existe en Prisma (`@default(true)`),
+- **Clientes:** CRUD sin `DELETE` desde S2. `Cliente.activo` existe en Prisma (`@default(true)`),
   pero ni el dominio, ni el repositorio, ni la respuesta lo usan. `listar` busca `q` como una sola
   cadena en cinco columnas (`OR`), así que "juan pérez" no encuentra nada, y filtra solo por
   `tipoIdentificacion`. `ActualizarClienteUseCase` ya valida RN-11 contra el valor guardado.
@@ -221,7 +231,7 @@ No aplican:
   - `PolizasPage` es solo un listado (`pageSize=100`, sin filtros ni acciones).
   - `features/polizas/api.ts` lista clientes y aseguradoras con `pageSize=100`.
   - `ClientesPage` tiene alta y búsqueda, sin edición ni estado.
-  - `TablaDatos.tsx` (S4) da la tabla paginada con carga, error y vacío.
+  - `TablaDatos.tsx` (S2) da la tabla paginada con carga, error y vacío.
   - Hay `alert-dialog`, pero no `popover` ni `command`.
   - `PanelCliente` muestra `poliza.ramo`: la respuesta conserva `ramo` (nombre) y suma `ramoId`.
 - **Pruebas que se rompen con este sprint:**
@@ -236,16 +246,16 @@ No aplican:
   ejemplo. No se cambia.
 - **Migraciones:** no hacen falta: el esquema ya tiene todo lo que este sprint usa.
 - **ADR:** el último es ADR-017; el nuevo es ADR-018.
-- **Pruebas según el informe de S4:** 30 de contratos, 131 unitarias del API (31 suites), 97 de la
+- **Pruebas según el informe de S2:** 30 de contratos, 131 unitarias del API (31 suites), 97 de la
   SPA (14 archivos), 134 e2e del API (9 suites) y 8 de Playwright.
-- **Entorno (informes de S2 a S4):**
+- **Entorno (informes de S1 y S2):**
   - `pnpm` es el binario de Windows aunque se invoque desde WSL.
   - Si Windows define `CONTRACT_ADDRESS`, esa variable pisa el `.env`.
   - Limpia `bull:anclaje-recibos:*` con el worker detenido.
   - El hook `pre-commit` puede fallar con muchos archivos: verifica `lint` y `format:check` del
     monorepo, commitea con `--no-verify` y anótalo.
 
-## 4. Fase 0 — Preparación (`orquestador`, 0,5 h)
+## A4. Fase A0 — Preparación (`orquestador`, 0,5 h)
 
 ### T0. Rama, línea base y ledger
 
@@ -253,12 +263,12 @@ No aplican:
   `docs/sprint-05-plan-agentes`. Crea `feat/sprint-05-clientes-polizas`.
 - Ejecuta la línea base: `pnpm install --frozen-lockfile`, `pnpm -r build`,
   `pnpm -r typecheck` y `pnpm test`, y guarda los totales en
-  `.superpowers/sdd/sprint-05-plan/orquestador.md`. Si algo está rojo antes de empezar, detente y
+  `.superpowers/sdd/sprint-s3-plan/orquestador.md`. Si algo está rojo antes de empezar, detente y
   repórtalo.
 - Comprueba que OpenCode ve los seis agentes (`@` en la TUI) y la skill `grilling` en
   `.agents/skills/`.
 
-## 5. Fase 1 — Contratos compartidos (`contrato-shared`, 2 h)
+## A5. Fase A1 — Contratos compartidos (`contrato-shared`, 2 h)
 
 ### T1. Esquemas de cliente (HU-08 y HU-09; TDD, 0,5 h)
 
@@ -335,18 +345,18 @@ export const actualizarPolizaSchema = z
   - un cliente editable.
 - Agrega la entrada a `docs/adr/README.md`.
 
-**Verificación de la Fase 1** (la ejecuta el agente y la confirma el orquestador):
+**Verificación de la Fase A1** (la ejecuta el agente y la confirma el orquestador):
 
 ```bash
 pnpm --filter @oasis/shared build && pnpm --filter @oasis/shared lint && pnpm --filter @oasis/shared typecheck
 pnpm --filter @oasis/web test src/contratos
 ```
 
-El `typecheck` del API y de la SPA puede quedar rojo al cerrar la Fase 1 (por ejemplo, el
-`ETIQUETAS_ACCION` de la bitácora o `ramo` → `ramoId`): se cierra en la Fase 2. Anota en la nota de
+El `typecheck` del API y de la SPA puede quedar rojo al cerrar la Fase A1 (por ejemplo, el
+`ETIQUETAS_ACCION` de la bitácora o `ramo` → `ramoId`): se cierra en la Fase A2. Anota en la nota de
 traspaso qué rompe en cada lado.
 
-## 6. Fase 2 — API y SPA en paralelo
+## A6. Fase A2 — API y SPA en paralelo
 
 El orquestador lanza `backend-api` (T4 a T7) y `frontend-spa` (T8 a T10) en **el mismo mensaje**,
 cada uno con la nota de `contrato-shared`. Ninguno espera al otro: la SPA se prueba con la API
@@ -537,11 +547,11 @@ pnpm --filter @oasis/web lint && pnpm --filter @oasis/web typecheck
 pnpm --filter @oasis/web test && pnpm --filter @oasis/web build
 ```
 
-**Cierre de la Fase 2 (orquestador):** `pnpm -r build`, `pnpm -r lint`, `pnpm format:check`,
+**Cierre de la Fase A2 (orquestador):** `pnpm -r build`, `pnpm -r lint`, `pnpm format:check`,
 `pnpm -r typecheck`, `pnpm test`, `pnpm deps:check` y `pnpm deps:check:negativo`. Si el contrato
 real del API difiere del que usó la SPA, relanza al agente que se desvió del plan.
 
-## 7. Fase 3 — Evidencia de extremo a extremo (`verificador`, 4 h)
+## A7. Fase A3 — Evidencia de extremo a extremo (`verificador`, 4 h)
 
 Infraestructura: PostgreSQL y Redis de `compose.dev.yaml`, el nodo Hardhat, `pnpm dev:chain`,
 `prisma migrate deploy` y `seed`.
@@ -588,25 +598,25 @@ Infraestructura: PostgreSQL y Redis de `compose.dev.yaml`, el nodo Hardhat, `pnp
 - **`responsive.spec.ts`:** `/clientes` y `/polizas`, con sus diálogos abiertos, sin
   `scrollWidth > 360`.
 
-**Verificación de la Fase 3:**
+**Verificación de la Fase A3:**
 
 ```bash
 pnpm test:e2e
 pnpm --filter @oasis/web test:e2e
 ```
 
-## 8. Fase 4 — Revisión (`revisor` y especialistas, 2 h)
+## A8. Fase A4 — Revisión (`revisor` y especialistas, 2 h)
 
 ### T13. Revisión y correcciones
 
-- El `revisor` revisa todo el diff (y los archivos nuevos) contra la sección 2, los criterios de la
-  sección 1, `AGENTS.md`, `ponytail-review`, `accessibility` e `impeccable` (`audit`).
+- El `revisor` revisa todo el diff (y los archivos nuevos) contra la sección A2, los criterios de la
+  sección A1, `AGENTS.md`, `ponytail-review`, `accessibility` e `impeccable` (`audit`).
 - El orquestador reparte los hallazgos **bloqueantes** por dueño de carpeta. Los **menores** dentro
   del alcance también se corrigen; los de fuera de alcance van como deuda.
 - Una ronda de confirmación del `revisor`, como máximo. Después, el orquestador repite la
-  verificación del cierre de la Fase 2 y la de la Fase 3.
+  verificación del cierre de la Fase A2 y la de la Fase A3.
 
-## 9. Fase 5 — Documentación, DoD, informe y commit (`orquestador`, 3,75 h)
+## A9. Fase A5 — Documentación, DoD, informe y commit (`orquestador`, 3,75 h)
 
 ### T14. Documentación
 
@@ -619,7 +629,7 @@ pnpm --filter @oasis/web test:e2e
   acciones.
 - `docs/adr/README.md` ya lo actualizó `contrato-shared` (T3).
 
-### 9.1 Definición de Terminado
+### A9.1 Definición de Terminado
 
 Con PostgreSQL y Redis de `compose.dev.yaml` y el nodo Hardhat:
 
@@ -647,14 +657,14 @@ Pruebas manuales (anota el resultado en el informe):
 - `/clientes` y `/polizas` a 360 px, con teclado (combobox, menús y diálogos) y con lector de
   pantalla (anuncio de las opciones del combobox y de los errores por campo).
 
-### 9.2 Informe del sprint
+### A9.2 Informe del sprint
 
-Crea `docs/sprints/sprint-05.md` con la estructura de `sprint-04.md`:
+Escribe la Etapa A del informe `docs/sprints/sprint-s3.md`, con la estructura del informe de S2:
 
 1. **Encabezado:** historias, épicas, rama, fechas y estado.
 2. **Objetivo.**
 3. **Entregables:** tabla con su ubicación, incluidos los agentes de `.opencode/agents/`.
-4. **Criterios de cada historia con su evidencia** (sección 11).
+4. **Criterios de cada historia con su evidencia** (sección A11).
 5. **Definición de Terminado:** tabla de estado.
 6. **Versiones:** solo si cambió alguna dependencia (no se espera).
 7. **Decisiones y discrepancias:**
@@ -673,9 +683,9 @@ Crea `docs/sprints/sprint-05.md` con la estructura de `sprint-04.md`:
    - HU-10, HU-15 y HU-16;
    - Firefox y WebKit.
 10. **Acciones del autor:** agregar ADR-018 a la tabla 11-1 de `docs/referencia/ARQUITECTURA.md`.
-11. **Pruebas manuales** y **Cómo verificar** (los comandos de 9.1).
+11. **Pruebas manuales** y **Cómo verificar** (los comandos de A9.1).
 
-## 10. Commit y entrega
+## A10. Commit y entrega
 
 Revisa con `git status` que no entren:
 
@@ -690,7 +700,7 @@ un solo commit, **sin** líneas `Co-Authored-By` ni "Generated with":
 ```bash
 git add -A
 git commit -F - <<'EOF'
-feat(repo): completar el sprint 5 con gestión de clientes y registro de pólizas
+feat(repo): completar la etapa A del sprint S3 con gestión de clientes y registro de pólizas
 
 - HU-08: edición de clientes con identificación fija si tienen pólizas; desactivar y reactivar.
 - HU-09: búsqueda por identificación o nombre, filtro por estado y paginación de 20 en 20.
@@ -699,7 +709,7 @@ feat(repo): completar el sprint 5 con gestión de clientes y registro de póliza
   VENCIDA o CANCELADA y RN-01 en el registro de pagos.
 - HU-14: listado con filtros por cliente, aseguradora y estado, y orden por fin de vigencia.
 - Se retira DELETE de pólizas (RN-09); GET /ramos de solo lectura.
-- Docs: ADR-018, CLAUDE.md e informe del sprint 5.
+- Docs: ADR-018, CLAUDE.md e informe de la etapa A del S3.
 
 Refs: HU-08, HU-09, HU-12, HU-13, HU-14
 EOF
@@ -707,7 +717,7 @@ EOF
 
 No hagas push. Termina con un mensaje al usuario que incluya:
 
-- el resumen de la verificación de 9.1 y de las pruebas manuales;
+- el resumen de la verificación de A9.1 y de las pruebas manuales;
 - el recordatorio de agregar ADR-018 a la tabla 11-1;
 - el título del PR (el encabezado del commit);
 - este cuerpo de PR, listo para pegar y sin líneas de atribución:
@@ -715,9 +725,9 @@ No hagas push. Termina con un mensaje al usuario que incluya:
 ```markdown
 ## Resumen
 
-Sprint 5: edición y desactivación de clientes (HU-08), búsqueda paginada (HU-09), registro (HU-12),
+S3, Etapa A: edición y desactivación de clientes (HU-08), búsqueda paginada (HU-09), registro (HU-12),
 edición y cambio de estado (HU-13) y listado filtrado (HU-14) de pólizas. Informe:
-`docs/sprints/sprint-05.md`.
+`docs/sprints/sprint-s3.md`.
 
 ## Criterios de aceptación
 
@@ -735,7 +745,7 @@ edición y cambio de estado (HU-13) y listado filtrado (HU-14) de pólizas. Info
 - Aceptación del Product Owner en la revisión del sprint.
 ```
 
-## 11. Trazabilidad criterio → evidencia
+## A11. Trazabilidad criterio → evidencia
 
 | Criterio                                     | Evidencia esperada                                                                                                |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -757,24 +767,24 @@ edición y cambio de estado (HU-13) y listado filtrado (HU-14) de pólizas. Info
 | HU-14.2 paginado                             | `polizas.e2e-spec.ts` caso 8                                                                                      |
 | HU-14.3 orden por fin de vigencia            | `polizas.e2e-spec.ts` caso 8; `PolizasPage.test.tsx`; `clientes-polizas.spec.ts`                                  |
 
-## 12. Estimación
+## A12. Estimación
 
 | Fase | Tareas                                              | Agente                    | Historia | Horas |
 | ---- | --------------------------------------------------- | ------------------------- | -------- | ----: |
-| 0    | Rama, línea base y ledger (T0)                      | `orquestador`             | Todas    |   0,5 |
-| 1    | Esquemas y ADR-018 (T1 a T3)                        | `contrato-shared`         | Todas    |     2 |
-| 2    | Clientes, ramos, pólizas y RN-01 en el API (T4–7)   | `backend-api`             | Todas    |  5,75 |
-| 2    | `ClientesPage`, `SelectorCliente` y pólizas (T8–10) | `frontend-spa`            | Todas    |     6 |
-| 3    | e2e del API y Playwright (T11 y T12)                | `verificador`             | Todas    |     4 |
-| 4    | Revisión y correcciones (T13)                       | `revisor` y especialistas | Todas    |     2 |
-| 5    | Documentación, DoD, informe y commit (T14)          | `orquestador`             | Todas    |  3,75 |
+| A0   | Rama, línea base y ledger (T0)                      | `orquestador`             | Todas    |   0,5 |
+| A1   | Esquemas y ADR-018 (T1 a T3)                        | `contrato-shared`         | Todas    |     2 |
+| A2   | Clientes, ramos, pólizas y RN-01 en el API (T4–7)   | `backend-api`             | Todas    |  5,75 |
+| A2   | `ClientesPage`, `SelectorCliente` y pólizas (T8–10) | `frontend-spa`            | Todas    |     6 |
+| A3   | e2e del API y Playwright (T11 y T12)                | `verificador`             | Todas    |     4 |
+| A4   | Revisión y correcciones (T13)                       | `revisor` y especialistas | Todas    |     2 |
+| A5   | Documentación, DoD, informe y commit (T14)          | `orquestador`             | Todas    |  3,75 |
 |      | **Total de trabajo**                                |                           |          |    24 |
 
-Las fases 2 de API y de SPA corren en paralelo. En el informe, las horas por historia siguen el
+Las dos partes de la Fase A2 (API y SPA) corren en paralelo. En el informe, las horas por historia siguen el
 backlog: HU-08 4 h, HU-09 5 h, HU-12 8 h, HU-13 4 h y HU-14 3 h (24 h). Las horas son nominales
 (D1): no hay orden de recorte.
 
-## 13. Prompt de arranque para OpenCode
+## A13. Prompt de arranque para OpenCode
 
 **Preparación, una vez en tu copia local:**
 
@@ -792,30 +802,77 @@ backlog: HU-08 4 h, HU-09 5 h, HU-12 8 h, HU-13 4 h y HU-14 3 h (24 h). Las hora
 **Prompt:**
 
 ```text
-Eres el orquestador del Sprint 5 del SRPP. Ejecuta docs/sprints/sprint-05-plan.md de principio a
-fin, siguiendo sus reglas (sección 0) y sus decisiones (sección 2), que no se reabren.
+Eres el orquestador del Sprint S3 del SRPP. Ejecuta la Etapa A de docs/sprints/sprint-s3-plan.md de principio a
+fin, siguiendo sus reglas (sección A0) y sus decisiones (sección A2), que no se reabren.
 
 1. Lee AGENTS.md, CLAUDE.md, apps/api/src/modules/README.md y el plan completo. Invoca
-   executing-plans y ponytail. Abre el ledger en .superpowers/sdd/sprint-05-plan/.
-2. Fase 0 (T0): crea la rama feat/sprint-05-clientes-polizas, ejecuta la línea base y anota los
+   executing-plans y ponytail. Abre el ledger en .superpowers/sdd/sprint-s3-plan/.
+2. Fase A0 (T0): crea la rama feat/sprint-05-clientes-polizas, ejecuta la línea base y anota los
    totales. Si algo está rojo antes de empezar, detente y avísame.
-3. Fase 1: lanza @contrato-shared con T1, T2 y T3, citando D5 a D17 y la ruta de su nota de
-   traspaso. Verifica la Fase 1 tú mismo.
-4. Fase 2: en un mismo mensaje lanza dos tareas en paralelo:
+3. Fase A1: lanza @contrato-shared con T1, T2 y T3, citando D5 a D17 y la ruta de su nota de
+   traspaso. Verifica la Fase A1 tú mismo.
+4. Fase A2: en un mismo mensaje lanza dos tareas en paralelo:
    - @backend-api con T4 a T7 (decisiones D5 a D15 y D19);
    - @frontend-spa con T8 a T10 (decisiones D5 a D8, D11, D12, D15 y D16).
    Pásales a ambos el resumen de la nota de @contrato-shared. Al terminar los dos, ejecuta el
-   cierre de la Fase 2.
-5. Fase 3: lanza @verificador con T11 y T12 y las notas de backend y frontend. Si reporta bugs de
+   cierre de la Fase A2.
+5. Fase A3: lanza @verificador con T11 y T12 y las notas de backend y frontend. Si reporta bugs de
    producto, relanza al especialista dueño de la carpeta con la prueba roja y repite la
    verificación.
-6. Fase 4: lanza @revisor con T13. Reparte los hallazgos por dueño de carpeta, corrige y pide
+6. Fase A4: lanza @revisor con T13. Reparte los hallazgos por dueño de carpeta, corrige y pide
    como máximo una ronda de confirmación.
-7. Fase 5: T14, la Definición de Terminado (9.1), el informe docs/sprints/sprint-05.md (9.2) y el
-   único commit de la sección 10, sin atribuciones y sin push.
+7. Fase A5: T14, la Definición de Terminado (A9.1), el informe docs/sprints/sprint-s3.md (A9.2) y el
+   único commit de la sección A10, sin atribuciones y sin push.
 
 Cada subagente recibe un mensaje autosuficiente: las tareas, las decisiones por número, lo que
 entregaron los demás y la ruta de su nota. Respeta las fronteras de edición de la tabla 0.1. Si
 una decisión deja de ser viable, detente e invoca la skill grilling para preguntarme, con tu
-recomendación. Termina con el resumen y el cuerpo del PR que pide la sección 10.
+recomendación. Termina con el resumen y el cuerpo del PR que pide la sección A10.
 ```
+
+---
+
+# ETAPA B — Sistema de diseño (HT-13)
+
+## B0. Condición de entrada
+
+HT-13 implementa la propuesta de diseño que **Oasis Seguros elija** (RNF-20, RNF-26). La Etapa B
+arranca cuando haya una decisión registrada en un ADR; sin ella no se toca la interfaz, para no
+rehacer pantallas. Las tres propuestas (A · Sello, B · Claro y C · Cercano) se presentaron el
+06/10/2026 en `SRPP-propuestas-diseno.pdf`.
+
+## B1. Alcance
+
+### HT-13 — Implementación del sistema de diseño de la interfaz (RNF-20, RNF-26)
+
+1. Los tokens de color, tipografía, radios, alturas de control y movimiento de la propuesta
+   aprobada reemplazan la paleta provisional, y ningún componente usa colores fuera de ellos.
+2. Las fuentes se sirven desde el mismo origen, sin CDN de terceros, y el isologo de Oasis Seguros
+   aparece en la navegación y en el inicio de sesión.
+3. La navegación del personal y el encabezado siguen el diseño aprobado; en el teléfono, el cliente
+   navega con una barra inferior.
+4. Los estados de pago, recibo, póliza, cliente y verificación se muestran con un único componente
+   que combina icono, texto y color, y que las cuotas reutilizan desde HU-35.
+5. Las pantallas existentes usan el sistema de diseño sin cambiar su comportamiento.
+6. Contraste AA, foco visible, objetivos táctiles de al menos 44 px en el portal y nada desborda a
+   360 px.
+
+La deuda visual de la Etapa A entra aquí, porque toca los mismos archivos: el icono de dirección en
+«Vigencia», `scope="col"` en el componente de tabla y los alias `Ramo`, `OrdenPoliza` y
+`FiltroEstadoCliente` de `types/index.ts`.
+
+## B2. Plan
+
+Las tareas se detallan con la propuesta aprobada: tokens, fuentes e isologo; navegación y
+encabezado; componente único de estado; pantallas existentes; evidencia con axe, foco, 44 px y
+360 px; revisión, visto bueno visual del autor y commit.
+
+## B3. Estimación
+
+| Historia  |  Horas |
+| --------- | -----: |
+| HT-13     |     25 |
+| **Total** | **25** |
+
+Si la decisión de diseño no llega a tiempo, HT-13 pasa completa al sprint siguiente como deuda y se
+ejecuta antes que cualquier pantalla nueva.

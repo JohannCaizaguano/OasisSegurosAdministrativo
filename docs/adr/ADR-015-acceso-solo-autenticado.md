@@ -2,7 +2,7 @@
 
 - **Estado**: aceptado (S2: regla de acceso; S5: verificación del cliente)
 - **Fecha**: 2026-10
-- **Sprint**: 3 y 8
+- **Sprint**: S2 y S5
 
 ## Contexto
 
