@@ -110,49 +110,49 @@ importers:
   .:
     devDependencies:
       '@commitlint/cli':
-        specifier: ^21.2.3
+        specifier: 21.2.3
         version: 21.2.3(@types/node@26.6.3)(conventional-commits-parser@7.1.2)(typescript@6.0.3)
       '@commitlint/config-conventional':
-        specifier: ^21.2.3
+        specifier: 21.2.3
         version: 21.2.3
       '@eslint/js':
-        specifier: ^10.0.1
+        specifier: 10.0.1
         version: 10.0.1(eslint@10.11.0(jiti@2.6.1)(supports-color@7.2.0))
       '@secretlint/secretlint-rule-preset-recommend':
         specifier: 13.0.7
         version: 13.0.7
       eslint:
-        specifier: ^10.11.0
+        specifier: 10.11.0
         version: 10.11.0(jiti@2.6.1)(supports-color@7.2.0)
       eslint-config-prettier:
-        specifier: ^10.1.8
+        specifier: 10.1.8
         version: 10.1.8(eslint@10.11.0(jiti@2.6.1)(supports-color@7.2.0))
       eslint-plugin-react-hooks:
-        specifier: ^7.1.1
+        specifier: 7.1.1
         version: 7.1.1(eslint@10.11.0(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)
       eslint-plugin-react-refresh:
-        specifier: ^0.5.7
+        specifier: 0.5.7
         version: 0.5.7(eslint@10.11.0(jiti@2.6.1)(supports-color@7.2.0))
       globals:
-        specifier: ^17.12.0
+        specifier: 17.12.0
         version: 17.12.0
       husky:
-        specifier: ^9.1.7
+        specifier: 9.1.7
         version: 9.1.7
       lint-staged:
-        specifier: ^17.6.0
+        specifier: 17.6.0
         version: 17.6.0
       prettier:
-        specifier: ^3.9.9
+        specifier: 3.9.9
         version: 3.9.9
       secretlint:
         specifier: 13.0.7
         version: 13.0.7(supports-color@7.2.0)
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       typescript-eslint:
-        specifier: ^8.70.1
+        specifier: 8.70.1
         version: 8.70.1(eslint@10.11.0(jiti@2.6.1)(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)
 
   apps/api:
@@ -249,58 +249,58 @@ importers:
         version: 4.6.5
     devDependencies:
       '@nestjs/cli':
-        specifier: ^11.0.24
+        specifier: 11.0.24
         version: 11.0.24(@types/node@26.6.3)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)(prettier@3.9.9)(uglify-js@3.19.3)
       '@nestjs/schematics':
-        specifier: ^11.1.0
+        specifier: 11.1.0
         version: 11.1.0(chokidar@4.0.3)(prettier@3.9.9)(typescript@6.0.3)
       '@nestjs/testing':
-        specifier: ^11.2.6
+        specifier: 11.2.6
         version: 11.2.6(@nestjs/common@11.2.6(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.2.6)(@nestjs/platform-express@11.2.6)
       '@types/cookie-parser':
-        specifier: ^1.4.10
+        specifier: 1.4.10
         version: 1.4.10(@types/express@5.0.6)
       '@types/express':
-        specifier: ^5.0.6
+        specifier: 5.0.6
         version: 5.0.6
       '@types/jest':
-        specifier: ^30.0.0
+        specifier: 30.0.0
         version: 30.0.0
       '@types/node':
-        specifier: ^26.6.3
+        specifier: 26.6.3
         version: 26.6.3
       '@types/passport-jwt':
-        specifier: ^4.0.1
+        specifier: 4.0.1
         version: 4.0.1
       '@types/supertest':
-        specifier: ^7.2.1
+        specifier: 7.2.1
         version: 7.2.1
       concurrently:
-        specifier: ^10.0.5
+        specifier: 10.0.5
         version: 10.0.5
       cross-env:
-        specifier: ^10.1.0
+        specifier: 10.1.0
         version: 10.1.0
       dependency-cruiser:
-        specifier: ^18.4.0
+        specifier: 18.4.0
         version: 18.4.0
       jest:
-        specifier: ^30.5.2
+        specifier: 30.5.2
         version: 30.5.2(@types/node@26.6.3)(supports-color@7.2.0)
       pino-pretty:
-        specifier: ^13.1.3
+        specifier: 13.1.3
         version: 13.1.3
       prisma:
         specifier: 7.10.0
         version: 7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(typescript@6.0.3)
       supertest:
-        specifier: ^7.3.0
+        specifier: 7.3.0
         version: 7.3.0(supports-color@7.2.0)
       ts-jest:
-        specifier: ^29.4.14
+        specifier: 29.4.14
         version: 29.4.14(@babel/core@7.29.7(supports-color@7.2.0))(@jest/transform@30.5.2(supports-color@7.2.0))(@jest/types@30.5.1)(babel-jest@30.5.2(@babel/core@7.29.7(supports-color@7.2.0))(supports-color@7.2.0))(esbuild@0.28.2)(jest-util@30.5.1)(jest@30.5.2(@types/node@26.6.3)(supports-color@7.2.0))(typescript@6.0.3)
       tsx:
-        specifier: ^4.23.15
+        specifier: 4.23.15
         version: 4.23.15
 
   apps/web:
@@ -382,19 +382,19 @@ importers:
         specifier: 4.13.0
         version: 4.13.0(playwright-core@1.63.0)
       '@playwright/test':
-        specifier: ^1.63.0
+        specifier: 1.63.0
         version: 1.63.0
       '@tailwindcss/vite':
-        specifier: ^4.3.3
+        specifier: 4.3.3
         version: 4.3.3(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@testing-library/jest-dom':
-        specifier: ^7.0.1
+        specifier: 7.0.1
         version: 7.0.1(@testing-library/dom@10.4.2)(vitest@5.0.2(@opentelemetry/api@1.9.1)(@types/node@26.6.3)(jsdom@30.1.1(@noble/hashes@2.3.0))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))
       '@testing-library/react':
-        specifier: ^16.3.3
+        specifier: 16.3.3
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@types/node':
-        specifier: ^26.6.3
+        specifier: 26.6.3
         version: 26.6.3
       '@types/react':
         specifier: ^19.3.0
@@ -403,52 +403,52 @@ importers:
         specifier: ^19.3.0
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
-        specifier: ^6.1.1
+        specifier: 6.1.1
         version: 6.1.1(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       jsdom:
-        specifier: ^30.1.1
+        specifier: 30.1.1
         version: 30.1.1(@noble/hashes@2.3.0)
       tailwindcss:
-        specifier: ^4.3.3
+        specifier: 4.3.3
         version: 4.3.3
       typescript:
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       vite:
-        specifier: ^8.3.1
+        specifier: 8.3.1
         version: 8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
-        specifier: ^5.0.2
+        specifier: 5.0.2
         version: 5.0.2(@opentelemetry/api@1.9.1)(@types/node@26.6.3)(jsdom@30.1.1(@noble/hashes@2.3.0))(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/contracts:
     devDependencies:
       '@nomicfoundation/hardhat-ignition':
-        specifier: ^3.1.8
+        specifier: 3.1.8
         version: 3.1.8(@nomicfoundation/hardhat-verify@3.1.1(hardhat@3.18.0))(hardhat@3.18.0)
       '@nomicfoundation/hardhat-toolbox-viem':
-        specifier: ^5.0.7
+        specifier: 5.0.7
         version: 5.0.7(55d888e17480b5e453ca9f77c10044b0)
       '@openzeppelin/contracts':
-        specifier: ^5.6.1
+        specifier: 5.6.1
         version: 5.6.1
       '@types/node':
-        specifier: ^24.0.0
+        specifier: 24.19.0
         version: 24.19.0
       forge-std:
         specifier: github:foundry-rs/forge-std#v1.16.2
         version: https://codeload.github.com/foundry-rs/forge-std/tar.gz/bf647bd6046f2f7da30d0c2bf435e5c76a780c1b
       hardhat:
-        specifier: ^3.18.0
+        specifier: 3.18.0
         version: 3.18.0
       solhint:
-        specifier: ^6.0.0
+        specifier: 6.2.4
         version: 6.2.4(typescript@6.0.3)
       typescript:
         specifier: 6.0.3
         version: 6.0.3
       viem:
-        specifier: ^2.56.9
+        specifier: 2.56.9
         version: 2.56.9(typescript@6.0.3)(zod@3.25.76)
 
   packages/shared:
