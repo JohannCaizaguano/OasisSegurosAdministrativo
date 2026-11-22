@@ -16,6 +16,15 @@ VALUES
 ON CONFLICT ("codigo") DO UPDATE
 SET "nombre" = EXCLUDED."nombre", "activo" = true, "updatedAt" = now();
 
+-- Los ramos que Oasis no comercializa también son datos: en una base nueva se crean inactivos
+-- para que el catálogo quede completo (HU-51.4) y el UPDATE siguiente solo tenga que confirmarlo.
+INSERT INTO "Ramo" ("id", "codigo", "nombre", "activo", "updatedAt")
+VALUES
+  (gen_random_uuid(), 'SALUD', 'Salud', false, now()),
+  (gen_random_uuid(), 'INCENDIO', 'Incendio', false, now()),
+  (gen_random_uuid(), 'FIANZAS', 'Fianzas', false, now())
+ON CONFLICT ("codigo") DO NOTHING;
+
 -- Los ramos que Oasis no comercializa se desactivan; sus pólizas se conservan (RN-09).
 UPDATE "Ramo"
 SET "activo" = false, "updatedAt" = now()

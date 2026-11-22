@@ -5,8 +5,7 @@ import { Injectable } from '@nestjs/common';
 import { esConflictoUnico } from '../../../../infrastructure/prisma/errores-prisma';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
 import { Prisma } from '../../../../generated/prisma/client';
-import { ConflictoError } from '../../../../shared-kernel/domain-error';
-import { numeroDuplicado, planConPagosValidados } from '../../domain/errores';
+import { numeroDuplicado, polizaModificada } from '../../domain/errores';
 import { estadoDeCuota } from '../../domain/estado-cuota';
 import type { CuotaDelPlan } from '../../domain/plan-cuotas';
 import { Poliza } from '../../domain/poliza';
@@ -141,6 +140,13 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
     try {
       const count = cuotas
         ? await this.prisma.$transaction(async (tx) => {
+            const validadosAntes = await this.contarPagosValidados(tx, id);
+            await this.bloquearCuotas(tx, id);
+            // Si el recuento cambió mientras se esperaba el bloqueo, el plan calculado por el
+            // caso de uso ya no refleja el saldo y no debe aplicarse.
+            if ((await this.contarPagosValidados(tx, id)) !== validadosAntes) {
+              throw polizaModificada();
+            }
             const escritas = await this.escribirPoliza(tx, id, datos);
             if (escritas > 0) await this.ajustarCuotas(tx, id, cuotas);
             return escritas;
@@ -188,11 +194,15 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
    */
   async reemplazarCuotas(polizaId: string, cuotas: CuotaDelPlan[]): Promise<Cuota[]> {
     await this.prisma.$transaction(async (tx) => {
-      const editable = await tx.poliza.count({
-        where: { id: polizaId, estado: 'VIGENTE', pagos: { none: { estado: 'VALIDADO' } } },
-      });
-      if (editable === 0) {
-        throw planConPagosValidados();
+      await this.bloquearCuotas(tx, polizaId);
+      // Un VALIDADO que aparece tras la comprobación del caso de uso es una carrera: 409 y nunca
+      // el 500 de la FK de AplicacionPago. El 422 lo decide el caso de uso antes de llegar aquí.
+      if ((await this.contarPagosValidados(tx, polizaId)) > 0) {
+        throw polizaModificada();
+      }
+      const vigente = await tx.poliza.count({ where: { id: polizaId, estado: 'VIGENTE' } });
+      if (vigente === 0) {
+        throw polizaModificada();
       }
       await this.escribirCuotas(tx, polizaId, cuotas);
     });
@@ -204,6 +214,12 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
   ): Promise<{ items: CuotaEnCartera[]; total: number }> {
     const where = {
       estado: { not: 'PAGADA' as const },
+      // Solo la cartera viva: las pólizas CANCELADAS o VENCIDAS no se cobran (HU-38).
+      poliza: {
+        estado: 'VIGENTE' as const,
+        ...(filtros.clienteId ? { clienteId: filtros.clienteId } : {}),
+        ...(filtros.aseguradoraId ? { aseguradoraId: filtros.aseguradoraId } : {}),
+      },
       ...(filtros.vencimientoDesde || filtros.vencimientoHasta
         ? {
             fechaVencimiento: {
@@ -211,9 +227,6 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
               ...(filtros.vencimientoHasta ? { lte: aFecha(filtros.vencimientoHasta) } : {}),
             },
           }
-        : {}),
-      ...(filtros.clienteId || filtros.aseguradoraId
-        ? { poliza: { clienteId: filtros.clienteId, aseguradoraId: filtros.aseguradoraId } }
         : {}),
     };
     const [filas, total] = await this.prisma.$transaction([
@@ -284,6 +297,19 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
       },
     });
     return count;
+  }
+
+  /**
+   * D12: serializa con `validarYCrearRecibo`, que bloquea las mismas cuotas antes de aplicar el
+   * pago; todo lo que decida sobre el plan va después de este bloqueo.
+   */
+  private async bloquearCuotas(tx: Prisma.TransactionClient, polizaId: string): Promise<void> {
+    await tx.$queryRaw`
+      SELECT "id" FROM "Cuota" WHERE "polizaId" = ${polizaId}::uuid FOR UPDATE`;
+  }
+
+  private contarPagosValidados(tx: Prisma.TransactionClient, polizaId: string): Promise<number> {
+    return tx.pago.count({ where: { polizaId, estado: 'VALIDADO' } });
   }
 
   private async escribirCuotas(
@@ -370,12 +396,7 @@ export class PrismaPolizasRepository implements PolizasRepositoryPort {
 
   private async releerTrasEscribir(id: string, filasEscritas: number): Promise<Poliza> {
     if (filasEscritas === 0) {
-      throw new ConflictoError(
-        'La póliza cambió mientras se editaba; recargue e intente de nuevo',
-        {
-          motivo: 'POLIZA_MODIFICADA',
-        },
-      );
+      throw polizaModificada();
     }
     const fila = await this.prisma.poliza.findUniqueOrThrow({
       where: { id },

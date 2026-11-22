@@ -105,7 +105,8 @@ convenciones que la skill ya define.
   Para auditar: `ponytail-review` (diff) y `ponytail-audit` (repo completo).
 - **Impeccable** para cualquier trabajo de UI (crear, auditar, pulir). El sistema visual es
   Claroscuro ([ADR-019](docs/adr/ADR-019-diseno-interfaz-claroscuro.md)): manda
-  `apps/web/DESIGN.md`, con el prototipo y el documento en `docs/diseno/`.
+  `apps/web/DESIGN.md`, con el prototipo y el documento en `docs/diseno/`. El diseño final (Claroscuro v2, ADR-030 y ADR-031)
+  está aprobado pero **no implementado**: no lo apliques al código fuera de la fase de diseño del S5.
 - Orden: skill de proceso → skill de la tecnología → ponytail decide el tamaño.
 - **Agentes** (`.opencode/agents/`): superpowers dirige la ejecución y cada tarea la hace el
   especialista de su área (sección "Agentes").

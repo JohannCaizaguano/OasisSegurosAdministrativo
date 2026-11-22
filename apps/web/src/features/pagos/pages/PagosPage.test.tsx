@@ -2,6 +2,7 @@ import type {
   Cliente,
   Pago,
   PagoDetalle,
+  Poliza,
   RespuestaPaginada,
   ValidarPagoResponse,
 } from '@oasis/shared';
@@ -80,6 +81,14 @@ function montar(ruta = '/pagos') {
 }
 
 const CLIENTE_ID = '11111111-1111-4111-8111-111111111111';
+const CLIENTE = {
+  id: CLIENTE_ID,
+  tipoIdentificacion: 'CEDULA',
+  identificacion: '1710034065',
+  nombres: 'Ana',
+  apellidos: 'Pérez',
+  activo: true,
+} as unknown as Cliente;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -95,18 +104,7 @@ beforeEach(() => {
       aplicaciones: [],
     },
   ]);
-  vi.mocked(clientesApi.listar).mockResolvedValue(
-    paginada([
-      {
-        id: CLIENTE_ID,
-        tipoIdentificacion: 'CEDULA',
-        identificacion: '1710034065',
-        nombres: 'Ana',
-        apellidos: 'Pérez',
-        activo: true,
-      } as unknown as Cliente,
-    ]),
-  );
+  vi.mocked(clientesApi.listar).mockResolvedValue(paginada([CLIENTE]));
 });
 
 afterEach(cleanup);
@@ -323,9 +321,76 @@ describe('PagosPage — filtros y detalle (HU-20, HU-36)', () => {
 });
 
 describe('PagosPage — filtros de póliza y cliente visibles (T20)', () => {
-  it.todo('al recargar con ?polizaId= el combobox muestra el número de la póliza');
+  it('al recargar con ?polizaId= el combobox muestra el número de la póliza', async () => {
+    vi.mocked(polizasApi.obtener).mockResolvedValue({
+      id: PAGO.polizaId,
+      numero: PAGO.numeroPoliza,
+    } as Poliza);
+    montar(`/pagos?polizaId=${PAGO.polizaId}`);
 
-  it.todo('al recargar con ?clienteId= el combobox muestra el nombre del cliente');
+    const combobox = await screen.findByRole('combobox', { name: 'Póliza' });
+    await waitFor(() => expect(combobox).toHaveValue(PAGO.numeroPoliza));
+    expect(polizasApi.obtener).toHaveBeenCalledWith(PAGO.polizaId);
+  });
 
-  it.todo('el filtro de póliza encuentra una póliza cancelada');
+  it('al recargar con ?clienteId= el combobox muestra el nombre del cliente', async () => {
+    vi.mocked(clientesApi.obtener).mockResolvedValue(CLIENTE);
+    montar(`/pagos?clienteId=${CLIENTE_ID}`);
+
+    const combobox = await screen.findByRole('combobox', { name: 'Cliente' });
+    await waitFor(() => expect(combobox).toHaveValue('Ana Pérez'));
+    expect(clientesApi.obtener).toHaveBeenCalledWith(CLIENTE_ID);
+  });
+
+  it('el filtro de póliza encuentra una póliza cancelada', async () => {
+    const cancelada = {
+      id: '66666666-6666-4666-8666-666666666666',
+      numero: 'POL-0099',
+      estado: 'CANCELADA',
+    } as Poliza;
+    vi.mocked(polizasApi.listar).mockImplementation(async (filtros = {}) =>
+      paginada(filtros.estado === 'VIGENTE' ? [] : [cancelada]),
+    );
+    montar();
+    const combobox = screen.getByRole('combobox', { name: 'Póliza' });
+    fireEvent.focus(combobox);
+    fireEvent.change(combobox, { target: { value: 'POL' } });
+
+    expect(await screen.findByRole('option', { name: /POL-0099/ })).toBeInTheDocument();
+    expect(polizasApi.listar).toHaveBeenCalledWith(
+      expect.not.objectContaining({ estado: 'VIGENTE' }),
+    );
+  });
+
+  it('si el cliente del filtro no se pudo cargar, lo explica y deja el combobox usable', async () => {
+    vi.mocked(clientesApi.obtener).mockRejectedValue(new Error('no encontrado'));
+    montar(`/pagos?clienteId=${CLIENTE_ID}`);
+
+    expect(await screen.findByText(/no se pudo cargar el cliente del filtro/i)).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Cliente' })).toBeEnabled();
+  });
+
+  it('«Limpiar filtros» vacía la etiqueta inicial y la URL', async () => {
+    vi.mocked(clientesApi.obtener).mockResolvedValue(CLIENTE);
+    montar(`/pagos?clienteId=${CLIENTE_ID}`);
+    const combobox = await screen.findByRole('combobox', { name: 'Cliente' });
+    await waitFor(() => expect(combobox).toHaveValue('Ana Pérez'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar filtros' }));
+
+    await waitFor(() => expect(screen.getByTestId('ubicacion')).toHaveTextContent(/^\/pagos$/));
+    expect(screen.getByRole('combobox', { name: 'Cliente' })).toHaveValue('');
+  });
+
+  it('escribir sobre la etiqueta inicial quita el filtro sin dejar el nombre viejo', async () => {
+    vi.mocked(clientesApi.obtener).mockResolvedValue(CLIENTE);
+    montar(`/pagos?clienteId=${CLIENTE_ID}`);
+    const combobox = await screen.findByRole('combobox', { name: 'Cliente' });
+    await waitFor(() => expect(combobox).toHaveValue('Ana Pérez'));
+
+    fireEvent.change(combobox, { target: { value: 'Bea' } });
+
+    await waitFor(() => expect(screen.getByTestId('ubicacion')).toHaveTextContent(/^\/pagos$/));
+    expect(combobox).toHaveValue('Bea');
+  });
 });

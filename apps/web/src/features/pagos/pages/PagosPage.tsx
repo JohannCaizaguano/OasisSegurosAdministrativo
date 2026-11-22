@@ -176,6 +176,8 @@ export function PagosPage() {
           <SelectorPoliza
             key={`poliza-${generacion}`}
             id="filtro-poliza-pagos"
+            soloVigentes={false}
+            valorInicial={filtros.leer('polizaId')}
             onChange={(id) => filtrar({ polizaId: id })}
           />
         </div>
@@ -184,6 +186,7 @@ export function PagosPage() {
           <SelectorCliente
             key={`cliente-${generacion}`}
             id="filtro-cliente-pagos"
+            valorInicial={filtros.leer('clienteId')}
             onChange={(id) => filtrar({ clienteId: id })}
           />
         </div>

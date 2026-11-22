@@ -13,6 +13,15 @@ export function useClientes(filtros: FiltrosClientes = {}, habilitado = true) {
   });
 }
 
+/** Etiqueta de un cliente ya elegido fuera del combobox (p. ej. un filtro de la URL). */
+export function useCliente(id: string | undefined) {
+  return useQuery({
+    queryKey: ['clientes', 'detalle', id],
+    queryFn: () => clientesApi.obtener(id as string),
+    enabled: !!id,
+  });
+}
+
 export function useCrearCliente() {
   const queryClient = useQueryClient();
   return useMutation({

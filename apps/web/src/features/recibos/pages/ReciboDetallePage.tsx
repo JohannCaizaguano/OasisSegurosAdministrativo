@@ -162,7 +162,7 @@ export function ReciboDetallePage() {
             <CardHeader>
               <CardTitle>Datos del recibo</CardTitle>
               <CardDescription>
-                Anclado en la red {recibo.chainId === 31337 ? 'Hardhat local' : 'Polygon Amoy'}
+                Red de anclaje: {recibo.chainId === 31337 ? 'Hardhat local' : 'Polygon Amoy'}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">

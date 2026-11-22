@@ -20,6 +20,8 @@ export interface ComboboxBusquedaProps<T extends { id: string }> {
   texto: (item: T) => string;
   detalle?: (item: T) => ReactNode;
   onChange: (item: T | undefined) => void;
+  /** Selección hecha fuera del combobox (p. ej. un filtro de la URL) que se muestra al llegar. */
+  seleccionInicial?: T | null;
   etiquetaLista: string;
   etiquetaQuitar: string;
   mensajeError: string;
@@ -40,6 +42,7 @@ export function ComboboxBusqueda<T extends { id: string }>({
   texto: textoDe,
   detalle,
   onChange,
+  seleccionInicial,
   etiquetaLista,
   etiquetaQuitar,
   mensajeError,
@@ -56,15 +59,21 @@ export function ComboboxBusqueda<T extends { id: string }>({
   const [abierto, setAbierto] = useState(false);
   const [activo, setActivo] = useState(-1);
   const [seleccionado, setSeleccionado] = useState<T | null>(null);
+  const [tocado, setTocado] = useState(false);
   const entrada = useRef<HTMLInputElement>(null);
 
+  // Sin tocar manda la selección externa; después, la elección local.
+  const itemElegido = tocado ? seleccionado : (seleccionado ?? seleccionInicial ?? null);
+  const textoMostrado = tocado ? texto : texto || (itemElegido ? textoDe(itemElegido) : '');
+
   const q = useDebounce(texto);
-  const consulta = useResultados(q || undefined, abierto && seleccionado === null);
+  const consulta = useResultados(q || undefined, abierto && itemElegido === null);
   const items = consulta.data ?? [];
   const indiceActivo = activo >= 0 && activo < items.length ? activo : -1;
   const opcionActiva = indiceActivo >= 0 ? items[indiceActivo] : undefined;
 
   function elegir(item: T) {
+    setTocado(true);
     setSeleccionado(item);
     setTexto(textoDe(item));
     setActivo(-1);
@@ -73,6 +82,7 @@ export function ComboboxBusqueda<T extends { id: string }>({
   }
 
   function limpiar() {
+    setTocado(true);
     setSeleccionado(null);
     setTexto('');
     setActivo(-1);
@@ -81,10 +91,11 @@ export function ComboboxBusqueda<T extends { id: string }>({
   }
 
   function alCambiarTexto(valor: string) {
+    setTocado(true);
     setTexto(valor);
     setAbierto(true);
     setActivo(-1);
-    if (seleccionado) {
+    if (itemElegido) {
       setSeleccionado(null);
       onChange(undefined);
     }
@@ -96,7 +107,7 @@ export function ComboboxBusqueda<T extends { id: string }>({
       if (!abierto) {
         // Con una selección ya hecha la consulta está deshabilitada: abrir aquí
         // mostraría una lista vacía hasta que el usuario teclee.
-        if (!seleccionado) {
+        if (!itemElegido) {
           setAbierto(true);
         }
         return;
@@ -143,18 +154,18 @@ export function ComboboxBusqueda<T extends { id: string }>({
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescrito}
         autoComplete="off"
-        placeholder={seleccionado ? undefined : placeholder}
-        className={seleccionado ? 'pr-9' : undefined}
-        value={texto}
+        placeholder={itemElegido ? undefined : placeholder}
+        className={itemElegido ? 'pr-9' : undefined}
+        value={textoMostrado}
         onChange={(evento) => alCambiarTexto(evento.target.value)}
         onFocus={() => {
-          if (!seleccionado) {
+          if (!itemElegido) {
             setAbierto(true);
           }
         }}
         onKeyDown={alTeclear}
       />
-      {seleccionado && (
+      {itemElegido && (
         <Button
           type="button"
           variant="quiet"

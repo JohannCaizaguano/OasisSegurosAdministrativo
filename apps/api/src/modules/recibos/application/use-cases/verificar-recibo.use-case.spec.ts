@@ -127,6 +127,20 @@ describe('VerificarReciboUseCase: los cinco resultados (D2)', () => {
 
     expect((await sinRegistro.caso.ejecutar('RC-ABC123ABC123')).estado).toBe('ANULADO');
     expect((await otroHash.caso.ejecutar('RC-ABC123ABC123')).estado).toBe('ANULADO');
+    expect(sinRegistro.obtenerEnCadena).not.toHaveBeenCalled();
+    expect(otroHash.obtenerEnCadena).not.toHaveBeenCalled();
+  });
+
+  it('ANULADO en la base no consulta la cadena aunque el RPC esté caído (Q17)', async () => {
+    const { caso, obtenerEnCadena } = crear(
+      recibo({ estado: 'ANULADO' }),
+      new Error('fetch failed'),
+    );
+
+    const salida = await caso.ejecutar('RC-ABC123ABC123');
+
+    expect(salida.estado).toBe('ANULADO');
+    expect(obtenerEnCadena).not.toHaveBeenCalled();
   });
 
   it('NO_ENCONTRADO sin consultar la cadena cuando el código no existe', async () => {
@@ -182,6 +196,20 @@ describe('VerificarReciboUseCase: el CLIENTE solo verifica sus recibos (D3, RN-0
     expect(deAjeno.estado).toBe('NO_ENCONTRADO');
     expect(sinVariables(deAjeno)).toEqual(sinVariables(deInexistente));
     expect(ajeno.obtenerEnCadena).not.toHaveBeenCalled();
+  });
+
+  it('un recibo ANULADO propio responde ANULADO sin consultar la cadena y con la máscara (Q17)', async () => {
+    const { caso, obtenerEnCadena } = crear(
+      recibo({ estado: 'ANULADO' }),
+      new Error('fetch failed'),
+    );
+
+    const salida = await caso.ejecutar('RC-ABC123ABC123', { clienteId: CLIENTE_DUENO });
+
+    expect(salida.estado).toBe('ANULADO');
+    expect(salida).not.toHaveProperty('hashOnchain');
+    expect(salida).not.toHaveProperty('contractAddress');
+    expect(obtenerEnCadena).not.toHaveBeenCalled();
   });
 
   it('un CLIENTE sin cliente asociado recibe NO_ENCONTRADO', async () => {

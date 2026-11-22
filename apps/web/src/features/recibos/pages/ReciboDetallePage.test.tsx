@@ -81,6 +81,15 @@ describe('ReciboDetallePage — estado de anclaje (HU-24)', () => {
     await screen.findByRole('list', { name: 'Línea de tiempo del anclaje' });
     expect(document.body.textContent).not.toMatch(/payload/i);
   });
+
+  it('un recibo que nunca se ancló nombra la red sin decir que está anclado', async () => {
+    obtener.mockResolvedValue(reciboDetalle({ estado: 'PENDIENTE_ANCLAJE', ancladoEn: null }));
+    montar();
+    await screen.findByRole('list', { name: 'Línea de tiempo del anclaje' });
+
+    expect(screen.getByText('Red de anclaje: Polygon Amoy')).toBeInTheDocument();
+    expect(screen.queryByText(/Anclado en la red/)).not.toBeInTheDocument();
+  });
 });
 
 describe('ReciboDetallePage — imprimible (HU-25)', () => {

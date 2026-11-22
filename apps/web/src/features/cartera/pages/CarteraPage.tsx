@@ -167,6 +167,7 @@ export function CarteraPage() {
           <SelectorCliente
             key={`cliente-${generacion}`}
             id="filtro-cliente-cartera"
+            valorInicial={filtros.leer('clienteId')}
             onChange={(id) => filtrar({ clienteId: id })}
           />
         </div>

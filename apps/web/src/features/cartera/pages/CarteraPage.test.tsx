@@ -1,9 +1,10 @@
-import type { FilaCartera, RespuestaPaginada } from '@oasis/shared';
+import type { Cliente, FilaCartera, RespuestaPaginada } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { clientesApi } from '@/features/clientes/api';
 import { polizasApi } from '@/features/polizas/api';
 
 import { carteraApi } from '../api';
@@ -152,7 +153,18 @@ describe('CarteraPage (HU-38)', () => {
     );
   });
 
-  it.todo('al recargar con ?clienteId= el combobox muestra el nombre del cliente');
+  it('al recargar con ?clienteId= el combobox muestra el nombre del cliente', async () => {
+    vi.mocked(clientesApi.obtener).mockResolvedValue({
+      id: '11111111-1111-4111-8111-111111111111',
+      nombres: 'Ana',
+      apellidos: 'Pérez',
+    } as unknown as Cliente);
+    montar('/cartera?clienteId=11111111-1111-4111-8111-111111111111');
+
+    const combobox = await screen.findByRole('combobox', { name: 'Cliente' });
+    await waitFor(() => expect(combobox).toHaveValue('Ana Pérez'));
+    expect(clientesApi.obtener).toHaveBeenCalledWith('11111111-1111-4111-8111-111111111111');
+  });
 
   it('explica cada estado de cuota con la leyenda', async () => {
     montar();

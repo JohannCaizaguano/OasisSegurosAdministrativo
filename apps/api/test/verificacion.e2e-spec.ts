@@ -166,6 +166,32 @@ describe('Verificación de recibos (e2e)', () => {
     });
   });
 
+  it('un recibo ANULADO en la base responde ANULADO aunque el RPC esté caído (Q17)', async () => {
+    const recibo = await emitirRecibo();
+    await como(tokenAdmin, 'post', `/api/v1/recibos/${recibo.id}/anular`).expect(200);
+    const registro = app.get<RegistroRecibosPort>(REGISTRO_RECIBOS, { strict: false });
+    const consulta = jest
+      .spyOn(registro, 'obtenerEnCadena')
+      .mockRejectedValue(new Error('RPC caído'));
+    try {
+      const personal = await verificar(tokenOperador, recibo.codigo).expect(200);
+      expect(personal.body).toMatchObject({ codigo: recibo.codigo, estado: 'ANULADO' });
+      expect(personal.body.hashOnchain).toBeNull();
+      expect(consulta).not.toHaveBeenCalled();
+
+      const dueno = await verificar(tokenCliente, recibo.codigo).expect(200);
+      expect(dueno.body).toMatchObject({ codigo: recibo.codigo, estado: 'ANULADO' });
+      expect(dueno.body).not.toHaveProperty('hashOnchain');
+      expect(dueno.body).not.toHaveProperty('contractAddress');
+
+      const ajeno = await verificar(tokenOtroCliente, recibo.codigo).expect(200);
+      expect(ajeno.body).toMatchObject({ codigo: recibo.codigo, estado: 'NO_ENCONTRADO' });
+      expect(consulta).not.toHaveBeenCalled();
+    } finally {
+      consulta.mockRestore();
+    }
+  });
+
   it('un código inexistente → 200 NO_ENCONTRADO (HU-28.3)', async () => {
     const respuesta = await verificar(tokenOperador, INEXISTENTE).expect(200);
 

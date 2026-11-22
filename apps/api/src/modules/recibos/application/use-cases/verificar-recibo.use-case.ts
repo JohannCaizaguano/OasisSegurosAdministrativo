@@ -88,12 +88,15 @@ export class VerificarReciboUseCase {
 
   private async verificar(recibo: Recibo, verificadoEn: string): Promise<ResultadoVerificacion> {
     const hashRecalculado = this.hasher.hashRecibo(recibo.payloadCanonico, recibo.sal).hash;
-    const enCadena = await this.leerCadena(recibo.idOnchain);
+    // La anulación en la base es definitiva: no depende de la cadena y un RPC caído no puede
+    // convertir un ANULADO en un 502.
+    const anulado = recibo.estaAnulado();
+    const enCadena = anulado ? null : await this.leerCadena(recibo.idOnchain);
 
     let estado: EstadoVerificacion;
-    if (recibo.estaAnulado() || (enCadena.existe && enCadena.anulado)) {
+    if (anulado || enCadena?.anulado) {
       estado = 'ANULADO';
-    } else if (!enCadena.existe) {
+    } else if (!enCadena?.existe) {
       estado = 'EN_PROCESO';
     } else if (enCadena.hashRecibo.toLowerCase() !== hashRecalculado.toLowerCase()) {
       estado = 'NO_COINCIDE';
@@ -105,7 +108,7 @@ export class VerificarReciboUseCase {
       codigo: recibo.codigo,
       estado,
       hashRecibo: hashRecalculado,
-      hashOnchain: enCadena.existe ? enCadena.hashRecibo : null,
+      hashOnchain: enCadena?.existe ? enCadena.hashRecibo : null,
       txHash: recibo.txHash,
       blockNumber: recibo.blockNumber,
       ancladoEn: recibo.ancladoEn,

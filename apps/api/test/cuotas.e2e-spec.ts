@@ -228,6 +228,37 @@ describe('Plan de cuotas y vencimiento (e2e)', () => {
       return aplicado;
     }
 
+    /**
+     * Lanza el cambio de póliza y espera a que su caso de uso haya leído la póliza. Así el
+     * prechequeo de pagos validados queda siempre antes de la validación: la carrera ocurre en la
+     * transacción y solo puede terminar en 200/200 o 200/409, nunca en el 422 del prechequeo.
+     */
+    async function carreraTrasLeerPoliza(
+      cambio: () => request.Test,
+      validacion: () => request.Test,
+    ): Promise<[request.Response, request.Response]> {
+      const repositorio = app.get<PolizasRepositoryPort>(POLIZAS_REPOSITORY, { strict: false });
+      const leerOriginal = repositorio.buscarPorId.bind(repositorio);
+      let avisarLectura: () => void = () => {};
+      const lecturaHecha = new Promise<void>((resolver) => {
+        avisarLectura = resolver;
+      });
+      const espia = jest.spyOn(repositorio, 'buscarPorId').mockImplementationOnce(async (id) => {
+        const poliza = await leerOriginal(id);
+        avisarLectura();
+        return poliza;
+      });
+      try {
+        const peticionCambio = cambio();
+        // Supertest es perezoso: `.then()` es lo que envía la petición.
+        const enVuelo = peticionCambio.then((respuesta) => respuesta);
+        await lecturaHecha;
+        return await Promise.all([enVuelo, validacion()]);
+      } finally {
+        espia.mockRestore();
+      }
+    }
+
     async function polizaConPlan(
       prima: string,
       cuotas: Array<{ numero: number; valor: string; fechaVencimiento: string }>,
@@ -364,6 +395,111 @@ describe('Plan de cuotas y vencimiento (e2e)', () => {
         expect(await prisma.recibo.count({ where: { pago: { polizaId } } })).toBe(1);
         expect(await exigirInvariante(polizaId)).toBe('60.00');
       }
+    });
+
+    it('validar un pago y reemplazar el plan a la vez: 200/200 o 200/409, nunca 500, y D13 se mantiene (Q16)', async () => {
+      const polizaId = await polizaConPlan('300.00', [
+        { numero: 1, valor: '100.00', fechaVencimiento: '2027-01-31' },
+        { numero: 2, valor: '100.00', fechaVencimiento: '2027-02-28' },
+        { numero: 3, valor: '100.00', fechaVencimiento: '2027-03-31' },
+      ]);
+      const pagoId = await registrar(polizaId, '50.00');
+
+      const [reemplazo, validacion] = await carreraTrasLeerPoliza(
+        () =>
+          como(tokenOperador, 'put', `/api/v1/polizas/${polizaId}/cuotas`).send({
+            cuotas: [
+              { numero: 1, valor: '100.00', fechaVencimiento: '2027-04-30' },
+              { numero: 2, valor: '100.00', fechaVencimiento: '2027-05-31' },
+              { numero: 3, valor: '100.00', fechaVencimiento: '2027-06-30' },
+            ],
+          }),
+        () => validar(pagoId),
+      );
+
+      const estados = [validacion.status, reemplazo.status].sort((a, b) => a - b);
+      expect([
+        [200, 200],
+        [200, 409],
+      ]).toContainEqual(estados);
+      expect(validacion.status).toBe(200);
+      if (reemplazo.status === 409) {
+        expect(reemplazo.body.details).toMatchObject({ motivo: 'POLIZA_MODIFICADA' });
+      }
+
+      const cuotas = await cuotasDe(polizaId);
+      expect(cuotas.map((c) => c.numero)).toEqual([1, 2, 3]);
+      expect(cuotas.every((c) => Number(c.valorPagado) <= Number(c.valor))).toBe(true);
+      expect(await exigirInvariante(polizaId)).toBe('50.00');
+      const plan = await como(tokenOperador, 'get', `/api/v1/polizas/${polizaId}/cuotas`).expect(
+        200,
+      );
+      expect(plan.body.map((c: { numero: number }) => c.numero)).toEqual([1, 2, 3]);
+    });
+
+    it('validar un pago y cambiar la prima a la vez: 200/200 o 200/409, nunca 500 (Q16)', async () => {
+      const polizaId = await polizaConPlan('300.00', [
+        { numero: 1, valor: '100.00', fechaVencimiento: '2027-01-31' },
+        { numero: 2, valor: '100.00', fechaVencimiento: '2027-02-28' },
+        { numero: 3, valor: '100.00', fechaVencimiento: '2027-03-31' },
+      ]);
+      const pagoId = await registrar(polizaId, '50.00');
+
+      const [edicion, validacion] = await carreraTrasLeerPoliza(
+        () =>
+          como(tokenOperador, 'patch', `/api/v1/polizas/${polizaId}`).send({
+            primaTotal: '600.00',
+          }),
+        () => validar(pagoId),
+      );
+
+      const estados = [validacion.status, edicion.status].sort((a, b) => a - b);
+      expect([
+        [200, 200],
+        [200, 409],
+      ]).toContainEqual(estados);
+      expect(validacion.status).toBe(200);
+      if (edicion.status === 409) {
+        expect(edicion.body.details).toMatchObject({ motivo: 'POLIZA_MODIFICADA' });
+      }
+
+      const poliza = await prisma.poliza.findUniqueOrThrow({ where: { id: polizaId } });
+      const cuotas = await cuotasDe(polizaId);
+      expect(cuotas.map((c) => c.numero)).toEqual([1, 2, 3]);
+      const suma = cuotas.reduce((total, cuota) => total + Number(cuota.valor), 0);
+      expect(suma.toFixed(2)).toBe(poliza.primaTotal.toFixed(2));
+      expect(await exigirInvariante(polizaId)).toBe('50.00');
+    });
+
+    it('validar un pago y cambiar la vigencia a la vez: 200/200 o 200/409, nunca 500 (Q16)', async () => {
+      const polizaId = await polizaConPlan('300.00', [
+        { numero: 1, valor: '100.00', fechaVencimiento: '2027-01-31' },
+        { numero: 2, valor: '100.00', fechaVencimiento: '2027-02-28' },
+        { numero: 3, valor: '100.00', fechaVencimiento: '2027-03-31' },
+      ]);
+      const pagoId = await registrar(polizaId, '50.00');
+
+      const [edicion, validacion] = await carreraTrasLeerPoliza(
+        () =>
+          como(tokenOperador, 'patch', `/api/v1/polizas/${polizaId}`).send({
+            fechaFin: '2028-12-31',
+          }),
+        () => validar(pagoId),
+      );
+
+      const estados = [validacion.status, edicion.status].sort((a, b) => a - b);
+      expect([
+        [200, 200],
+        [200, 409],
+      ]).toContainEqual(estados);
+      expect(validacion.status).toBe(200);
+      if (edicion.status === 409) {
+        expect(edicion.body.details).toMatchObject({ motivo: 'POLIZA_MODIFICADA' });
+      }
+
+      const cuotas = await cuotasDe(polizaId);
+      expect(cuotas.map((c) => c.numero)).toEqual([1, 2, 3]);
+      expect(await exigirInvariante(polizaId)).toBe('50.00');
     });
 
     it('editar la vigencia de una póliza con pagos aplicados → 200 y conserva lo pagado (D13)', async () => {
@@ -548,6 +684,106 @@ describe('Plan de cuotas y vencimiento (e2e)', () => {
         .set('X-Forwarded-For', ip())
         .set('Authorization', `Bearer ${tokenCliente}`)
         .expect(403);
+    });
+
+    describe('Q18: la cartera solo cobra pólizas VIGENTES', () => {
+      let ramoId: string;
+
+      beforeAll(async () => {
+        ramoId = (await prisma.ramo.findUniqueOrThrow({ where: { codigo: 'VIDA' } })).id;
+      });
+
+      const conSesion = (metodo: 'get' | 'post', ruta: string) =>
+        request(cartera.getHttpServer())
+          [metodo](ruta)
+          .set('X-Forwarded-For', ip())
+          .set('Authorization', `Bearer ${tokenOperador}`);
+
+      async function crearCliente(semilla: number, apellidos: string): Promise<string> {
+        const respuesta = await conSesion('post', '/api/v1/clientes')
+          .send({
+            tipoIdentificacion: 'CEDULA',
+            identificacion: cedulaValida(semilla),
+            nombres: 'Cliente',
+            apellidos,
+            email: `q18.${semilla}.${sufijo}@example.com`,
+          })
+          .expect(201);
+        return respuesta.body.id as string;
+      }
+
+      async function crearPoliza(
+        clienteId: string,
+        numero: string,
+        aseguradoraId: string,
+      ): Promise<string> {
+        const respuesta = await conSesion('post', '/api/v1/polizas')
+          .send({
+            numero,
+            clienteId,
+            aseguradoraId,
+            ramoId,
+            primaTotal: '100.00',
+            fechaInicio: '2026-10-20',
+            fechaFin: '2027-10-19',
+          })
+          .expect(201);
+        return respuesta.body.id as string;
+      }
+
+      const cambiarEstado = (polizaId: string, estado: 'CANCELADA' | 'VENCIDA') =>
+        conSesion('post', `/api/v1/polizas/${polizaId}/estado`).send({ estado }).expect(200);
+
+      const listar = (clienteId: string, filtros: Record<string, string> = {}) =>
+        conSesion('get', '/api/v1/cuotas')
+          .query({ clienteId, pageSize: 50, ...filtros })
+          .expect(200);
+
+      const incluye = (cuerpo: { data: Array<{ poliza: { id: string } }> }, polizaId: string) =>
+        cuerpo.data.some((fila) => fila.poliza.id === polizaId);
+
+      it('muestra la VIGENTE con cuota impaga y excluye la CANCELADA y la VENCIDA (Q18)', async () => {
+        const clienteId = await crearCliente(sufijo + 5_100, 'Cartera Q18');
+        const { id: aseguradoraId } = await prisma.aseguradora.findFirstOrThrow();
+        const vigente = await crearPoliza(clienteId, `POL-Q18-VIG-${sufijo}`, aseguradoraId);
+        const cancelada = await crearPoliza(clienteId, `POL-Q18-CAN-${sufijo}`, aseguradoraId);
+        const vencida = await crearPoliza(clienteId, `POL-Q18-VEN-${sufijo}`, aseguradoraId);
+
+        const antes = await listar(clienteId);
+        expect(incluye(antes.body, vigente)).toBe(true);
+        expect(incluye(antes.body, cancelada)).toBe(true);
+        expect(incluye(antes.body, vencida)).toBe(true);
+
+        await cambiarEstado(cancelada, 'CANCELADA');
+        await cambiarEstado(vencida, 'VENCIDA');
+
+        const despues = await listar(clienteId);
+        expect(incluye(despues.body, vigente)).toBe(true);
+        expect(incluye(despues.body, cancelada)).toBe(false);
+        expect(incluye(despues.body, vencida)).toBe(false);
+        for (const polizaId of [cancelada, vencida]) {
+          expect(await prisma.cuota.count({ where: { polizaId, estado: { not: 'PAGADA' } } })).toBe(
+            1,
+          );
+        }
+      });
+
+      it('los filtros clienteId y aseguradoraId siguen combinando con el estado VIGENTE (Q18)', async () => {
+        const clienteId = await crearCliente(sufijo + 5_200, 'Filtros Q18');
+        const [propia, otra] = await prisma.aseguradora.findMany({
+          orderBy: { nombre: 'asc' },
+          take: 2,
+        });
+        const vigente = await crearPoliza(clienteId, `POL-Q18-FIL-V-${sufijo}`, propia.id);
+        const cancelada = await crearPoliza(clienteId, `POL-Q18-FIL-C-${sufijo}`, propia.id);
+        const deOtra = await crearPoliza(clienteId, `POL-Q18-FIL-O-${sufijo}`, otra.id);
+        await cambiarEstado(cancelada, 'CANCELADA');
+
+        const respuesta = await listar(clienteId, { aseguradoraId: propia.id });
+        expect(incluye(respuesta.body, vigente)).toBe(true);
+        expect(incluye(respuesta.body, cancelada)).toBe(false);
+        expect(incluye(respuesta.body, deOtra)).toBe(false);
+      });
     });
   });
 });

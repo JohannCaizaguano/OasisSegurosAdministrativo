@@ -40,9 +40,8 @@ leyendo varios archivos.
 - **Hash y privacidad (ADR-004):** `domain/payload-recibo.ts` arma el JSON canónico (RFC 8785);
   `hashRecibo = keccak256(sal ‖ payload)` con una sal de 32 bytes que solo vive en PostgreSQL, e
   `idOnchain = keccak256(uuid)`. La verificación (`GET /api/v1/recibos/:codigo/verificacion`)
-  recalcula el hash desde la base y lo compara con `verificar()`; los resultados posibles están en
-  `ESTADOS_VERIFICACION` de `@oasis/shared`. Hoy es solo del personal; HU-28 (S5) la abre al
-  CLIENTE para sus recibos, con 30 consultas por minuto por usuario (ADR-015).
+  recalcula el hash desde la base y lo compara con `verificar()`; los cinco resultados, el acceso
+  del CLIENTE y su límite están en «Verificación, recibos y cartera (S5)».
 
 ## API: tubería de cada petición
 
@@ -68,7 +67,10 @@ leyendo varios archivos.
 ## Clientes y pólizas (S3)
 
 - `GET /ramos` (ADMIN y OPERADOR) sirve el `Select` de ramo del formulario de póliza y devuelve
-  los ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. El catálogo se
+  los ramos activos `{ id, codigo, nombre }` ordenados por nombre, sin paginación. La migración
+  `20261026000000_cobertura_ramos_s5` (D18) deja activos VIDA, ASISTENCIA_MEDICA, VEHICULOS,
+  EQUIPOS_ELECTRONICOS, AEREO_DRONES y EQUIPOS_MAQUINARIA, y desactiva SALUD, INCENDIO y FIANZAS;
+  las pólizas con esos ramos se conservan (RN-09) y el seed usa los mismos códigos. El catálogo se
   administra en HU-46 (S9): hoy es de solo lectura.
 - Ciclo de vida de la póliza (ADR-018): nace VIGENTE; `POST /polizas/:id/estado` solo acepta
   VIGENTE → VENCIDA o CANCELADA (ambos terminales) y queda en la bitácora como `CAMBIAR_ESTADO`;
@@ -77,13 +79,21 @@ leyendo varios archivos.
 - RN-01 vive en `CrearPagoUseCase`: póliza inexistente → 404 y no VIGENTE → 422
   `POLIZA_NO_VIGENTE`, antes de resolver el método de pago.
 
-## Pagos y plan de cuotas (S4)
+## Pagos, plan de cuotas y aplicación de pagos (S4 y S5)
 
 - RN-01 y RN-02 se exigen al registrar y otra vez al validar (`exigirPolizaVigente` y
   `exigirMontoDentroDelSaldo` en `pagos.use-cases.ts`). El saldo es
   `primaTotal − Σ pagos VALIDADOS` (`saldoPoliza`, con `aggregate`); el error lleva
-  `details: { campo: 'monto', motivo: 'MONTO_SUPERA_SALDO', saldo }`. Dos validaciones
-  simultáneas aún pueden pasar las dos hasta HU-36 (S5), marcado con `ponytail:`.
+  `details: { campo: 'monto', motivo: 'MONTO_SUPERA_SALDO', saldo }`.
+- **Aplicación a cuotas (D12 de S5):** `PrismaPagosRepository.validarYCrearRecibo` aplica el pago
+  dentro de su `$transaction`: `SELECT … FROM "Cuota" WHERE "polizaId" = $1 FOR UPDATE`, la
+  comprobación definitiva de RN-02 con las cuotas bloqueadas, una `AplicacionPago` por cuota tocada
+  y `valorPagado`/`estado` actualizados. Dos validaciones simultáneas se serializan y la segunda
+  relee lo aplicado por la primera; una cuota VENCIDA cubierta en parte sigue VENCIDA.
+- **Invariante (D13 de S5):** por póliza, Σ `Cuota.valorPagado` = Σ pagos VALIDADOS. `GET /pagos/:id`
+  devuelve las `aplicaciones` del pago y `GET /polizas/:id/cuotas` las de cada cuota; los pagos
+  validados en S4 se aplican una vez con `prisma/backfill-aplicaciones.ts` (ver
+  `docs/despliegue.md` §6.1).
 - La referencia es obligatoria y única por póliza (`@@unique([polizaId, referencia])`): el `P2002`
   sale como 409 `REFERENCIA_DUPLICADA`. El rechazo guarda `rechazadoPorId`/`rechazadoEn`, nunca
   los campos de la validación. `Pago.puedeEditarse()` existe aunque no haya edición (D9).
@@ -93,11 +103,47 @@ leyendo varios archivos.
   `PUT /polizas/:id/cuotas` reemplaza el plan en una `$transaction` que vuelve a exigir VIGENTE y
   cero pagos VALIDADOS (único borrado del sistema); el dominio `PlanCuotas` valida la suma
   (RN-15, `PLAN_NO_CUADRA`) y la vigencia (`PLAN_FUERA_DE_VIGENCIA`). Editar la prima o la vigencia
-  ajusta el plan en la misma transacción (D13): una cuota sigue a la prima y al inicio; N cuotas
-  se recalculan con `proponerPlanCuotas` y conservan sus fechas.
+  ajusta el plan en la misma transacción (D13 de S4): una cuota sigue a la prima y al inicio; N
+  cuotas se recalculan con `proponerPlanCuotas` y conservan sus fechas.
+- **Carrera del plan (Q16):** `PUT /polizas/:id/cuotas` y el `PATCH` que cambia prima o vigencia
+  bloquean las cuotas y recuentan los pagos VALIDADOS dentro de la transacción (`reemplazarCuotas`
+  y `actualizar`); si el recuento cambió responden 409 `POLIZA_MODIFICADA` (`CONFLICTO`) y nunca el
+  500 de la FK de `AplicacionPago`. El 422 `PLAN_CON_PAGOS_VALIDADOS` sale de
+  `DefinirPlanCuotasUseCase` cuando los pagos ya estaban al leer la póliza.
 - `proponerPlanCuotas`, `sumarMontos` y `fechaEnGuayaquil` viven en `@oasis/shared/dominio`: toda
   aritmética de dinero va en centavos enteros y "hoy" es la fecha de Guayaquil.
 - Mora (RN-16): `enMora` sale del `_count` de cuotas VENCIDAS en la misma consulta de la póliza.
+
+## Verificación, recibos y cartera (S5)
+
+- **Códigos (D2):** `ESTADOS_VERIFICACION` de `@oasis/shared` lista `AUTENTICO`, `NO_COINCIDE`,
+  `EN_PROCESO`, `ANULADO` y `NO_ENCONTRADO`. `VerificarReciboUseCase` decide así:
+  recibo inexistente o ajeno → `NO_ENCONTRADO`; anulado en la base o en el contrato → `ANULADO`; sin
+  registrar en la cadena (PENDIENTE_ANCLAJE, ENVIADO o FALLIDO) → `EN_PROCESO`; hash distinto →
+  `NO_COINCIDE`; si no, `AUTENTICO`. Un RPC caído es 502, nunca un resultado falso.
+- **CLIENTE y RN-07 (D3):** `GET /recibos/:codigo/verificacion` admite ADMIN, OPERADOR y CLIENTE y
+  vive en `VerificacionController`. Con el CLIENTE, el caso de uso recibe su `clienteId`: un recibo
+  ajeno responde exactamente como un código inexistente (mismo cuerpo, 200 y sin consultar la
+  cadena) y su respuesta omite `hashOnchain` y `contractAddress`.
+- **Límite por usuario (D4):** `LimitePorUsuarioGuard` en el handler, después de la autenticación,
+  permite 30 consultas por minuto por `usuario.id` con el `ThrottlerStorage` en memoria; al pasarse
+  responde 429 `DEMASIADAS_CONSULTAS` con `Retry-After`. `ponytail:` una sola instancia del API; el
+  storage de Redis llega con HT-08 (S8).
+- **ANULADO sin cadena (Q17):** un recibo anulado en la base responde `ANULADO` sin llamar al
+  registro de recibos; `hashOnchain` queda `null` y al CLIENTE se le omite.
+- **Recibo imprimible (D7, D8):** `GET /recibos/:id/imprimible` (ADMIN y OPERADOR) y
+  `GET /mis-recibos/:id/imprimible` (CLIENTE; ajeno → 404) devuelven el recibo según
+  `reciboImprimibleSchema`, sin sal, payload ni hashes y con la identificación enmascarada
+  (`******4065`). La SPA comparte `ReciboImprimiblePage` entre `/recibos/:id/imprimir` y
+  `/portal/recibos/:id`; el QR codifica
+  `${window.location.origin}/recibos/verificar/<codigo>`, el botón llama a `window.print()` y
+  `@media print` oculta navegación y botones (A4 vertical, márgenes de 15 mm).
+- **Cartera (D16, Q18):** `GET /cuotas` (ADMIN y OPERADOR) pagina con
+  `vista=POR_VENCER|VENCIDAS|TODAS` (por defecto `TODAS`), `clienteId`, `aseguradoraId` y
+  `desde`/`hasta` sobre `fechaVencimiento`. Solo devuelve cuotas no PAGADAS de pólizas VIGENTES;
+  POR_VENCER es `hoy ≤ vencimiento ≤ hoy + 7` y VENCIDAS `vencimiento < hoy`, con «hoy» de
+  Guayaquil y sin depender del cron. Cada fila trae `pendiente` y `diasAtraso` (0 si aún no vence)
+  y va ordenada por vencimiento y número. La página `/cartera` es del personal.
 
 ## Sesiones (ADR-016)
 
@@ -153,6 +199,7 @@ leyendo varios archivos.
 
 ## SPA
 
+- **Diseño final pendiente de implementar:** el 05/11/2026 se aprobó Claroscuro v2 (ADR-030 y ADR-031). `apps/web/DESIGN.md` ya lo describe, pero la SPA sigue con el diseño del S4 hasta la fase de diseño del S5; hasta entonces los tokens de `src/index.css` mandan para el código. El inventario para planificar está en `docs/diseno/README.md`.
 - Diseño Claroscuro (ADR-019): tokens y reglas en `apps/web/DESIGN.md`, contexto de producto en
   `apps/web/PRODUCT.md` y prototipo navegable en `docs/diseno/prototipo/`. Los tokens viven en
   `src/index.css` (correspondencia con shadcn/ui en `docs/diseno/README.md`); `--color-*: initial`
@@ -176,8 +223,10 @@ leyendo varios archivos.
   accesible.
 - `AvisoVacio` (`components/DataState.tsx`) recibe el título como `children` y, opcionales,
   `descripcion` y `accion`; `TablaDatos` le pasa `vacioDescripcion`.
-- El filtro de `PagosPage` vive en la URL (`?estado=`, validado contra `ESTADOS_PAGO` y escrito con
-  `replace`): la cifra «Por validar» del inicio abre `/pagos?estado=REGISTRADO`. En el portal,
+- Los filtros de `PagosPage` y `CarteraPage` viven en la URL (`useFiltrosEnUrl`, que escribe con
+  `replace`): `?estado=` se valida contra `ESTADOS_PAGO` y al recargar con `?polizaId=` (Pagos) o
+  `?clienteId=` (Pagos y Cartera) el combobox muestra el número de la póliza o el nombre del
+  cliente. La cifra «Por validar» del inicio abre `/pagos?estado=REGISTRADO`. En el portal,
   `features/dashboard/components/SeguimientoPago.tsx` muestra los tres pasos de cada pago con su
   estado en texto.
 - Montos y fechas se formatean solo con `lib/format.ts` (`formatearMoneda`, `formatearFecha`,
@@ -189,9 +238,11 @@ leyendo varios archivos.
 - En desarrollo, Vite redirige `/api` a `:3000`, igual que Caddy en producción.
 - `components/ComboboxBusqueda.tsx` es el combobox ARIA 1.2 compartido (sin dependencias): busca
   en el servidor con debounce de 300 ms mediante un hook que recibe por props.
-  `SelectorCliente` (clientes activos, formulario y filtro de `PolizasPage`) y `SelectorPoliza`
-  (pólizas VIGENTES del formulario de pago, RN-01) lo envuelven. Dentro de un `Dialog`, el
-  `onEscapeKeyDown` del contenido protege la lista abierta del cierre del diálogo.
+  `SelectorCliente` (clientes activos; formulario de póliza y filtros de `PolizasPage`, `PagosPage`
+  y `CarteraPage`) y `SelectorPoliza` (con `soloVigentes`, que por defecto es `true`: el formulario
+  de pago solo ofrece VIGENTES por RN-01 y el filtro de `PagosPage` pasa `false` para ver cualquier
+  estado) lo envuelven. Dentro de un `Dialog`, el `onEscapeKeyDown` del contenido protege la lista
+  abierta del cierre del diálogo.
 - `components/Campo.tsx` pone label, ayuda y error con su ARIA; lo usan `FormularioPoliza` y
   `FormularioPago`, que llevan el error del API a su campo con `details.campo`.
 - Pagos (S4): `ValidarPagoDialog` (resumen, casilla y «Validar y emitir recibo», tres acciones

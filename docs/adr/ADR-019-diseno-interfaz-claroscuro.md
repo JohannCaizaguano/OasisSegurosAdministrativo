@@ -1,6 +1,6 @@
 # ADR-019 · Diseño de interfaz Claroscuro
 
-- **Estado**: aceptado
+- **Estado**: aceptado; reemplazado en parte por [ADR-030](ADR-030-colores-alineados-con-la-landing.md) y [ADR-031](ADR-031-diseno-final-claroscuro-v2.md)
 - **Fecha**: 2026-10-23
 - **Sprint**: S4 (decisión); implementación en HT-13
 

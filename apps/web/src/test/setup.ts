@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom/vitest';
+import { configure } from '@testing-library/react';
+
+// La suite completa corre muchas pruebas en paralelo: jsdom tarda en aplicar los estados.
+configure({ asyncUtilTimeout: 3000 });
 
 /** Polyfills que jsdom no implementa y que necesitan los componentes Radix. */
 if (!window.matchMedia) {
