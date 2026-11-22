@@ -162,20 +162,20 @@ export const ESTADOS: { [D in Dominio]: Record<EstadoDe<D>, Presentacion> } = {
     },
   },
   verificacion: {
-    VALIDO: {
+    AUTENTICO: {
       tono: 'exito',
       icono: ShieldCheck,
       texto: 'Auténtico',
       descripcion: 'El recibo fue emitido por Oasis Seguros y no ha cambiado.',
     },
-    HASH_INCONSISTENTE: {
+    NO_COINCIDE: {
       tono: 'error',
       icono: ShieldX,
       texto: 'No coincide',
       descripcion:
         'Los datos del recibo no son los que se registraron. No lo acepte y comuníquese con Oasis Seguros.',
     },
-    NO_ANCLADO: {
+    EN_PROCESO: {
       ...EN_PROCESO,
       descripcion: 'El recibo existe y se está registrando. Vuelva a intentarlo en un minuto.',
     },

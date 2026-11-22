@@ -1,8 +1,29 @@
-import type { Pago } from '@oasis/shared';
+import type { Cuota, Pago } from '@oasis/shared';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { polizasApi } from '@/features/polizas/api';
 
 import { ValidarPagoDialog } from './ValidarPagoDialog';
+
+vi.mock('@/features/polizas/api', () => ({ polizasApi: { cuotas: vi.fn() } }));
+
+function cuota(numero: number): Cuota {
+  return {
+    id: `c${numero}`,
+    numero,
+    valor: '120.00',
+    valorPagado: '0.00',
+    fechaVencimiento: `2099-0${numero}-01`,
+    estado: 'PENDIENTE',
+    aplicaciones: [],
+  };
+}
+
+beforeEach(() => {
+  vi.mocked(polizasApi.cuotas).mockResolvedValue([cuota(1), cuota(2)]);
+});
 
 const PAGO: Pago = {
   id: '7c1e5a90-2b3d-4f6a-9e8c-1d2b3a4c5d6e',
@@ -22,19 +43,45 @@ const PAGO: Pago = {
 
 afterEach(cleanup);
 
-function montar() {
+function montar(pago: Pago = PAGO) {
   const alConfirmar = vi.fn();
   render(
-    <ValidarPagoDialog
-      pago={PAGO}
-      abierto
-      enCurso={false}
-      alCambiarAbierto={vi.fn()}
-      alConfirmar={alConfirmar}
-    />,
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+    >
+      <ValidarPagoDialog
+        pago={pago}
+        abierto
+        enCurso={false}
+        alCambiarAbierto={vi.fn()}
+        alConfirmar={alConfirmar}
+      />
+    </QueryClientProvider>,
   );
   return { alConfirmar, casilla: () => screen.getByLabelText(/confirmo que revisé/i) };
 }
+
+describe('ValidarPagoDialog — vista previa de las cuotas (D24)', () => {
+  it('$160 sobre cuotas de $120 y $120 anticipa la cuota Pagada y la parcial', async () => {
+    montar({ ...PAGO, monto: '160.00' });
+
+    expect(
+      await screen.findByText(
+        'Al validar: la cuota 1 queda Pagada y la cuota 2 recibe $40,00 (Pago parcial).',
+      ),
+    ).toHaveAttribute('role', 'status');
+    expect(polizasApi.cuotas).toHaveBeenCalledWith(PAGO.polizaId);
+  });
+
+  it('un monto mayor que lo pendiente avisa el saldo y no deja confirmar', async () => {
+    const { alConfirmar, casilla } = montar({ ...PAGO, monto: '300.00' });
+
+    expect(await screen.findByText(/Supera el saldo pendiente \(\$240,00\)/)).toBeInTheDocument();
+    fireEvent.click(casilla());
+    expect(screen.getByTestId('confirmar-validar')).toBeDisabled();
+    expect(alConfirmar).not.toHaveBeenCalled();
+  });
+});
 
 describe('ValidarPagoDialog (HU-18, D10)', () => {
   it('explica en lenguaje llano qué ocurre al validar', () => {

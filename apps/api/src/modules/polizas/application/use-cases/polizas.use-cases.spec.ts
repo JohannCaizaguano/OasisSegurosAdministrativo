@@ -34,6 +34,8 @@ function crearPoliza(parcial: Partial<Parameters<typeof Poliza.reconstituir>[0]>
     fechaInicio: '2026-01-01',
     fechaFin: '2026-12-31',
     estado: 'VIGENTE',
+    cobertura: null,
+    condiciones: null,
     tienePagosValidados: false,
     enMora: false,
     createdAt: '2026-10-01T12:00:00.000Z',
@@ -50,6 +52,7 @@ function cuota(numero: number, valor: string, fechaVencimiento: string) {
     valorPagado: '0.00',
     fechaVencimiento,
     estado: 'PENDIENTE' as const,
+    aplicaciones: [],
   };
 }
 
@@ -71,6 +74,7 @@ function crearDobles(poliza: Poliza | null = crearPoliza()) {
     listarRamosActivos: jest.fn().mockResolvedValue([]),
     listarCuotas: jest.fn().mockResolvedValue([cuota(1, '1500.50', '2026-01-01')]),
     reemplazarCuotas: jest.fn(),
+    listarCartera: jest.fn(),
     marcarCuotasVencidas: jest.fn(),
   };
   return { polizas };
@@ -346,5 +350,31 @@ describe('ActualizarPolizaUseCase y el plan de cuotas (D13)', () => {
 
     expect(deps.polizas.listarCuotas).not.toHaveBeenCalled();
     expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, { numero: 'POL-009' });
+  });
+});
+
+describe('Cobertura y condiciones (HU-51, D17)', () => {
+  it('crea la póliza con cobertura y condiciones', async () => {
+    const deps = crearDobles();
+    const datos = { ...DATOS_CREAR, cobertura: 'Todo riesgo', condiciones: 'Deducible 10 %' };
+
+    await new CrearPolizaUseCase(deps.polizas).ejecutar(datos);
+
+    expect(deps.polizas.crear).toHaveBeenCalledWith(datos);
+  });
+
+  it('edita cobertura y borra condiciones con null, sin tocar el plan de cuotas', async () => {
+    const deps = crearDobles(crearPoliza({ tienePagosValidados: true }));
+
+    await new ActualizarPolizaUseCase(deps.polizas).ejecutar(POLIZA_ID, {
+      cobertura: 'Pérdida total',
+      condiciones: null,
+    });
+
+    expect(deps.polizas.actualizar).toHaveBeenCalledWith(POLIZA_ID, {
+      cobertura: 'Pérdida total',
+      condiciones: null,
+    });
+    expect(deps.polizas.listarCuotas).not.toHaveBeenCalled();
   });
 });

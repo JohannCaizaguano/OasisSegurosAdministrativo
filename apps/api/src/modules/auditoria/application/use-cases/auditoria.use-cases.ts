@@ -17,6 +17,8 @@ export interface EntradaListarBitacora {
   porPagina: number;
   usuarioId?: string;
   accion?: AccionAuditoria;
+  entidad?: string;
+  entidadId?: string;
   desde?: string;
   hasta?: string;
 }
@@ -29,6 +31,8 @@ export class ListarBitacoraUseCase {
     return this.bitacora.listar({
       usuarioId: entrada.usuarioId,
       accion: entrada.accion,
+      entidad: entrada.entidad,
+      entidadId: entrada.entidadId,
       desde: periodo.desde,
       hastaExclusivo: periodo.hastaExclusivo,
       pagina: entrada.pagina,

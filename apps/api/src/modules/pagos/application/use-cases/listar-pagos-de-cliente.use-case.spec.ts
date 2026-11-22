@@ -6,6 +6,7 @@ function crearRepo(): PagosRepositoryPort {
     crear: jest.fn(),
     listar: jest.fn().mockResolvedValue({ items: [], total: 0 }),
     buscarPorId: jest.fn(),
+    buscarDetalle: jest.fn(),
     validarYCrearRecibo: jest.fn(),
     rechazar: jest.fn(),
     buscarMetodoPago: jest.fn(),
@@ -38,5 +39,13 @@ describe('ListarPagosDeClienteUseCase', () => {
       estado: 'VALIDADO',
       clienteId: 'cliente-1',
     });
+  });
+
+  it('el portal conserva el orden por fecha: no pide los pagos por validar primero (HU-19)', async () => {
+    const repo = crearRepo();
+
+    await new ListarPagosDeClienteUseCase(repo).ejecutar('c1', { pagina: 1, porPagina: 20 });
+
+    expect(jest.mocked(repo.listar).mock.calls[0]?.[0].porValidarPrimero).toBeUndefined();
   });
 });

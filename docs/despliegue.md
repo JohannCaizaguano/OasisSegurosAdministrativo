@@ -215,6 +215,27 @@ script). Restaure al menos una vez antes de la evaluación.
 Con el tag `vX.Y.Z`, GitHub Actions publica las imágenes, despliega por SSH y ejecuta el
 smoke test. A mano: `infra/scripts/deploy.sh <tag>`.
 
+### 6.1 Pagos validados antes de S5 (D13)
+
+El invariante de HU-36 es, por póliza, Σ `Cuota.valorPagado` = Σ pagos VALIDADOS. Los pagos que se
+validaron en S4 no tienen `AplicacionPago`; el script
+[`apps/api/prisma/backfill-aplicaciones.ts`](../apps/api/prisma/backfill-aplicaciones.ts) los aplica
+con la misma función del API (`aplicarPagoACuotas`). Se ejecuta una vez por cada base que ya tenga
+pagos VALIDADOS de S4, después de aplicar las migraciones de S5:
+
+```bash
+pnpm --filter @oasis/api exec tsx prisma/backfill-aplicaciones.ts
+```
+
+- Lee `DATABASE_URL` como el API: `apps/api/.env` y luego el `.env` raíz.
+- Toma solo pagos VALIDADOS sin aplicaciones, en orden de `validadoEn` (y `createdAt`), para que el
+  saldo de cada cuota se reconstruya en el orden en que se validaron.
+- «Hoy» es la fecha de Guayaquil: una cuota vencida cubierta en parte sigue VENCIDA.
+- Es idempotente: la segunda corrida aplica 0.
+- Si un pago supera lo pendiente de su plan, lo omite y lo lista al final para revisarlo a mano; no
+  fuerza el saldo.
+- En una base creada después de S5 no hay nada que aplicar.
+
 ## 7. Día de la evaluación
 
 ### 7.1 Preparación

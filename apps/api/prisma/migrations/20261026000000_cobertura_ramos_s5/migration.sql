@@ -1,0 +1,31 @@
+-- Sprint S5: cobertura y condiciones de la póliza (HU-51, D17) y catálogo de ramos de Oasis (D18).
+
+-- AlterTable
+ALTER TABLE "Poliza" ADD COLUMN     "cobertura" TEXT,
+ADD COLUMN     "condiciones" TEXT;
+
+-- Producción no corre el seed: el catálogo vive aquí y es idempotente.
+INSERT INTO "Ramo" ("id", "codigo", "nombre", "activo", "updatedAt")
+VALUES
+  (gen_random_uuid(), 'VIDA', 'Vida', true, now()),
+  (gen_random_uuid(), 'ASISTENCIA_MEDICA', 'Asistencia médica', true, now()),
+  (gen_random_uuid(), 'VEHICULOS', 'Vehículos', true, now()),
+  (gen_random_uuid(), 'EQUIPOS_ELECTRONICOS', 'Equipos electrónicos', true, now()),
+  (gen_random_uuid(), 'AEREO_DRONES', 'Aéreo (drones)', true, now()),
+  (gen_random_uuid(), 'EQUIPOS_MAQUINARIA', 'Equipos y maquinaria', true, now())
+ON CONFLICT ("codigo") DO UPDATE
+SET "nombre" = EXCLUDED."nombre", "activo" = true, "updatedAt" = now();
+
+-- Los ramos que Oasis no comercializa también son datos: en una base nueva se crean inactivos
+-- para que el catálogo quede completo (HU-51.4) y el UPDATE siguiente solo tenga que confirmarlo.
+INSERT INTO "Ramo" ("id", "codigo", "nombre", "activo", "updatedAt")
+VALUES
+  (gen_random_uuid(), 'SALUD', 'Salud', false, now()),
+  (gen_random_uuid(), 'INCENDIO', 'Incendio', false, now()),
+  (gen_random_uuid(), 'FIANZAS', 'Fianzas', false, now())
+ON CONFLICT ("codigo") DO NOTHING;
+
+-- Los ramos que Oasis no comercializa se desactivan; sus pólizas se conservan (RN-09).
+UPDATE "Ramo"
+SET "activo" = false, "updatedAt" = now()
+WHERE "codigo" IN ('SALUD', 'INCENDIO', 'FIANZAS') AND "activo";

@@ -1,6 +1,11 @@
 import { z } from 'zod';
-import { ESTADOS_RECIBO, ESTADOS_VERIFICACION } from '../constants/estados';
-import { bigintStringSchema, hex32Schema, paginacionQuerySchema } from './common.schema';
+import { ESTADOS_RECIBO, ESTADOS_VERIFICACION, METODOS_PAGO } from '../constants/estados';
+import {
+  bigintStringSchema,
+  hex32Schema,
+  montoDecimalSchema,
+  paginacionQuerySchema,
+} from './common.schema';
 
 export const estadoReciboSchema = z.enum(ESTADOS_RECIBO);
 export const estadoVerificacionSchema = z.enum(ESTADOS_VERIFICACION);
@@ -20,10 +25,11 @@ export const reciboResumenSchema = z.object({
 });
 export type ReciboResumen = z.infer<typeof reciboResumenSchema>;
 
-export const reciboDetalleSchema = reciboResumenSchema.extend({
+/** D6: estricto, para que el payload canónico y la sal no vuelvan a salir del API. */
+export const reciboDetalleSchema = z.strictObject({
+  ...reciboResumenSchema.shape,
   pagoId: z.uuid(),
   numeroPoliza: z.string(),
-  payloadCanonico: z.string(),
   blockNumber: bigintStringSchema.nullish(),
   gasUsed: bigintStringSchema.nullish(),
   effectiveGasPrice: bigintStringSchema.nullish(),
@@ -34,6 +40,34 @@ export const reciboDetalleSchema = reciboResumenSchema.extend({
   explorerUrl: z.string().nullish(),
 });
 export type ReciboDetalle = z.infer<typeof reciboDetalleSchema>;
+
+/**
+ * Recibo imprimible (HU-25, D7): solo lo que se entrega al cliente. Estricto en cada nivel para
+ * que un dato interno o la identificación completa no se cuelen en la respuesta.
+ */
+export const reciboImprimibleSchema = z.strictObject({
+  codigo: z.string(),
+  estadoAnclaje: estadoReciboSchema,
+  emitidoEn: z.iso.datetime(),
+  ancladoEn: z.iso.datetime().nullable(),
+  explorerUrl: z.string().nullable(),
+  pago: z.strictObject({
+    monto: montoDecimalSchema,
+    fechaPago: z.iso.date(),
+    metodo: z.enum(METODOS_PAGO),
+    referencia: z.string().nullable(),
+  }),
+  poliza: z.strictObject({
+    numero: z.string(),
+    ramo: z.string(),
+    aseguradora: z.string(),
+  }),
+  cliente: z.strictObject({
+    nombre: z.string(),
+    identificacionEnmascarada: z.string(),
+  }),
+});
+export type ReciboImprimible = z.infer<typeof reciboImprimibleSchema>;
 
 export const listarRecibosQuerySchema = paginacionQuerySchema.extend({
   estado: estadoReciboSchema.optional(),

@@ -1,5 +1,5 @@
 import type { Pago, Poliza } from '@oasis/shared';
-import { ShieldCheck } from 'lucide-react';
+import { Printer, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { AvisoError, AvisoVacio, EsqueletoTabla } from '@/components/DataState';
@@ -10,6 +10,9 @@ import { formatearFecha, formatearMoneda } from '@/lib/format';
 
 import { useMisPagos, useMisPolizas } from '../hooks';
 import { SeguimientoPago } from './SeguimientoPago';
+
+const CLASES_ENLACE =
+  'inline-flex min-h-control items-center gap-1.5 font-semibold text-link underline underline-offset-3';
 
 const CLASES_ACCION_CONTORNO =
   'border border-sidebar-foreground/30 bg-transparent text-sidebar-foreground shadow-none hover:bg-sidebar-accent';
@@ -174,6 +177,26 @@ export function PanelCliente() {
                   <EstadoInsignia dominio="pago" estado={pago.estado} />
                 </span>
                 <SeguimientoPago pago={pago} />
+                {pago.recibo ? (
+                  <span className="flex basis-full flex-wrap gap-x-5">
+                    <Link
+                      to={`/portal/recibos/${pago.recibo.id}`}
+                      aria-label={`Imprimir recibo ${pago.recibo.codigo}`}
+                      className={CLASES_ENLACE}
+                    >
+                      <Printer className="size-4" aria-hidden="true" />
+                      Imprimir recibo
+                    </Link>
+                    <Link
+                      to={`/recibos/verificar/${pago.recibo.codigo}`}
+                      aria-label={`Verificar recibo ${pago.recibo.codigo}`}
+                      className={CLASES_ENLACE}
+                    >
+                      <ShieldCheck className="size-4" aria-hidden="true" />
+                      Verificar recibo
+                    </Link>
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

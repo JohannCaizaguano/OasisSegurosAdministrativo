@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { iniciarSesion } from './ayudas';
+import { ENLACE_PAGOS, iniciarSesion } from './ayudas';
 
 /**
  * E2E de sesión: "atrás" tras cerrar sesión (HU-02) e inactividad con reloj
@@ -14,7 +14,7 @@ test('volver atrás después de cerrar sesión no muestra datos protegidos', asy
   await page.setExtraHTTPHeaders({ 'X-Forwarded-For': '10.3.0.11' });
   await iniciarSesion(page, EMAIL, PASSWORD);
 
-  await page.getByRole('link', { name: 'Pagos', exact: true }).click();
+  await page.getByRole('link', { name: ENLACE_PAGOS }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos', exact: true })).toBeVisible();
 
   await page.getByTestId('menu-usuario').click();

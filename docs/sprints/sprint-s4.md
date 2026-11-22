@@ -281,7 +281,9 @@ validación (S7) y contadores del límite de tasa en Redis (HT-08, S8).
 
 ## 10. Acciones del autor (D24)
 
-- [ ] Instalar la app de Renovate en el repositorio y aprobar su PR de bienvenida.
+- [x] Instalar la app de Renovate en el repositorio (25/10, modo «Scan and Alert»). No hubo PR de
+      bienvenida porque `renovate.json` ya estaba en `main`; la primera corrida abrió el
+      Dependency Dashboard (issue #14).
 - [ ] Crear la billetera fría (cuenta nueva sin otro uso, frase semilla solo en papel).
 - [ ] Ejecutar en Amoy `pnpm --filter @oasis/contracts transferir-admin` hacia la billetera fría
       (`docs/despliegue.md` §4.1) y anotar aquí los dos txHash. Con esto se cumple HT-15.1.

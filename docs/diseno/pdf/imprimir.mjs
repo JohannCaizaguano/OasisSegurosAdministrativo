@@ -4,6 +4,7 @@
 //   pnpm --filter @oasis/web exec node ../../docs/diseno/pdf/imprimir.mjs              imprime el PDF
 //   pnpm --filter @oasis/web exec node ../../docs/diseno/pdf/imprimir.mjs --prototipo  recaptura el prototipo e imprime
 //   pnpm --filter @oasis/web exec node ../../docs/diseno/pdf/imprimir.mjs --spa <dir>  importa capturas PNG de la SPA e imprime
+//   --solo-capturas  no imprime el PDF; CHROMIUM_PATH=<ejecutable>  usa ese Chromium en lugar del de Playwright
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
@@ -48,7 +49,7 @@ function servir() {
         throw new Error('El prototipo cambió: actualice GANCHO en imprimir.mjs');
       cuerpo = html.replace(
         GANCHO,
-        `window.__proto={UI,go,setRole,render,mGo,mTab,get D(){return D}};\n${GANCHO}`,
+        `window.__proto={UI,go,setRole,render,mGo,mTab,openSheet,dlgCliente,dlgPoliza,get D(){return D}};\n${GANCHO}`,
       );
     }
     res
@@ -85,15 +86,10 @@ async function aJpeg(pagina, png, nombre, recorte) {
 // pie en el PDF). Un recorte [x, y, ancho, alto] en píxeles de la captura genera `<nombre>-resultado`.
 const RESULTADO_VERIFICACION = [701, 471, 1342, 175];
 const SPA = [
-  ['01-ingreso-escritorio'],
   ['01-ingreso-360'],
-  ['02-inicio-personal-escritorio'],
-  ['03-pagos-filtrado-desde-panel-escritorio'],
-  ['04-pagos-leyenda-abierta-escritorio'],
   ['formulario-pago'],
   ['dialogo-validar'],
   ['dialogo-rechazar'],
-  ['06-polizas-iconos-escritorio'],
   ['07-recibos-escritorio'],
   ['10-verificacion-valido', RESULTADO_VERIFICACION],
   ['10-verificacion-hash_inconsistente', RESULTADO_VERIFICACION],
@@ -127,6 +123,102 @@ async function importarSpa(pagina, carpeta) {
 
 // Pantallas de sprints futuros, tomadas del prototipo. `p` es window.__proto.
 const PROTOTIPO = [
+  ['login', (p) => p.setRole('login')],
+  ['inicio-registro', (p) => p.setRole('staff')],
+  [
+    'clientes',
+    (p) => {
+      p.setRole('staff');
+      p.go('clientes');
+    },
+  ],
+  [
+    'cliente-ventana',
+    (p) => {
+      p.setRole('staff');
+      p.go('clientes');
+      p.openSheet('cli:María Fernanda Guamán');
+    },
+  ],
+  [
+    'polizas',
+    (p) => {
+      p.setRole('staff');
+      p.go('polizas');
+    },
+  ],
+  [
+    'poliza-ventana',
+    (p) => {
+      p.setRole('staff');
+      p.go('polizas');
+      p.openSheet('pol:VID-2026-00052', 'María Fernanda Guamán');
+    },
+  ],
+  [
+    'dialogo-cliente',
+    (p) => {
+      p.setRole('staff');
+      p.go('clientes');
+      p.dlgCliente();
+    },
+  ],
+  [
+    'dialogo-poliza',
+    (p) => {
+      p.setRole('staff');
+      p.go('polizas');
+      p.dlgPoliza();
+    },
+  ],
+  [
+    'pagos',
+    (p) => {
+      p.setRole('staff');
+      p.go('pagos');
+    },
+  ],
+  [
+    'cuenta',
+    (p) => {
+      p.setRole('admin');
+      p.go('cuenta');
+    },
+  ],
+  [
+    'admin-sistema',
+    (p) => {
+      p.setRole('admin');
+      p.UI.adm = 'sistema';
+      p.go('admin');
+    },
+  ],
+  [
+    'movil-clientes',
+    (p) => {
+      p.setRole('staff');
+      p.go('clientes');
+    },
+    'movil',
+  ],
+  [
+    'tel-cuenta',
+    (p) => {
+      p.D.consent = true;
+      p.setRole('client');
+      p.mTab('cuenta');
+    },
+    true,
+  ],
+  [
+    'tel-clave',
+    (p) => {
+      p.D.consent = true;
+      p.setRole('client');
+      p.mGo('clave');
+    },
+    true,
+  ],
   [
     'cargar',
     (p) => {
@@ -156,13 +248,6 @@ const PROTOTIPO = [
     (p) => {
       p.setRole('staff');
       p.go('cartera');
-    },
-  ],
-  [
-    'ficha-cliente',
-    (p) => {
-      p.setRole('staff');
-      p.go('cliente', 'María Fernanda Guamán');
     },
   ],
   [
@@ -308,7 +393,7 @@ const PROTOTIPO = [
 ];
 // Sin la barra del prototipo ni el marco del teléfono: el PDF dibuja el suyo para todas las capturas.
 const SIN_MARCO =
-  '.pbar,.toast,.guide,.notch{display:none!important}.rail{top:0!important;height:100vh!important}.staff{min-height:100vh!important}' +
+  '.pbar,.toast,.guide,.notch,.fondo-sel{display:none!important}' +
   '.phone{border:0!important;border-radius:0!important;box-shadow:none!important}';
 async function capturarPrototipo(navegador, base, conversor) {
   const ctx = await navegador.newContext({
@@ -331,9 +416,17 @@ async function capturarPrototipo(navegador, base, conversor) {
     await pagina.evaluate(() => document.fonts.ready);
     await pagina.waitForTimeout(500);
     await pagina.evaluate(() => window.scrollTo(0, 0));
-    const png = telefono
-      ? await pagina.locator('.phone .scr').screenshot()
-      : await pagina.screenshot({ clip: { x: 0, y: 0, width: 1280, height: 800 } });
+    let png;
+    if (telefono === 'movil') {
+      await pagina.setViewportSize({ width: 390, height: 844 });
+      await pagina.waitForTimeout(300);
+      png = await pagina.screenshot({ clip: { x: 0, y: 0, width: 390, height: 844 } });
+      await pagina.setViewportSize({ width: 1280, height: 1000 });
+    } else if (telefono) {
+      png = await pagina.locator('.phone .scr').screenshot();
+    } else {
+      png = await pagina.screenshot({ clip: { x: 0, y: 0, width: 1280, height: 800 } });
+    }
     await aJpeg(conversor, png, `proto-${nombre}`);
   }
   await ctx.close();
@@ -343,13 +436,14 @@ async function capturarPrototipo(navegador, base, conversor) {
 const args = process.argv.slice(2);
 const servidor = await servir();
 const base = `http://127.0.0.1:${servidor.address().port}`;
-const navegador = await chromium.launch();
+const navegador = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 try {
   const conversor = await navegador.newPage();
   const spa = args.indexOf('--spa');
   if (spa !== -1) await importarSpa(conversor, args[spa + 1]);
   if (args.includes('--prototipo')) await capturarPrototipo(navegador, base, conversor);
 
+  if (args.includes('--solo-capturas')) process.exit(0);
   const pagina = await navegador.newPage();
   const faltantes = [];
   pagina.on('response', (r) => r.status() === 404 && faltantes.push(r.url()));

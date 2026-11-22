@@ -38,9 +38,9 @@ const ESPERADO: Record<Dominio, Record<string, [string, Tono]>> = {
     DESACTIVADO: ['Desactivado', 'neutro'],
   },
   verificacion: {
-    VALIDO: ['Auténtico', 'exito'],
-    HASH_INCONSISTENTE: ['No coincide', 'error'],
-    NO_ANCLADO: ['En proceso', 'proceso'],
+    AUTENTICO: ['Auténtico', 'exito'],
+    NO_COINCIDE: ['No coincide', 'error'],
+    EN_PROCESO: ['En proceso', 'proceso'],
     ANULADO: ['Anulado', 'neutro'],
     NO_ENCONTRADO: ['No encontrado', 'error'],
   },

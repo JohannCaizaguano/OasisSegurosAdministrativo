@@ -2,6 +2,7 @@ import type { EstadoPoliza, OrdenPoliza, Poliza } from '@oasis/shared';
 import { ESTADOS_POLIZA } from '@oasis/shared';
 import { ArrowDown, ArrowUp, ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { EstadoInsignia } from '@/components/EstadoInsignia';
 import { LeyendaEstados } from '@/components/LeyendaEstados';
@@ -251,7 +252,12 @@ export function PolizasPage() {
             {polizas.map((poliza) => (
               <TableRow key={poliza.id}>
                 <TableCell className="cifra font-semibold whitespace-nowrap">
-                  {poliza.numero}
+                  <Link
+                    to={`/polizas/${poliza.id}`}
+                    className="text-link underline underline-offset-3"
+                  >
+                    {poliza.numero}
+                  </Link>
                 </TableCell>
                 <TableCell>{poliza.clienteNombre ?? '—'}</TableCell>
                 <TableCell>{poliza.aseguradoraNombre ?? '—'}</TableCell>

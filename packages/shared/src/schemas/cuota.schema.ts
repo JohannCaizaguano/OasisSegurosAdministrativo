@@ -13,6 +13,10 @@ export const cuotaSchema = z.object({
   valorPagado: montoDecimalSchema,
   fechaVencimiento: z.iso.date(),
   estado: estadoCuotaSchema,
+  /** D14: pagos validados aplicados a la cuota; `fecha` es cuándo se aplicó. */
+  aplicaciones: z.array(
+    z.object({ pagoId: z.uuid(), monto: montoDecimalSchema, fecha: z.iso.datetime() }),
+  ),
 });
 export type Cuota = z.infer<typeof cuotaSchema>;
 

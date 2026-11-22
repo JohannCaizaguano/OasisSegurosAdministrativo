@@ -3,7 +3,13 @@ import { randomUUID } from 'node:crypto';
 import { expect, test, type Page } from '@playwright/test';
 import { MOTIVOS_RECHAZO_FRECUENTES } from '@oasis/shared';
 
-import { cabecerasDeSesion, crearPolizaPropia, esperarCarga, iniciarSesion } from './ayudas';
+import {
+  cabecerasDeSesion,
+  crearPolizaPropia,
+  ENLACE_PAGOS,
+  esperarCarga,
+  iniciarSesion,
+} from './ayudas';
 
 /**
  * HU-16, HU-18, HU-19 y HU-35 por la interfaz: registrar con Débito bancario, validar en tres
@@ -46,10 +52,15 @@ test('el operador registra, valida y rechaza pagos; el cliente ve el motivo; se 
 
   // HU-16: registrar con Débito bancario.
   await iniciarSesion(page, OPERADOR.email, OPERADOR.password);
-  await page.getByRole('link', { name: 'Pagos', exact: true }).click();
+  await page.getByRole('link', { name: ENLACE_PAGOS }).click();
   await esperarCarga(page);
   await registrarPagoPorLaInterfaz(page, polizaPagos.numero, referenciaValidar);
   await registrarPagoPorLaInterfaz(page, polizaPagos.numero, referenciaRechazar);
+
+  // D15 ordena los REGISTRADOS primero: acotar a la póliza mantiene ambas filas a la vista al
+  // cambiar de estado (HU-20, el filtro vive en la URL).
+  await page.goto(`/pagos?polizaId=${polizaPagos.id}`);
+  await esperarCarga(page);
 
   // HU-18: tres acciones desde la fila y el código del recibo en el aviso.
   const filaValidar = page.locator('tbody tr', { hasText: referenciaValidar });

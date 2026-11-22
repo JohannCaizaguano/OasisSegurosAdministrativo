@@ -59,8 +59,13 @@ mueve el código a la capa que corresponde.
   sesión declara `@Auditar(accion, entidad)` (`src/common/auditoria/auditar.decorator.ts`), con
   valores de `ACCIONES_AUDITORIA` y `ENTIDADES_AUDITADAS`.
 - `auditoria-cobertura.spec.ts` falla si una ruta POST, PUT, PATCH o DELETE no lo declara;
-  descubre los controladores con `test/rutas-declaradas.ts` y las exenciones siguen listadas allí.
+  descubre los controladores con `test/rutas-declaradas.ts` y las mutaciones exentas están en el
+  `EXENTOS` del propio spec.
 - La bitácora es de solo inserción: no agregues métodos de edición ni de borrado a su puerto.
+- Las lecturas no se auditan. Las nuevas de S5 —`GET /recibos/:codigo/verificacion`,
+  `GET /recibos/:id/imprimible`, `GET /mis-recibos/:id/imprimible`, `GET /pagos/:id` y
+  `GET /cuotas`— están fijadas como GET y sin `@Auditar` en `auditoria-cobertura.spec.ts`; las de
+  la bitácora (`GET /bitacora` y `GET /bitacora/usuarios`, ADMIN) siguen la misma regla.
 - `PUT /polizas/:id/cuotas` se audita como `MODIFICAR` sobre `PlanCuotas` (con `entidadId` = la
   póliza). `GET /operadora/saldo` es una lectura y no se audita.
 - El filtro de usuarios de la bitácora se alimenta de `GET /bitacora/usuarios` (ADMIN), que lista
@@ -77,6 +82,10 @@ mueve el código a la capa que corresponde.
   sin token y 403 para cada rol no permitido.
 - Los datos del CLIENTE se filtran en un caso de uso con su `clienteId` (RN-07), no solo en el
   controlador.
+- `GET /recibos/:codigo/verificacion` es del personal y del CLIENTE; el caso de uso aplica RN-07 y
+  `LimitePorUsuarioGuard` pone el límite de 30 por minuto. `GET /mis-recibos/:id/imprimible` es solo
+  del CLIENTE; `GET /cuotas` y `GET /pagos/:id`, solo del personal. Las rutas de S5 están descritas
+  en `CLAUDE.md` («Verificación, recibos y cartera»).
 - `GET/POST/PATCH /usuarios*` es solo ADMIN; desactivar, cambiar el rol y restablecer la contraseña
   cierran todas las sesiones con `cerrarTodas` (HU-04, D8). `aseguradoras` declara `@Roles` por
   handler: lectura para ADMIN y OPERADOR, escritura solo para ADMIN (D14).

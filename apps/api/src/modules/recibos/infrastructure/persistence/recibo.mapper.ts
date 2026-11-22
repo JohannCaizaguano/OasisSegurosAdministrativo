@@ -20,7 +20,7 @@ export interface FilaRecibo {
   creadoEn: Date;
   enviadoEn: Date | null;
   ancladoEn: Date | null;
-  pago?: { poliza?: { numero: string } };
+  pago?: { poliza?: { numero: string; clienteId: string } };
 }
 
 export function mapearRecibo(fila: FilaRecibo): Recibo {
@@ -45,5 +45,6 @@ export function mapearRecibo(fila: FilaRecibo): Recibo {
     enviadoEn: fila.enviadoEn === null ? null : fila.enviadoEn.toISOString(),
     ancladoEn: fila.ancladoEn === null ? null : fila.ancladoEn.toISOString(),
     numeroPoliza: fila.pago?.poliza?.numero,
+    clienteId: fila.pago?.poliza?.clienteId,
   });
 }

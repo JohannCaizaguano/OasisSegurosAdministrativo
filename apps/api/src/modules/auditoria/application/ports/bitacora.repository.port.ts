@@ -7,6 +7,8 @@ export const BITACORA_REPOSITORY = Symbol('BitacoraRepositoryPort');
 export interface FiltrosBitacora {
   usuarioId?: string;
   accion?: AccionAuditoria;
+  entidad?: string;
+  entidadId?: string;
   desde?: Date;
   hastaExclusivo?: Date;
   pagina: number;

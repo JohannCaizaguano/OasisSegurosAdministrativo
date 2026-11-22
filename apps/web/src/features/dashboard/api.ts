@@ -1,4 +1,11 @@
-import type { Pago, Poliza, ReciboResumen, RespuestaPaginada, SaldoOperadora } from '@oasis/shared';
+import type {
+  Pago,
+  PagoCliente,
+  Poliza,
+  ReciboResumen,
+  RespuestaPaginada,
+  SaldoOperadora,
+} from '@oasis/shared';
 
 import { api } from '@/lib/api-client';
 
@@ -12,5 +19,5 @@ export const dashboardApi = {
   saldoOperadora: () => api.get<SaldoOperadora>('/operadora/saldo'),
   /** Datos propios del asegurado (rol CLIENTE). */
   misPolizas: () => api.get<RespuestaPaginada<Poliza>>('/mis-polizas?page=1&pageSize=20'),
-  misPagos: () => api.get<RespuestaPaginada<Pago>>('/mis-pagos?page=1&pageSize=20'),
+  misPagos: () => api.get<RespuestaPaginada<PagoCliente>>('/mis-pagos?page=1&pageSize=20'),
 };

@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import {
   ACCIONES_AUDITORIA,
+  actualizarClienteSchema,
   actualizarPolizaSchema,
   actualizarUsuarioSchema,
   apiErrorSchema,
@@ -227,6 +228,58 @@ describe('crearClienteSchema', () => {
         apellidos: 'Pérez',
       }).success,
     ).toBe(false);
+  });
+
+  it('reporta en una sola validación los errores base, de nombres y del dígito verificador', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'CEDULA',
+      identificacion: '1712345678',
+      email: 'correo-invalido',
+      nombres: '',
+      apellidos: '',
+    });
+    expect(resultado.success).toBe(false);
+    if (!resultado.success) {
+      const campos = resultado.error.issues.map((issue) => issue.path[0]);
+      expect(campos).toEqual(
+        expect.arrayContaining(['identificacion', 'email', 'nombres', 'apellidos']),
+      );
+    }
+  });
+
+  it('con RUC y nombres vacíos solo exige la razón social', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'RUC',
+      identificacion: '1790844521001',
+      email: 'a@b.com',
+      nombres: '',
+      apellidos: '',
+    });
+    expect(resultado.success).toBe(false);
+    if (!resultado.success) {
+      expect(resultado.error.issues.map((issue) => issue.path)).toEqual([['razonSocial']]);
+    }
+  });
+
+  it('trata la razón social vacía como ausente', () => {
+    const resultado = crearClienteSchema.safeParse({
+      tipoIdentificacion: 'CEDULA',
+      identificacion: '1710034065',
+      email: 'a@b.com',
+      nombres: 'Ana',
+      apellidos: 'Pérez',
+      razonSocial: '',
+    });
+    expect(resultado.success).toBe(true);
+    if (resultado.success) {
+      expect(resultado.data.razonSocial).toBeUndefined();
+    }
+  });
+});
+
+describe('actualizarClienteSchema', () => {
+  it('rechaza una actualización cuyo único campo llega vacío', () => {
+    expect(actualizarClienteSchema.safeParse({ razonSocial: '' }).success).toBe(false);
   });
 });
 
@@ -486,6 +539,8 @@ describe('polizaSchema de respuesta', () => {
     primaTotal: '480.50',
     fechaInicio: '2026-10-05',
     fechaFin: '2027-10-04',
+    cobertura: null,
+    condiciones: null,
     estado: 'VIGENTE',
     clienteNombre: 'Ana Pérez',
     aseguradoraNombre: 'Aseguradora X',
@@ -568,6 +623,7 @@ describe('cuotaSchema (HU-35)', () => {
       valorPagado: '0.00',
       fechaVencimiento: '2026-01-31',
       estado: 'PENDIENTE',
+      aplicaciones: [],
     };
     expect(cuotaSchema.safeParse(cuota).success).toBe(true);
     expect(cuotaSchema.safeParse({ ...cuota, estado: 'ATRASADA' }).success).toBe(false);

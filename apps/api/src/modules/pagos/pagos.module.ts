@@ -12,6 +12,7 @@ import {
   ListarPagosUseCase,
   RechazarPagoUseCase,
 } from './application/use-cases/pagos.use-cases';
+import { ObtenerPagoUseCase } from './application/use-cases/obtener-pago.use-case';
 import { ValidarPagoUseCase } from './application/use-cases/validar-pago.use-case';
 import { PrismaPagosRepository } from './infrastructure/persistence/prisma-pagos.repository';
 import { MisPagosController, PagosController } from './presentation/http/pagos.controller';
@@ -30,6 +31,11 @@ import { MisPagosController, PagosController } from './presentation/http/pagos.c
       provide: ListarPagosUseCase,
       inject: [PAGOS_REPOSITORY],
       useFactory: (repo: PrismaPagosRepository) => new ListarPagosUseCase(repo),
+    },
+    {
+      provide: ObtenerPagoUseCase,
+      inject: [PAGOS_REPOSITORY],
+      useFactory: (repo: PrismaPagosRepository) => new ObtenerPagoUseCase(repo),
     },
     {
       provide: ListarPagosDeClienteUseCase,

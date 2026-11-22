@@ -1,13 +1,17 @@
-import type { EstadoPoliza, MetodoPago } from '@oasis/shared';
+import type { EstadoCuota, EstadoPoliza, MetodoPago } from '@oasis/shared';
+import { aCentavos, aMonto, aplicarPagoACuotas, fechaEnGuayaquil } from '@oasis/shared';
 import { Injectable } from '@nestjs/common';
 
 import { ConflictoError, ReglaNegocioError } from '../../../../shared-kernel/domain-error';
 import { PrismaService } from '../../../../infrastructure/prisma/prisma.service';
-import { Pago } from '../../domain/pago';
+import type { Prisma } from '../../../../generated/prisma/client';
+import { montoSuperaSaldo } from '../../domain/errores';
+import { Pago, type ReciboDelPago } from '../../domain/pago';
 import { mapearRecibo } from '../../../recibos/infrastructure/persistence/recibo.mapper';
 import { Recibo } from '../../../recibos/domain/recibo';
 import type {
   DatosCrearPago,
+  DetallePago,
   DatosValidarPago,
   FiltrosPagos,
   MetodoPagoResumen,
@@ -35,7 +39,27 @@ interface FilaPago {
   createdAt: Date;
   updatedAt: Date;
   poliza?: { numero: string };
+  recibo?: { id: string; codigo: string; estado: ReciboDelPago['estado'] } | null;
 }
+
+interface FilaCuotaBloqueada {
+  id: string;
+  numero: number;
+  valor: Prisma.Decimal;
+  valorPagado: Prisma.Decimal;
+  fechaVencimiento: Date;
+  estado: EstadoCuota;
+}
+
+const ORDEN_RECIENTES = [{ fechaPago: 'desc' as const }, { createdAt: 'desc' as const }];
+// D15: PostgreSQL ordena el enum por su declaración (REGISTRADO, VALIDADO, RECHAZADO).
+const ORDEN_POR_VALIDAR = [{ estado: 'asc' as const }, ...ORDEN_RECIENTES];
+
+const INCLUIR_PAGO = {
+  poliza: true,
+  metodoPago: true,
+  recibo: { select: { id: true, codigo: true, estado: true } },
+} as const;
 
 @Injectable()
 export class PrismaPagosRepository implements PagosRepositoryPort {
@@ -88,8 +112,8 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
     const [filas, total] = await this.prisma.$transaction([
       this.prisma.pago.findMany({
         where,
-        include: { poliza: true, metodoPago: true },
-        orderBy: [{ fechaPago: 'desc' }, { createdAt: 'desc' }],
+        include: INCLUIR_PAGO,
+        orderBy: filtros.porValidarPrimero ? ORDEN_POR_VALIDAR : ORDEN_RECIENTES,
         skip: (filtros.pagina - 1) * filtros.porPagina,
         take: filtros.porPagina,
       }),
@@ -100,11 +124,29 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
   }
 
   async buscarPorId(id: string): Promise<Pago | null> {
+    const fila = await this.prisma.pago.findUnique({ where: { id }, include: INCLUIR_PAGO });
+    return fila ? this.mapearPago(fila) : null;
+  }
+
+  async buscarDetalle(id: string): Promise<DetallePago | null> {
     const fila = await this.prisma.pago.findUnique({
       where: { id },
-      include: { poliza: true, metodoPago: true },
+      include: {
+        ...INCLUIR_PAGO,
+        aplicaciones: {
+          select: { monto: true, cuota: { select: { numero: true } } },
+          orderBy: { cuota: { numero: 'asc' } },
+        },
+      },
     });
-    return fila ? this.mapearPago(fila) : null;
+    if (!fila) return null;
+    return {
+      pago: this.mapearPago(fila),
+      aplicaciones: fila.aplicaciones.map((aplicacion) => ({
+        cuotaNumero: aplicacion.cuota.numero,
+        monto: aplicacion.monto.toFixed(2),
+      })),
+    };
   }
 
   async buscarMetodoPago(codigo: MetodoPago): Promise<MetodoPagoResumen | null> {
@@ -137,6 +179,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
 
   async validarYCrearRecibo(datos: DatosValidarPago): Promise<ResultadoValidacion> {
     return this.prisma.$transaction(async (tx) => {
+      // Primero el cambio de estado: un pago ya validado o rechazado se informa como tal.
       const actualizados = await tx.pago.updateMany({
         where: { id: datos.pagoId, estado: 'REGISTRADO' },
         data: {
@@ -155,6 +198,13 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
         where: { id: datos.pagoId },
         include: { poliza: true, metodoPago: true },
       });
+      await this.aplicarACuotas(
+        tx,
+        datos.pagoId,
+        filaPago.polizaId,
+        filaPago.monto.toFixed(2),
+        fechaEnGuayaquil(datos.validadoEn),
+      );
 
       // El agregado se construye con `Recibo.nuevo()` para que los invariantes
       // de creación los garantice el dominio.
@@ -181,6 +231,48 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
         recibo: mapearRecibo(filaRecibo),
       };
     });
+  }
+
+  /**
+   * D12: `FOR UPDATE` serializa las validaciones de la misma póliza; la segunda relee las cuotas
+   * ya aplicadas por la primera y RN-02 se decide con ese saldo.
+   */
+  private async aplicarACuotas(
+    tx: Prisma.TransactionClient,
+    pagoId: string,
+    polizaId: string,
+    monto: string,
+    hoy: string,
+  ): Promise<void> {
+    const filas = await tx.$queryRaw<FilaCuotaBloqueada[]>`
+      SELECT "id", "numero", "valor", "valorPagado", "fechaVencimiento", "estado"
+      FROM "Cuota" WHERE "polizaId" = ${polizaId}::uuid FOR UPDATE`;
+    const cuotas = filas.map((fila) => ({
+      id: fila.id,
+      numero: fila.numero,
+      valor: fila.valor.toFixed(2),
+      valorPagado: fila.valorPagado.toFixed(2),
+      fechaVencimiento: fila.fechaVencimiento.toISOString().slice(0, 10),
+      estado: fila.estado,
+    }));
+    const pendiente = cuotas.reduce(
+      (total, cuota) => total + aCentavos(cuota.valor) - aCentavos(cuota.valorPagado),
+      0,
+    );
+    if (aCentavos(monto) > pendiente) {
+      throw montoSuperaSaldo(aMonto(pendiente));
+    }
+
+    const resultado = aplicarPagoACuotas(cuotas, monto, hoy);
+    await tx.aplicacionPago.createMany({
+      data: resultado.aplicaciones.map((aplicacion) => ({ pagoId, ...aplicacion })),
+    });
+    for (const cuota of resultado.cuotas) {
+      await tx.cuota.update({
+        where: { id: cuota.id },
+        data: { valorPagado: cuota.valorPagado, estado: cuota.estado },
+      });
+    }
   }
 
   async rechazar(id: string, rechazadoPorId: string, cuando: Date, motivo: string): Promise<Pago> {
@@ -225,6 +317,7 @@ export class PrismaPagosRepository implements PagosRepositoryPort {
       nota: fila.nota,
       createdAt: fila.createdAt.toISOString(),
       updatedAt: fila.updatedAt.toISOString(),
+      recibo: fila.recibo,
     });
   }
 }

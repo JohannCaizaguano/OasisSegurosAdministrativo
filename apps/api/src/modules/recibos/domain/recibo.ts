@@ -27,6 +27,8 @@ export interface PropsRecibo extends DatosNuevoRecibo {
   enviadoEn: string | null;
   ancladoEn: string | null;
   numeroPoliza?: string;
+  /** Cliente dueño de la póliza del pago (RN-07). */
+  clienteId?: string;
 }
 
 export interface DatosAnclaje {
@@ -133,6 +135,10 @@ export class Recibo extends Entity<PropsRecibo> {
 
   get numeroPoliza(): string | undefined {
     return this.props.numeroPoliza;
+  }
+
+  get clienteId(): string | undefined {
+    return this.props.clienteId;
   }
 
   estaAnclado(): boolean {

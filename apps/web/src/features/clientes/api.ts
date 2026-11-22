@@ -21,6 +21,7 @@ export const clientesApi = {
     api.get<RespuestaPaginada<Cliente>>(
       `/clientes${construirQuery({ page: 1, pageSize: 20, estado: 'ACTIVOS', ...filtros })}`,
     ),
+  obtener: (id: string) => api.get<Cliente>(`/clientes/${id}`),
   crear: (datos: CrearClienteInput) => api.post<Cliente>('/clientes', datos),
   actualizar: (id: string, datos: ActualizarClienteInput) =>
     api.patch<Cliente>(`/clientes/${id}`, datos),

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import { cabecerasDeSesion, crearPolizaPropia, hoyEnGuayaquil } from './ayudas';
+import { cabecerasDeSesion, crearPolizaPropia, ENLACE_PAGOS, hoyEnGuayaquil } from './ayudas';
 
 /**
  * E2E de la SPA: login → validar pago → ANCLADO → QR → verificación con sesión;
@@ -44,7 +44,7 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   await expect(page.getByRole('heading', { name: /Hola,/ })).toBeVisible();
 
   // 2. Validar el primer pago REGISTRADO
-  await page.getByRole('link', { name: 'Pagos', exact: true }).click();
+  await page.getByRole('link', { name: ENLACE_PAGOS }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Pagos', exact: true })).toBeVisible();
 
   // Se localiza la fila por su referencia para no validar otro pago.
@@ -96,7 +96,10 @@ test('flujo completo de validación, anclaje y verificación con sesión', async
   await page.getByTestId('boton-login').click();
 
   await expect(page.getByTestId('resultado-verificacion')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByTestId('resultado-verificacion')).toHaveAttribute('data-estado', 'VALIDO');
+  await expect(page.getByTestId('resultado-verificacion')).toHaveAttribute(
+    'data-estado',
+    'AUTENTICO',
+  );
   await expect(page.getByTestId('resultado-verificacion')).toContainText('Auténtico');
   await expect(page.getByTestId('resultado-verificacion')).toContainText(codigo as string);
 

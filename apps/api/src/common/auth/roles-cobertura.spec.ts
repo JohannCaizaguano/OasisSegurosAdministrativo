@@ -30,4 +30,14 @@ describe('cobertura de @Roles', () => {
     expect(roles('CuotasController.definir')).toEqual(['ADMIN', 'OPERADOR']);
     expect(roles('OperadoraController.saldo')).toEqual(['ADMIN']);
   });
+
+  it('rutas de S5: verificación con CLIENTE, imprimible por rol, detalle de pago y cartera del personal', () => {
+    const roles = (clave: string) =>
+      [...(rutasDeclaradas().find((ruta) => ruta.clave === clave)?.roles ?? [])].sort();
+    expect(roles('VerificacionController.verificar')).toEqual(['ADMIN', 'CLIENTE', 'OPERADOR']);
+    expect(roles('RecibosController.imprimible')).toEqual(['ADMIN', 'OPERADOR']);
+    expect(roles('MisRecibosController.imprimible')).toEqual(['CLIENTE']);
+    expect(roles('PagosController.obtener')).toEqual(['ADMIN', 'OPERADOR']);
+    expect(roles('CarteraController.listar')).toEqual(['ADMIN', 'OPERADOR']);
+  });
 });

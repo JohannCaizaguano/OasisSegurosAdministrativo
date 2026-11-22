@@ -1,12 +1,24 @@
 import type { UsuarioSesion } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
+import { pagosApi } from '@/features/pagos/api';
 import { useAuthStore } from '@/lib/auth-store';
 
 import { AppLayout } from './AppLayout';
+
+vi.mock('@/features/pagos/api', () => ({ pagosApi: { porValidar: vi.fn() } }));
+
+function porValidar(total: number) {
+  vi.mocked(pagosApi.porValidar).mockResolvedValue({
+    data: [],
+    meta: { page: 1, pageSize: 1, total, totalPages: total },
+  });
+}
+
+beforeEach(() => porValidar(0));
 
 function usuario(rol: UsuarioSesion['rol']): UsuarioSesion {
   return {
@@ -78,6 +90,7 @@ describe('AppLayout — menú por rol', () => {
     ).toEqual([
       'Inicio',
       'Pagos',
+      'Cartera',
       'Recibos',
       'Verificar recibo',
       'Clientes',
@@ -135,16 +148,17 @@ describe('AppLayout — riel del personal', () => {
 
     expect(tabulables[0]).toHaveTextContent('Saltar al contenido');
     expect(tabulables[0]).toHaveAttribute('href', '#contenido');
-    expect(tabulables.slice(1, 8).map((elemento) => elemento.textContent)).toEqual([
+    expect(tabulables.slice(1, 9).map((elemento) => elemento.textContent)).toEqual([
       'Inicio',
       'Pagos',
+      'Cartera',
       'Recibos',
       'Verificar recibo',
       'Clientes',
       'Pólizas',
       'Aseguradoras',
     ]);
-    expect(tabulables[8]).toBe(screen.getByTestId('menu-usuario'));
+    expect(tabulables[9]).toBe(screen.getByTestId('menu-usuario'));
   });
 
   it('un ítem enfocado con el teclado lleva a su página', () => {
@@ -216,5 +230,39 @@ describe('AppLayout — portal del cliente', () => {
     montar('CLIENTE');
 
     expect(screen.getByTestId('menu-usuario')).toHaveTextContent('Usuario CLIENTE');
+  });
+});
+
+describe('AppLayout — píldora de pagos por validar (D26 c)', () => {
+  it('con 0 pagos por validar no muestra la cifra', async () => {
+    montar('OPERADOR');
+    await waitFor(() => expect(pagosApi.porValidar).toHaveBeenCalled());
+    expect(riel().getByRole('link', { name: 'Pagos' })).toHaveAttribute('href', '/pagos');
+    expect(riel().queryByTestId('pildora-por-validar')).not.toBeInTheDocument();
+  });
+
+  it('con N pagos por validar los cuenta en el enlace y abre la lista filtrada', async () => {
+    porValidar(7);
+    montar('ADMIN');
+    const enlace = await riel().findByRole('link', { name: 'Pagos, 7 por validar' });
+    expect(enlace).toHaveAttribute('href', '/pagos?estado=REGISTRADO');
+    expect(within(enlace).getByTestId('pildora-por-validar')).toHaveTextContent('7');
+  });
+
+  it('el CLIENTE no la pide', () => {
+    montar('CLIENTE');
+    expect(pagosApi.porValidar).not.toHaveBeenCalled();
+  });
+});
+
+describe('AppLayout — Cartera (HU-38)', () => {
+  it.each(['ADMIN', 'OPERADOR'] as const)('el %s ve «Cartera» en el riel', (rol) => {
+    montar(rol);
+    expect(riel().getByRole('link', { name: 'Cartera' })).toHaveAttribute('href', '/cartera');
+  });
+
+  it('el CLIENTE no ve «Cartera»', () => {
+    montar('CLIENTE');
+    expect(screen.queryByRole('link', { name: 'Cartera' })).not.toBeInTheDocument();
   });
 });

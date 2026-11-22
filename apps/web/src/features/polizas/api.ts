@@ -30,6 +30,7 @@ export const polizasApi = {
     api.get<RespuestaPaginada<Poliza>>(
       `/polizas${construirQuery({ page: 1, pageSize: 20, ...filtros })}`,
     ),
+  obtener: (id: string) => api.get<Poliza>(`/polizas/${id}`),
   crear: (datos: CrearPolizaInput) => api.post<Poliza>('/polizas', datos),
   actualizar: (id: string, datos: ActualizarPolizaInput) =>
     api.patch<Poliza>(`/polizas/${id}`, datos),

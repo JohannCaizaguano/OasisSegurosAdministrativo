@@ -55,4 +55,21 @@ describe('cobertura de @Auditar', () => {
   it('instrumenta todas las mutaciones HTTP con su acción y entidad', () => {
     expect(mutacionesInstrumentadas()).toEqual(ESPERADAS);
   });
+
+  it('las lecturas de S5 existen y no se auditan', () => {
+    const lecturas = [
+      'VerificacionController.verificar',
+      'RecibosController.imprimible',
+      'MisRecibosController.imprimible',
+      'PagosController.obtener',
+      'CarteraController.listar',
+    ];
+    const rutas = rutasDeclaradas().filter((ruta) => lecturas.includes(ruta.clave));
+
+    expect(rutas.map((ruta) => ruta.clave).sort()).toEqual([...lecturas].sort());
+    for (const ruta of rutas) {
+      expect(ruta.metodo).toBe(RequestMethod.GET);
+      expect(Reflect.getMetadata(AUDITAR_KEY, ruta.handler)).toBeUndefined();
+    }
+  });
 });

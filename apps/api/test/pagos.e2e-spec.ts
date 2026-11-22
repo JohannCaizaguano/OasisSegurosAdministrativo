@@ -7,6 +7,7 @@ import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/infrastructure/prisma/prisma.service';
+import { cedulaValida } from './identificaciones';
 import { crearPolizaDePrueba } from './polizas-de-prueba';
 
 /**
@@ -170,10 +171,11 @@ describe('Pagos: registrar, validar y rechazar (e2e)', () => {
     expect(await prisma.recibo.count({ where: { pagoId } })).toBe(0);
     await validar(pagoId).expect(422);
 
+    // D15 ordena REGISTRADO primero: el filtro evita que el rechazo quede fuera de la página.
     const misPagos = await como(
       tokenCliente,
       'get',
-      '/api/v1/mis-pagos?page=1&pageSize=100',
+      '/api/v1/mis-pagos?page=1&pageSize=100&estado=RECHAZADO',
     ).expect(200);
     const visto = (misPagos.body.data as Array<{ id: string; motivoRechazo: string | null }>).find(
       (item) => item.id === pagoId,
@@ -190,18 +192,144 @@ describe('Pagos: registrar, validar y rechazar (e2e)', () => {
       .send({ confirmado: true, motivo: 'La referencia no corresponde' })
       .expect(200);
 
-    const misPagos = await como(
-      tokenCliente,
-      'get',
-      '/api/v1/mis-pagos?page=1&pageSize=100',
-    ).expect(200);
-    const porId = new Map(
-      (misPagos.body.data as Array<{ id: string; rechazadoEn: string | null }>).map((p) => [
-        p.id,
-        p,
-      ]),
-    );
-    expect(porId.get(rechazado.body.id as string)?.rechazadoEn).toEqual(expect.any(String));
-    expect(porId.get(validado.body.id as string)?.rechazadoEn).toBeNull();
+    const misPagos = async (estado: string) =>
+      (
+        await como(
+          tokenCliente,
+          'get',
+          `/api/v1/mis-pagos?page=1&pageSize=100&estado=${estado}`,
+        ).expect(200)
+      ).body.data as Array<{
+        id: string;
+        rechazadoEn: string | null;
+        recibo: { id: string; codigo: string } | null;
+      }>;
+    const vistoRechazado = (await misPagos('RECHAZADO')).find((p) => p.id === rechazado.body.id);
+    const vistoValidado = (await misPagos('VALIDADO')).find((p) => p.id === validado.body.id);
+
+    expect(vistoRechazado?.rechazadoEn).toEqual(expect.any(String));
+    expect(vistoValidado?.rechazadoEn).toBeNull();
+    // D7: el portal arma /portal/recibos/:id con el recibo del pago validado.
+    expect(vistoValidado?.recibo).toEqual({
+      id: expect.any(String),
+      codigo: expect.stringMatching(/^RC-[0-9A-F]{12}$/),
+    });
+    expect(vistoRechazado?.recibo).toBeNull();
+  });
+
+  describe('HU-20: listado de pagos', () => {
+    const sufijo = Date.now();
+    let clienteId: string;
+    let ids: Record<'A' | 'B' | 'C' | 'D' | 'E', string>;
+    let hoy: string;
+
+    const diasAntes = (fecha: string, dias: number) =>
+      new Date(Date.parse(`${fecha}T00:00:00Z`) - dias * 86_400_000).toISOString().slice(0, 10);
+
+    const listar = (query: Record<string, unknown>) =>
+      como(tokenOperador, 'get', '/api/v1/pagos').query(query).expect(200);
+
+    beforeAll(async () => {
+      hoy = fechaEnGuayaquil(new Date());
+      const cliente = await como(tokenOperador, 'post', '/api/v1/clientes')
+        .send({
+          tipoIdentificacion: 'CEDULA',
+          identificacion: cedulaValida(sufijo + 2020),
+          nombres: 'Cliente',
+          apellidos: 'Listado Pagos',
+          email: `listado.pagos.${sufijo}@example.com`,
+        })
+        .expect(201);
+      clienteId = cliente.body.id as string;
+      const poliza = await como(tokenOperador, 'post', '/api/v1/polizas')
+        .send({
+          numero: `POL-HU20-${sufijo}`,
+          clienteId,
+          aseguradoraId: (await prisma.aseguradora.findFirstOrThrow()).id,
+          ramoId: (await prisma.ramo.findUniqueOrThrow({ where: { codigo: 'VIDA' } })).id,
+          primaTotal: '1000.00',
+          fechaInicio: '2026-01-01',
+          fechaFin: '2027-12-31',
+        })
+        .expect(201);
+      const polizaId = poliza.body.id as string;
+
+      const fechas = { A: 3, B: 1, C: 2, D: 0, E: 1 } as const;
+      const creados = {} as Record<keyof typeof fechas, string>;
+      for (const clave of ['A', 'B', 'C', 'D', 'E'] as const) {
+        const pago = await registrar(polizaId, {
+          monto: '10.00',
+          fechaPago: diasAntes(hoy, fechas[clave]),
+        }).expect(201);
+        creados[clave] = pago.body.id as string;
+      }
+      await validar(creados.A).expect(200);
+      await validar(creados.E).expect(200);
+      await como(tokenOperador, 'patch', `/api/v1/pagos/${creados.B}/rechazar`)
+        .send({ confirmado: true, motivo: 'La referencia no corresponde' })
+        .expect(200);
+      ids = creados;
+    });
+
+    it('filtra por cliente, muestra primero los por validar y luego por fecha descendente (HU-20.1, HU-20.2)', async () => {
+      const respuesta = await listar({ clienteId, pageSize: 100 });
+
+      expect(respuesta.body.data.map((p: { id: string }) => p.id)).toEqual([
+        ids.D,
+        ids.C,
+        ids.E,
+        ids.A,
+        ids.B,
+      ]);
+      expect(respuesta.body.data.map((p: { estado: string }) => p.estado)).toEqual([
+        'REGISTRADO',
+        'REGISTRADO',
+        'VALIDADO',
+        'VALIDADO',
+        'RECHAZADO',
+      ]);
+      expect(respuesta.body.meta.total).toBe(5);
+    });
+
+    it('filtra por rango de fechas de pago y por estado, con el total del filtro (HU-20.1, HU-20.3)', async () => {
+      const rango = await listar({
+        clienteId,
+        desde: diasAntes(hoy, 2),
+        hasta: diasAntes(hoy, 1),
+      });
+      expect(rango.body.data.map((p: { id: string }) => p.id)).toEqual([ids.C, ids.E, ids.B]);
+      expect(rango.body.meta.total).toBe(3);
+
+      const validados = await listar({ clienteId, estado: 'VALIDADO' });
+      expect(validados.body.data.map((p: { id: string }) => p.id)).toEqual([ids.E, ids.A]);
+      expect(validados.body.meta.total).toBe(2);
+    });
+
+    it('pagina conservando el orden y reporta total y páginas (HU-20.3)', async () => {
+      const paginas = await Promise.all(
+        [1, 2, 3].map((page) => listar({ clienteId, page, pageSize: 2 })),
+      );
+
+      expect(paginas.map((p) => p.body.data.length)).toEqual([2, 2, 1]);
+      expect(paginas[0].body.meta).toEqual({ page: 1, pageSize: 2, total: 5, totalPages: 3 });
+      expect(paginas.flatMap((p) => p.body.data.map((pago: { id: string }) => pago.id))).toEqual([
+        ids.D,
+        ids.C,
+        ids.E,
+        ids.A,
+        ids.B,
+      ]);
+    });
+
+    it('desde posterior a hasta → 400 con el error en hasta', async () => {
+      const respuesta = await como(tokenOperador, 'get', '/api/v1/pagos')
+        .query({ desde: hoy, hasta: diasAntes(hoy, 1) })
+        .expect(400);
+      expect(JSON.stringify(respuesta.body.details)).toContain('hasta');
+    });
+
+    it('el CLIENTE no lista los pagos del personal → 403', async () => {
+      await como(tokenCliente, 'get', '/api/v1/pagos').expect(403);
+    });
   });
 });

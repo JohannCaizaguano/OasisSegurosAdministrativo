@@ -69,6 +69,14 @@ export function useCambiarEstadoPoliza() {
   });
 }
 
+export function usePoliza(id: string | undefined) {
+  return useQuery({
+    queryKey: ['polizas', 'detalle', id],
+    queryFn: () => polizasApi.obtener(id as string),
+    enabled: !!id,
+  });
+}
+
 export function useCuotas(polizaId: string | undefined) {
   return useQuery({
     queryKey: ['polizas', polizaId, 'cuotas'],

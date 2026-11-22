@@ -1,11 +1,16 @@
-import type { Cuota, DefinirPlanCuotasInput } from '@oasis/shared';
-import { definirPlanCuotasSchema, idUuidParamSchema } from '@oasis/shared';
+import type { Cuota, DefinirPlanCuotasInput, FilaCartera, ListarCarteraQuery } from '@oasis/shared';
+import {
+  definirPlanCuotasSchema,
+  idUuidParamSchema,
+  listarCarteraQuerySchema,
+} from '@oasis/shared';
 import { Controller, Get, HttpCode, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { Auditar } from '../../../../common/auditoria/auditar.decorator';
 import { Roles } from '../../../../common/auth/decorators';
-import { ZodBody, ZodParam } from '../../../../common/pipes/zod-validation.pipe';
+import { ZodBody, ZodParam, ZodQuery } from '../../../../common/pipes/zod-validation.pipe';
+import { ListarCarteraUseCase } from '../../application/use-cases/listar-cartera.use-case';
 import {
   DefinirPlanCuotasUseCase,
   ObtenerPlanCuotasUseCase,
@@ -35,5 +40,38 @@ export class CuotasController {
     @ZodBody(definirPlanCuotasSchema) datos: DefinirPlanCuotasInput,
   ): Promise<Cuota[]> {
     return this.definirPlan.ejecutar(params.id, datos.cuotas);
+  }
+}
+
+@ApiTags('polizas')
+@Controller('cuotas')
+@Roles('ADMIN', 'OPERADOR')
+export class CarteraController {
+  constructor(private readonly listarCartera: ListarCarteraUseCase) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Cartera: cuotas por vencer en 7 días y vencidas (HU-38)' })
+  async listar(@ZodQuery(listarCarteraQuerySchema) query: ListarCarteraQuery): Promise<{
+    data: FilaCartera[];
+    meta: { page: number; pageSize: number; total: number; totalPages: number };
+  }> {
+    const { items, total } = await this.listarCartera.ejecutar({
+      vista: query.vista,
+      clienteId: query.clienteId,
+      aseguradoraId: query.aseguradoraId,
+      desde: query.desde,
+      hasta: query.hasta,
+      pagina: query.page,
+      porPagina: query.pageSize,
+    });
+    return {
+      data: items,
+      meta: {
+        page: query.page,
+        pageSize: query.pageSize,
+        total,
+        totalPages: Math.ceil(total / query.pageSize),
+      },
+    };
   }
 }

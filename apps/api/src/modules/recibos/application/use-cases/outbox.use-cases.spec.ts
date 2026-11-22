@@ -6,11 +6,8 @@ import { AnclarReciboUseCase } from './anclar-recibo.use-case';
 import type { ConfiguracionCadenaPort } from '../ports/configuracion-cadena.port';
 import type { RegistroRecibosPort } from '../ports/registro-recibos.port';
 import { Recibo, type DatosNuevoRecibo } from '../../domain/recibo';
-import { HashRecibo } from '../../domain/hash-recibo';
 import { ReencolarPendientesUseCase } from './reencolar-pendientes.use-case';
 import { ReintentarReciboUseCase } from './reintentar-recibo.use-case';
-import { VerificarReciboUseCase } from './verificar-recibo.use-case';
-import type { HasherRecibosPort } from '../ports/hasher-recibos.port';
 
 const RECIBO_ID = '11111111-1111-1111-1111-111111111111';
 const HASH = `0x${'22'.repeat(32)}`;
@@ -47,6 +44,10 @@ class RecibosEnMemoria implements RecibosRepositoryPort {
 
   async listar(): Promise<{ items: Recibo[]; total: number }> {
     return { items: [], total: 0 };
+  }
+
+  async buscarImprimible(): Promise<null> {
+    return null;
   }
 
   async guardar(recibo: Recibo): Promise<Recibo> {
@@ -88,11 +89,6 @@ const cadena: ConfiguracionCadenaPort = {
   explorerBaseUrl: 'https://amoy.polygonscan.com',
   obtenerContractAddress: () => '0x0000000000000000000000000000000000000009',
   contractAddressSiExiste: () => '0x0000000000000000000000000000000000000009',
-};
-
-const hasher: HasherRecibosPort = {
-  hashRecibo: () => HashRecibo.de(HASH, SAL),
-  hashTexto: () => `0x${'11'.repeat(32)}`,
 };
 
 describe('Barrido del outbox (ReencolarPendientesUseCase)', () => {
@@ -157,95 +153,6 @@ describe('AnclarReciboUseCase (idempotencia)', () => {
     await expect(
       new AnclarReciboUseCase(repo, reg, cadena, reloj).ejecutar(RECIBO_ID),
     ).rejects.toBeInstanceOf(NoEncontradoError);
-  });
-});
-
-describe('VerificarReciboUseCase (verificación con sesión, ADR-015)', () => {
-  it('devuelve NO_ENCONTRADO sin lanzar aunque no haya contrato desplegado', async () => {
-    const repo = new RecibosEnMemoria(null);
-    const reg = {
-      obtenerEnCadena: jest.fn(),
-    } as unknown as RegistroRecibosPort;
-    const cadenaSinContrato: ConfiguracionCadenaPort = {
-      ...cadena,
-      obtenerContractAddress: () => {
-        throw new Error('no debería llamarse');
-      },
-      contractAddressSiExiste: () => null,
-    };
-
-    const salida = await new VerificarReciboUseCase(
-      repo,
-      reg,
-      hasher,
-      cadenaSinContrato,
-      reloj,
-    ).ejecutar('RC-INEXISTENTE');
-
-    expect(salida.estado).toBe('NO_ENCONTRADO');
-    expect(salida.contractAddress).toBeNull();
-    // No se consultó la cadena: no hay recibo que verificar.
-    expect(reg.obtenerEnCadena).not.toHaveBeenCalled();
-  });
-
-  it('marca HASH_INCONSISTENTE si el hash en la cadena no coincide con el recalculado', async () => {
-    const recibo = Recibo.nuevo(datosNuevo());
-    const repo = new RecibosEnMemoria(recibo);
-    const reg = {
-      obtenerEnCadena: jest.fn(async () => ({
-        existe: true,
-        hashRecibo: `0x${'99'.repeat(32)}`,
-        registradoEn: 1n,
-        anulado: false,
-      })),
-    } as unknown as RegistroRecibosPort;
-
-    const salida = await new VerificarReciboUseCase(repo, reg, hasher, cadena, reloj).ejecutar(
-      'RC-ABC123',
-    );
-
-    expect(salida.estado).toBe('HASH_INCONSISTENTE');
-  });
-
-  it('informa el snapshot del recibo (chainId y contrato con el que se ancló)', async () => {
-    const recibo = Recibo.nuevo(datosNuevo());
-    const repo = new RecibosEnMemoria(recibo);
-    const reg = {
-      obtenerEnCadena: jest.fn(async () => ({
-        existe: true,
-        hashRecibo: HASH,
-        registradoEn: 1n,
-        anulado: false,
-      })),
-    } as unknown as RegistroRecibosPort;
-
-    const salida = await new VerificarReciboUseCase(repo, reg, hasher, cadena, reloj).ejecutar(
-      'RC-ABC123',
-    );
-
-    expect(salida.estado).toBe('VALIDO');
-    expect(salida.chainId).toBe(80002);
-    expect(salida.contractAddress).toBe('0x0000000000000000000000000000000000000009');
-  });
-
-  it('no expone la sal ni el payload canónico en la respuesta de la verificación con sesión', async () => {
-    const recibo = Recibo.nuevo(datosNuevo());
-    const repo = new RecibosEnMemoria(recibo);
-    const reg = {
-      obtenerEnCadena: jest.fn(async () => ({
-        existe: true,
-        hashRecibo: HASH,
-        registradoEn: 1n,
-        anulado: false,
-      })),
-    } as unknown as RegistroRecibosPort;
-
-    const salida = await new VerificarReciboUseCase(repo, reg, hasher, cadena, reloj).ejecutar(
-      'RC-ABC123',
-    );
-
-    expect(salida).not.toHaveProperty('sal');
-    expect(salida).not.toHaveProperty('payloadCanonico');
   });
 });
 

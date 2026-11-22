@@ -39,6 +39,8 @@ function aRespuesta(poliza: Poliza): PolizaRespuesta {
     fechaInicio: poliza.fechaInicio,
     fechaFin: poliza.fechaFin,
     estado: poliza.estado,
+    cobertura: poliza.cobertura,
+    condiciones: poliza.condiciones,
     clienteNombre: poliza.clienteNombre,
     aseguradoraNombre: poliza.aseguradoraNombre,
     tienePagosValidados: poliza.tienePagosValidados,

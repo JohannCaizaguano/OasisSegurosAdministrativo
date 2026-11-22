@@ -72,6 +72,8 @@ const POLIZA: Poliza = {
   ramo: 'Vehículos',
   ramoCodigo: 'VEHICULOS',
   primaTotal: '1500.50',
+  cobertura: null,
+  condiciones: null,
   fechaInicio: '2026-01-01',
   fechaFin: '2026-12-31',
   estado: 'VIGENTE',
@@ -135,6 +137,66 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
+describe('FormularioPoliza — cobertura y condiciones (HU-51)', () => {
+  it('2 001 caracteres de cobertura muestran el error del campo y no se envía', async () => {
+    montar();
+    await llenarPolizaValida();
+    fireEvent.change(screen.getByLabelText('Cobertura'), { target: { value: 'a'.repeat(2001) } });
+    fireEvent.click(screen.getByTestId('boton-guardar-poliza'));
+
+    expect(
+      await screen.findByText('La cobertura no puede superar los 2 000 caracteres'),
+    ).toHaveAttribute('role', 'alert');
+    expect(screen.getByLabelText('Cobertura')).toHaveAttribute('aria-invalid', 'true');
+    expect(crear).not.toHaveBeenCalled();
+  });
+
+  it('cuenta los caracteres con su máximo y limita el campo a 2 000', () => {
+    montar();
+    const condiciones = screen.getByLabelText('Condiciones');
+    expect(condiciones.tagName).toBe('TEXTAREA');
+    expect(condiciones).toHaveAttribute('maxLength', '2000');
+    fireEvent.change(condiciones, { target: { value: 'b'.repeat(1234) } });
+    expect(screen.getByText('1 234 / 2 000')).toBeInTheDocument();
+  });
+
+  it('al registrar envía la cobertura y las condiciones', async () => {
+    crear.mockResolvedValue(POLIZA);
+    montar();
+    await llenarPolizaValida();
+    fireEvent.change(screen.getByLabelText('Cobertura'), {
+      target: { value: 'Daños propios\nRobo total' },
+    });
+    fireEvent.change(screen.getByLabelText('Condiciones'), { target: { value: 'Deducible 10 %' } });
+    fireEvent.click(screen.getByTestId('boton-guardar-poliza'));
+
+    await waitFor(() =>
+      expect(crear).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cobertura: 'Daños propios\nRobo total',
+          condiciones: 'Deducible 10 %',
+        }),
+      ),
+    );
+  });
+
+  it('al editar, vaciar la cobertura la borra', async () => {
+    actualizar.mockResolvedValue(POLIZA);
+    montar({ ...POLIZA, cobertura: 'Robo total', condiciones: 'Deducible' });
+    expect(screen.getByLabelText('Cobertura')).toHaveValue('Robo total');
+
+    fireEvent.change(screen.getByLabelText('Cobertura'), { target: { value: '' } });
+    fireEvent.click(screen.getByTestId('boton-guardar-poliza'));
+
+    await waitFor(() =>
+      expect(actualizar).toHaveBeenCalledWith(
+        POLIZA.id,
+        expect.objectContaining({ cobertura: null, condiciones: 'Deducible' }),
+      ),
+    );
+  });
+});
+
 describe('FormularioPoliza', () => {
   it('valida prima y fechas con el esquema compartido', async () => {
     montar();
@@ -197,6 +259,7 @@ describe('FormularioPoliza', () => {
         valorPagado: '0.00',
         fechaVencimiento: `2026-0${numero}-01`,
         estado: 'PENDIENTE' as const,
+        aplicaciones: [],
       })),
     );
     montar(POLIZA);
@@ -216,6 +279,7 @@ describe('FormularioPoliza', () => {
         valorPagado: '0.00',
         fechaVencimiento: '2026-01-01',
         estado: 'PENDIENTE',
+        aplicaciones: [],
       },
     ]);
     montar(POLIZA);

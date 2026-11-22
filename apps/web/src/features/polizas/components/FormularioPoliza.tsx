@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { Campo } from '@/components/Campo';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { CLASES_CAMPO, Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { SelectorCliente } from '@/features/clientes/components/SelectorCliente';
 import { ApiError } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 
 import {
   useCatalogoAseguradoras,
@@ -36,6 +37,55 @@ interface DatosFormulario {
   primaTotal: string;
   fechaInicio: string;
   fechaFin: string;
+  cobertura: string;
+  condiciones: string;
+}
+
+const MAX_TEXTO = 2000;
+
+/** «1 234 / 2 000»: el separador de miles es un espacio, como en los mensajes del esquema. */
+function conMiles(valor: number): string {
+  return String(valor).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+}
+
+/** HU-51: texto largo con contador; los saltos de línea se guardan tal cual. */
+function CampoTextoLargo({
+  control,
+  nombre,
+  label,
+  error,
+}: {
+  control: Control<DatosFormulario>;
+  nombre: 'cobertura' | 'condiciones';
+  label: string;
+  error?: string;
+}) {
+  const { field } = useController({ control, name: nombre });
+  const id = `poliza-${nombre}`;
+
+  return (
+    <Campo
+      id={id}
+      label={label}
+      error={error}
+      ayuda="Opcional. Hasta 2 000 caracteres; los saltos de línea se conservan."
+    >
+      {(atributos) => (
+        <div className="grid gap-1">
+          <textarea
+            {...atributos}
+            {...field}
+            rows={4}
+            maxLength={MAX_TEXTO}
+            className={cn(CLASES_CAMPO, 'h-auto min-h-28 resize-y py-3 focus-visible:py-[11px]')}
+          />
+          <p className="cifra justify-self-end text-caption text-muted-foreground">
+            {conMiles(field.value.length)} / {conMiles(MAX_TEXTO)}
+          </p>
+        </div>
+      )}
+    </Campo>
+  );
 }
 
 interface FormularioPolizaProps {
@@ -68,6 +118,8 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
           primaTotal: poliza.primaTotal,
           fechaInicio: poliza.fechaInicio,
           fechaFin: poliza.fechaFin,
+          cobertura: poliza.cobertura ?? '',
+          condiciones: poliza.condiciones ?? '',
         }
       : {
           numero: '',
@@ -77,6 +129,8 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
           primaTotal: '',
           fechaInicio: '',
           fechaFin: '',
+          cobertura: '',
+          condiciones: '',
         },
   });
 
@@ -103,8 +157,27 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
 
   // El cliente no se monta en edición (D11): un 422 suyo ahí solo puede ir a toast.
   const camposDelFormulario: ReadonlyArray<keyof DatosFormulario> = esEdicion
-    ? ['numero', 'aseguradoraId', 'ramoId', 'primaTotal', 'fechaInicio', 'fechaFin']
-    : ['numero', 'clienteId', 'aseguradoraId', 'ramoId', 'primaTotal', 'fechaInicio', 'fechaFin'];
+    ? [
+        'numero',
+        'aseguradoraId',
+        'ramoId',
+        'primaTotal',
+        'fechaInicio',
+        'fechaFin',
+        'cobertura',
+        'condiciones',
+      ]
+    : [
+        'numero',
+        'clienteId',
+        'aseguradoraId',
+        'ramoId',
+        'primaTotal',
+        'fechaInicio',
+        'fechaFin',
+        'cobertura',
+        'condiciones',
+      ];
 
   function manejarError(error: unknown) {
     const detalle =
@@ -124,7 +197,16 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
       className="grid gap-4"
       onSubmit={formulario.handleSubmit((datos) => {
         if (esEdicion) {
-          const { numero, aseguradoraId, ramoId, primaTotal, fechaInicio, fechaFin } = datos;
+          const {
+            numero,
+            aseguradoraId,
+            ramoId,
+            primaTotal,
+            fechaInicio,
+            fechaFin,
+            cobertura,
+            condiciones,
+          } = datos;
           editar.mutate(
             {
               id: poliza.id,
@@ -135,6 +217,9 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
                 primaTotal,
                 fechaInicio,
                 fechaFin,
+                // El esquema convierte el texto vacío en `null`, que borra el guardado.
+                cobertura,
+                condiciones,
               } as ActualizarPolizaInput,
             },
             { onSuccess: alGuardar, onError: manejarError },
@@ -225,6 +310,19 @@ export function FormularioPoliza({ poliza, alGuardar }: FormularioPolizaProps) {
           {(atributos) => <Input {...atributos} type="date" {...formulario.register('fechaFin')} />}
         </Campo>
       </div>
+
+      <CampoTextoLargo
+        control={formulario.control}
+        nombre="cobertura"
+        label="Cobertura"
+        error={errores.cobertura?.message}
+      />
+      <CampoTextoLargo
+        control={formulario.control}
+        nombre="condiciones"
+        label="Condiciones"
+        error={errores.condiciones?.message}
+      />
 
       <DialogFooter>
         <Button type="submit" disabled={enviando} data-testid="boton-guardar-poliza">

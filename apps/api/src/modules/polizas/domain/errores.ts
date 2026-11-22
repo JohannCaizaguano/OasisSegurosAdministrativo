@@ -30,6 +30,13 @@ export function planConPagosValidados(): ReglaNegocioError {
   });
 }
 
+/** La póliza o su plan cambiaron entre la comprobación del caso de uso y la escritura. */
+export function polizaModificada(): ConflictoError {
+  return new ConflictoError('La póliza cambió mientras se editaba; recargue e intente de nuevo', {
+    motivo: 'POLIZA_MODIFICADA',
+  });
+}
+
 export function polizaNoVigente(mensaje: string): ReglaNegocioError {
   return new ReglaNegocioError(mensaje, { campo: 'estado', motivo: 'POLIZA_NO_VIGENTE' });
 }

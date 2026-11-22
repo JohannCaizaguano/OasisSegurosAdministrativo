@@ -1,4 +1,4 @@
-import type { Pago, Poliza, RespuestaPaginada } from '@oasis/shared';
+import type { PagoCliente, Poliza, RespuestaPaginada } from '@oasis/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -15,7 +15,7 @@ function paginada<T>(items: T[]): RespuestaPaginada<T> {
   return { data: items, meta: { page: 1, pageSize: 20, total: items.length, totalPages: 1 } };
 }
 
-const RECHAZADO: Pago = {
+const RECHAZADO: PagoCliente = {
   id: '7c1e5a90-2b3d-4f6a-9e8c-1d2b3a4c5d6e',
   polizaId: '3f2a1c8e-4b5d-4e6f-8a9b-0c1d2e3f4a5b',
   numeroPoliza: 'POL-0001',
@@ -27,18 +27,42 @@ const RECHAZADO: Pago = {
   motivoRechazo: MOTIVO,
   createdAt: '2026-10-20T10:00:00.000Z',
   updatedAt: '2026-10-21T10:00:00.000Z',
+  recibo: null,
 };
+
+const RECIBO = { id: '9b1c2d3e-4f5a-4b6c-8d7e-9f0a1b2c3d4e', codigo: 'RC-0123456789AB' };
 
 beforeEach(() => {
   vi.mocked(dashboardApi.misPolizas).mockResolvedValue(paginada([]));
   vi.mocked(dashboardApi.misPagos).mockResolvedValue(
-    paginada([RECHAZADO, { ...RECHAZADO, id: 'otro', estado: 'VALIDADO', motivoRechazo: null }]),
+    paginada([
+      RECHAZADO,
+      { ...RECHAZADO, id: 'otro', estado: 'VALIDADO', motivoRechazo: null, recibo: RECIBO },
+    ]),
   );
 });
 
 afterEach(cleanup);
 
 describe('PanelCliente (HU-19)', () => {
+  it('el pago validado enlaza su recibo imprimible y el rechazado no (HU-25)', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter>
+          <PanelCliente />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const enlaces = await screen.findAllByRole('link', { name: /Imprimir recibo/ });
+    expect(enlaces).toHaveLength(1);
+    expect(enlaces[0]).toHaveAccessibleName('Imprimir recibo RC-0123456789AB');
+    expect(enlaces[0]).toHaveAttribute('href', `/portal/recibos/${RECIBO.id}`);
+    expect(screen.getByRole('link', { name: 'Verificar recibo RC-0123456789AB' })).toHaveAttribute(
+      'href',
+      '/recibos/verificar/RC-0123456789AB',
+    );
+  });
+
   it('el cliente ve el motivo bajo su pago rechazado, y solo ahí', async () => {
     render(
       <QueryClientProvider client={new QueryClient()}>
@@ -67,6 +91,8 @@ describe('PanelCliente (HU-19)', () => {
           ramo: 'Vida',
           ramoCodigo: 'VIDA',
           primaTotal: '100.00',
+          cobertura: null,
+          condiciones: null,
           fechaInicio: '2026-01-01',
           fechaFin: '2027-01-01',
           estado: 'VIGENTE',

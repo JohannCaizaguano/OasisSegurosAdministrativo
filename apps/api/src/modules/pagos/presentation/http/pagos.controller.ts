@@ -1,6 +1,8 @@
 import type {
   CrearPagoInput,
   Pago as PagoRespuesta,
+  PagoCliente,
+  PagoDetalle,
   RechazarPagoInput,
   ValidarPagoInput,
   ValidarPagoResponse,
@@ -28,6 +30,7 @@ import {
   ListarPagosUseCase,
   RechazarPagoUseCase,
 } from '../../application/use-cases/pagos.use-cases';
+import { ObtenerPagoUseCase } from '../../application/use-cases/obtener-pago.use-case';
 import { ValidarPagoUseCase } from '../../application/use-cases/validar-pago.use-case';
 
 @ApiTags('pagos')
@@ -37,6 +40,7 @@ export class PagosController {
   constructor(
     private readonly crearPago: CrearPagoUseCase,
     private readonly listarPagos: ListarPagosUseCase,
+    private readonly obtenerPago: ObtenerPagoUseCase,
     private readonly validarPago: ValidarPagoUseCase,
     private readonly rechazarPago: RechazarPagoUseCase,
     @Inject(TOKENS_TRANSVERSALES.CLOCK) private readonly clock: ClockPort,
@@ -63,6 +67,7 @@ export class PagosController {
       pageSize: number;
       estado?: Pago['estado'];
       polizaId?: string;
+      clienteId?: string;
       desde?: string;
       hasta?: string;
       q?: string;
@@ -73,6 +78,7 @@ export class PagosController {
       porPagina: query.pageSize,
       estado: query.estado,
       polizaId: query.polizaId,
+      clienteId: query.clienteId,
       desde: query.desde,
       hasta: query.hasta,
       q: query.q,
@@ -86,6 +92,13 @@ export class PagosController {
         totalPages: Math.ceil(pagina.total / query.pageSize),
       },
     };
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Detalle del pago: cuotas a las que se aplicó y su recibo (HU-36)' })
+  async obtener(@ZodParam(idUuidParamSchema) params: { id: string }): Promise<PagoDetalle> {
+    const { pago, aplicaciones } = await this.obtenerPago.ejecutar(params.id);
+    return { ...this.aRespuesta(pago), aplicaciones, recibo: pago.recibo };
   }
 
   @Patch(':id/validar')
@@ -163,7 +176,7 @@ export class MisPagosController {
     @UsuarioActual() usuario: UsuarioAutenticado,
     @ZodQuery(listarPagosQuerySchema)
     query: { page: number; pageSize: number; estado?: Pago['estado'] },
-  ) {
+  ): Promise<{ data: PagoCliente[]; meta: Record<string, number> }> {
     const pagina = await this.listarPagos.ejecutar(usuario.clienteId, {
       pagina: query.page,
       porPagina: query.pageSize,
@@ -184,6 +197,10 @@ export class MisPagosController {
         motivoRechazo: pago.motivoRechazo,
         createdAt: pago.createdAt,
         updatedAt: pago.updatedAt,
+        recibo:
+          pago.estado === 'VALIDADO' && pago.recibo
+            ? { id: pago.recibo.id, codigo: pago.recibo.codigo }
+            : null,
       })),
       meta: {
         page: query.page,

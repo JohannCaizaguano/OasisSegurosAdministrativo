@@ -11,6 +11,9 @@ export const tipoIdentificacionSchema = z.enum(TIPOS_IDENTIFICACION);
 
 export const filtroEstadoClienteSchema = z.enum(FILTROS_ESTADO_CLIENTE);
 
+// Un input vacío ('') es "sin valor", no un valor inválido.
+const vacioComoAusente = (valor: unknown) => (valor === '' ? undefined : valor);
+
 const clienteBaseSchema = z.object({
   tipoIdentificacion: tipoIdentificacionSchema,
   identificacion: z
@@ -18,13 +21,21 @@ const clienteBaseSchema = z.object({
     .trim()
     .min(5, 'Identificación demasiado corta')
     .max(20, 'Identificación demasiado larga'),
-  nombres: z.string().trim().min(1, 'Los nombres son obligatorios').max(120).optional(),
-  apellidos: z.string().trim().min(1, 'Los apellidos son obligatorios').max(120).optional(),
-  razonSocial: z.string().trim().min(1, 'La razón social es obligatoria').max(200).optional(),
+  nombres: z.preprocess(
+    vacioComoAusente,
+    z.string().trim().min(1, 'Los nombres son obligatorios').max(120).optional(),
+  ),
+  apellidos: z.preprocess(
+    vacioComoAusente,
+    z.string().trim().min(1, 'Los apellidos son obligatorios').max(120).optional(),
+  ),
+  razonSocial: z.preprocess(
+    vacioComoAusente,
+    z.string().trim().min(1, 'La razón social es obligatoria').max(200).optional(),
+  ),
   email: z.email('Correo electrónico inválido'),
-  // Un teléfono vacío es "sin teléfono", no un teléfono inválido.
   telefono: z.preprocess(
-    (valor) => (valor === '' ? undefined : valor),
+    vacioComoAusente,
     z.string().trim().min(7, 'El teléfono debe tener al menos 7 caracteres').max(20).optional(),
   ),
 });
@@ -83,10 +94,20 @@ function validarIdentificacionDeCliente(value: IdentificacionCampos, ctx: z.Refi
   }
 }
 
+// Las validaciones cruzadas corren aunque fallen otros campos, para que el formulario reciba todos
+// los errores de una vez; solo se omiten si fallan los campos que leen.
+const sinErroresEn =
+  (...campos: string[]) =>
+  (payload: z.core.ParsePayload) =>
+    !payload.issues.some((issue) => campos.includes(String(issue.path?.[0])));
+
 export const crearClienteSchema = clienteBaseSchema
-  .transform(normalizarIdentificacionDeCliente)
-  .superRefine(validarNombrePersona)
-  .superRefine(validarIdentificacionDeCliente);
+  .superRefine(validarNombrePersona, { when: sinErroresEn('tipoIdentificacion') })
+  .superRefine(
+    (value, ctx) => validarIdentificacionDeCliente(normalizarIdentificacionDeCliente(value), ctx),
+    { when: sinErroresEn('tipoIdentificacion', 'identificacion') },
+  )
+  .transform(normalizarIdentificacionDeCliente);
 export type CrearClienteInput = z.infer<typeof crearClienteSchema>;
 
 export const actualizarClienteSchema = clienteBaseSchema
@@ -100,7 +121,7 @@ export const actualizarClienteSchema = clienteBaseSchema
         })
       : value,
   )
-  .refine((value) => Object.keys(value).length > 0, {
+  .refine((value) => Object.values(value).some((campo) => campo !== undefined), {
     message: 'Debe enviar al menos un campo a actualizar',
   })
   .superRefine((value, ctx) => {

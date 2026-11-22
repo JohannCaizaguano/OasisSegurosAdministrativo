@@ -2,7 +2,7 @@ import type { EstadoPoliza } from '@oasis/shared';
 
 import type { PagosRepositoryPort } from '../ports/pagos.repository.port';
 import { Pago, type PropsPago } from '../../domain/pago';
-import { CrearPagoUseCase, RechazarPagoUseCase } from './pagos.use-cases';
+import { CrearPagoUseCase, ListarPagosUseCase, RechazarPagoUseCase } from './pagos.use-cases';
 
 const POLIZA_ID = '11111111-1111-1111-1111-111111111111';
 
@@ -20,6 +20,7 @@ function crearDobles(estado: EstadoPoliza | null = 'VIGENTE', saldo: string | nu
     crear: jest.fn().mockResolvedValue({}),
     listar: jest.fn(),
     buscarPorId: jest.fn(),
+    buscarDetalle: jest.fn(),
     validarYCrearRecibo: jest.fn(),
     rechazar: jest.fn(),
     buscarMetodoPago: jest.fn().mockResolvedValue({ id: 'metodo-1', codigo: 'TRANSFERENCIA' }),
@@ -159,4 +160,19 @@ describe('RechazarPagoUseCase (HU-19)', () => {
       expect(deps.pagos.rechazar).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('ListarPagosUseCase (HU-20, D15)', () => {
+  it('pide al repositorio los pagos por validar primero', async () => {
+    const { pagos } = crearDobles();
+    jest.mocked(pagos.listar).mockResolvedValue({ items: [], total: 0 });
+
+    await new ListarPagosUseCase(pagos).ejecutar({ pagina: 1, porPagina: 20 });
+
+    expect(pagos.listar).toHaveBeenCalledWith({
+      pagina: 1,
+      porPagina: 20,
+      porValidarPrimero: true,
+    });
+  });
 });

@@ -9,6 +9,13 @@ type Limites = {
 let cache: Limites | null = null;
 
 /**
+ * HU-28 (D4): consultas de verificación por usuario y minuto.
+ * ponytail: techo, contadores en memoria de una sola instancia del API; salida, storage de Redis
+ * en HT-08 (S8).
+ */
+export const LIMITE_VERIFICACION = { limite: 30, ventanaMs: 60_000 } as const;
+
+/**
  * Límites del rate limiter para `@Throttle`, que se evalúa antes de que exista
  * el contenedor de DI: lee el mismo `envSchema` del arranque y los cachea.
  * Subirlos durante la medición de carga es deliberado (docs/despliegue.md).

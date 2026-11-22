@@ -1,15 +1,25 @@
-import { createBrowserRouter, Navigate, Outlet, Link, useLocation } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Link,
+  Navigate,
+  Outlet,
+  useLocation,
+  type RouteObject,
+} from 'react-router-dom';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 import { AseguradorasPage } from '@/features/aseguradoras/pages/AseguradorasPage';
 import { BitacoraPage } from '@/features/auditoria/pages/BitacoraPage';
+import { CarteraPage } from '@/features/cartera/pages/CarteraPage';
 import { CambiarContrasenaPage } from '@/features/auth/pages/CambiarContrasenaPage';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ClientesPage } from '@/features/clientes/pages/ClientesPage';
 import { DashboardPage } from '@/features/dashboard/pages/DashboardPage';
 import { PagosPage } from '@/features/pagos/pages/PagosPage';
+import { PolizaDetallePage } from '@/features/polizas/pages/PolizaDetallePage';
 import { PolizasPage } from '@/features/polizas/pages/PolizasPage';
 import { ReciboDetallePage } from '@/features/recibos/pages/ReciboDetallePage';
+import { ReciboImprimiblePage } from '@/features/recibos/pages/ReciboImprimiblePage';
 import { RecibosPage } from '@/features/recibos/pages/RecibosPage';
 import { UsuariosPage } from '@/features/usuarios/pages/UsuariosPage';
 import { VerificacionPage } from '@/features/verificacion/pages/VerificacionPage';
@@ -42,7 +52,7 @@ function NoEncontrado() {
   );
 }
 
-export const router = createBrowserRouter([
+export const rutas: RouteObject[] = [
   {
     element: <SoloInvitados />,
     children: [{ path: '/login', element: <LoginPage /> }],
@@ -55,17 +65,30 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <DashboardPage /> },
           {
+            // HU-28 (D3): el cliente verifica sus propios recibos; el API decide qué ve.
+            element: <RutaProtegida roles={['ADMIN', 'OPERADOR', 'CLIENTE']} />,
+            children: [
+              { path: '/recibos/verificar', element: <VerificacionPage /> },
+              { path: '/recibos/verificar/:codigo', element: <VerificacionPage /> },
+            ],
+          },
+          {
             element: <RutaProtegida roles={['ADMIN', 'OPERADOR']} />,
             children: [
               { path: '/pagos', element: <PagosPage /> },
+              { path: '/cartera', element: <CarteraPage /> },
               { path: '/recibos', element: <RecibosPage /> },
-              { path: '/recibos/verificar', element: <VerificacionPage /> },
-              { path: '/recibos/verificar/:codigo', element: <VerificacionPage /> },
               { path: '/recibos/:id', element: <ReciboDetallePage /> },
+              { path: '/recibos/:id/imprimir', element: <ReciboImprimiblePage /> },
               { path: '/clientes', element: <ClientesPage /> },
               { path: '/polizas', element: <PolizasPage /> },
+              { path: '/polizas/:id', element: <PolizaDetallePage /> },
               { path: '/aseguradoras', element: <AseguradorasPage /> },
             ],
+          },
+          {
+            element: <RutaProtegida roles={['CLIENTE']} />,
+            children: [{ path: '/portal/recibos/:id', element: <ReciboImprimiblePage /> }],
           },
           {
             element: <RutaProtegida roles={['ADMIN']} />,
@@ -80,4 +103,6 @@ export const router = createBrowserRouter([
     ],
   },
   { path: '*', element: <NoEncontrado /> },
-]);
+];
+
+export const router = createBrowserRouter(rutas);

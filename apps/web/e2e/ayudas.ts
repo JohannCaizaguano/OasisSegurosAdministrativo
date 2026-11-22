@@ -45,8 +45,8 @@ export async function cabecerasDeSesion(
 export async function crearPolizaPropia(
   request: APIRequestContext,
   headers: Record<string, string>,
-  opciones: { clienteId?: string; prima?: string } = {},
-): Promise<{ id: string; numero: string }> {
+  opciones: { clienteId?: string; prima?: string; cobertura?: string; condiciones?: string } = {},
+): Promise<{ id: string; numero: string; clienteId: string }> {
   let clienteId = opciones.clienteId;
   if (!clienteId) {
     const sufijo = Date.now();
@@ -82,8 +82,13 @@ export async function crearPolizaPropia(
       primaTotal: opciones.prima ?? '100.00',
       fechaInicio: dia(new Date(hoy.getTime() - 30 * 86_400_000)),
       fechaFin: dia(new Date(hoy.getTime() + 335 * 86_400_000)),
+      cobertura: opciones.cobertura,
+      condiciones: opciones.condiciones,
     },
   });
   expect(poliza.ok(), await poliza.text()).toBeTruthy();
-  return { id: ((await poliza.json()) as { id: string }).id, numero };
+  return { id: ((await poliza.json()) as { id: string }).id, numero, clienteId };
 }
+
+/** Enlace «Pagos» del riel: con pagos por validar se llama «Pagos, N por validar» (D26 c). */
+export const ENLACE_PAGOS = /^Pagos(, \d+ por validar)?$/;

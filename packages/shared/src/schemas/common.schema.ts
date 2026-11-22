@@ -13,6 +13,20 @@ export const paginacionQuerySchema = z.object({
 
 export type PaginacionQuery = z.infer<typeof paginacionQuerySchema>;
 
+/** Rango de fechas de un listado: el error va en `hasta` para que la SPA lo pinte bajo ese campo. */
+export function validarRangoFechas(
+  value: { desde?: string; hasta?: string },
+  ctx: z.RefinementCtx,
+): void {
+  if (value.desde && value.hasta && value.desde > value.hasta) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['hasta'],
+      message: 'La fecha «hasta» no puede ser anterior a «desde»',
+    });
+  }
+}
+
 export const paginacionMetaSchema = z.object({
   page: z.number().int().positive(),
   pageSize: z.number().int().positive(),
